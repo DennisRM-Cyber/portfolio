@@ -115,14 +115,9 @@ button {
     - Never wider than 1200px (ultrawide / TV screens)
     This single rule handles phones → tablets → desktops → 4K TVs.
   */
-  max-width: clamp(320px, 82vw, var(--max-width));
+  max-width: clamp(320px, 90vw, var(--max-width));
   margin: 0 auto;
-  /*
-    Horizontal padding ensures content never touches the window edge.
-    clamp scales it: 24px on small phones → 5% of viewport → 64px max.
-    Font sizes are NOT affected — this only moves the content inward.
-  */
-  padding: 0 clamp(24px, 5vw, 64px);
+  padding: 0 clamp(16px, 4vw, 48px); /* padding also scales with screen */
 }
 
 /* The blueprint corner-marks that appear on every page */
@@ -143,8 +138,8 @@ button {
   border-width: 1.5px 0 0 1.5px;
 }
 .page-frame::after {
-  bottom: 12px; right: 12px;
-  border-width: 0 1.5px 1.5px 0;
+  bottom: 19px; right: 19px;
+  border-width: 0 1.9px 1.9px 0;
 }
 
 
@@ -175,7 +170,7 @@ button {
   letter-spacing: 0.08em;
 }
 .nav__logo span {
-  color: rgba(218, 165, 32, 0.4);
+  color: rgba(230, 187, 81, 0.4);
 }
 
 /* Nav links */
@@ -355,15 +350,15 @@ button {
 
 /* ── 8. STAT STRIP ────────────────────────────────────────── */
 .stats {
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-top: 0.5px solid var(--border);
+  border-bottom: 0.5px solid var(--border);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
 }
 
 .stats__item {
   padding: 20px 32px;
-  border-right: 1px solid var(--border);
+  border-right: 0.5px solid var(--border);
 }
 .stats__item:last-child {
   border-right: none;
@@ -401,33 +396,19 @@ button {
 .nav-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  /*
-    Outer border wraps the entire grid — gives it a clear defined frame.
-    Inner card borders separate individual tiles.
-  */
-  border: 1px solid var(--border);
+  border-top: 0.5px solid var(--border-faint);
   margin-top: 0;
 }
 
 .nav-card {
   padding: 28px 28px 24px;
-  /* Stronger borders — 1px solid instead of 0.5px faint */
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  border-right: 0.5px solid var(--border-faint);
+  border-bottom: 0.5px solid var(--border-faint);
   transition: background 0.18s;
   position: relative;
   overflow: hidden;
 }
 .nav-card:nth-child(3n) {
-  border-right: none;
-}
-/* Remove bottom border on last row so it doesn't double with the outer border */
-.nav-card:nth-last-child(-n+3) {
-  border-bottom: none;
-}
-/* Last row edge case when 7th card (odd number) exists */
-.nav-card:last-child {
-  border-bottom: none;
   border-right: none;
 }
 .nav-card:hover {
