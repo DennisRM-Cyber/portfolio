@@ -115,9 +115,14 @@ button {
     - Never wider than 1200px (ultrawide / TV screens)
     This single rule handles phones → tablets → desktops → 4K TVs.
   */
-  max-width: clamp(320px, 90vw, var(--max-width));
+  max-width: clamp(320px, 82vw, var(--max-width));
   margin: 0 auto;
-  padding: 0 clamp(16px, 4vw, 48px); /* padding also scales with screen */
+  /*
+    Horizontal padding ensures content never touches the window edge.
+    clamp scales it: 24px on small phones → 5% of viewport → 64px max.
+    Font sizes are NOT affected — this only moves the content inward.
+  */
+  padding: 0 clamp(24px, 5vw, 64px);
 }
 
 /* The blueprint corner-marks that appear on every page */
@@ -350,15 +355,15 @@ button {
 
 /* ── 8. STAT STRIP ────────────────────────────────────────── */
 .stats {
-  border-top: 0.5px solid var(--border);
-  border-bottom: 0.5px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
 }
 
 .stats__item {
   padding: 20px 32px;
-  border-right: 0.5px solid var(--border);
+  border-right: 1px solid var(--border);
 }
 .stats__item:last-child {
   border-right: none;
@@ -396,19 +401,33 @@ button {
 .nav-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border-top: 0.5px solid var(--border-faint);
+  /*
+    Outer border wraps the entire grid — gives it a clear defined frame.
+    Inner card borders separate individual tiles.
+  */
+  border: 1px solid var(--border);
   margin-top: 0;
 }
 
 .nav-card {
   padding: 28px 28px 24px;
-  border-right: 0.5px solid var(--border-faint);
-  border-bottom: 0.5px solid var(--border-faint);
+  /* Stronger borders — 1px solid instead of 0.5px faint */
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   transition: background 0.18s;
   position: relative;
   overflow: hidden;
 }
 .nav-card:nth-child(3n) {
+  border-right: none;
+}
+/* Remove bottom border on last row so it doesn't double with the outer border */
+.nav-card:nth-last-child(-n+3) {
+  border-bottom: none;
+}
+/* Last row edge case when 7th card (odd number) exists */
+.nav-card:last-child {
+  border-bottom: none;
   border-right: none;
 }
 .nav-card:hover {
