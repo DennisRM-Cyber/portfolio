@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    index.html — Homepage
+    Portfolio: [Your Name] — Electrical Engineer
+    
+    LEARNING NOTE:
+    Every HTML file starts with these meta tags. They tell the
+    browser and search engines about your page. You only need
+    to change the <title> and <meta name="description"> per page.
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mwangi Dennis Rubui  — Electrical & Electronics Engineer</title>
+  <meta name="description" content="Portfolio of [Your Name], a graduate electrical engineer specialising in power systems, AutoCAD design, and illumination calculations. Open to internship opportunities." />
+
+  <!-- The one stylesheet that controls the look of every page -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body class="page-frame">
+  <!--
+    LEARNING NOTE — page-frame class:
+    This triggers the decorative corner marks you see in the
+    CSS (the amber L-shapes in each corner of the browser window).
+    Add it to every page's <body>.
+  -->
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       NAVIGATION
+       Shared across all pages. When you update this block,
+       copy the change to every .html file.
+       (In a future enhancement, JS could inject this automatically.)
+  ════════════════════════════════════════════════════════════ -->
+  <nav class="nav">
+    <div class="container nav__inner">
+
+      <a href="index.html" class="nav__logo">
+        <span>// </span>portfolio.ee<span> _</span>
+      </a>
+
+      <!--
+        LEARNING NOTE — aria-label:
+        Screen readers announce this button as "Toggle navigation".
+        Always add aria labels to icon-only buttons.
+      -->
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="nav__links">
+        <li><a href="index.html">home</a></li>
+        <li><a href="about.html">about</a></li>
+        <li><a href="projects.html">projects</a></li>
+        <li><a href="skills.html">skills</a></li>
+        <li><a href="articles.html">articles</a></li>
+        <li><a href="media.html">media</a></li>
+        <li><a href="contact.html">contact</a></li>
+      </ul>
+
+    </div>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       HERO SECTION
+       First thing a visitor sees. The circuit-trace SVG is
+       purely decorative — it sits behind the text.
+  ════════════════════════════════════════════════════════════ -->
+  <header class="hero">
+
+    <!-- Decorative circuit trace (top-right corner) -->
+    <svg class="hero__trace" width="220" height="280" viewBox="0 0 220 280" aria-hidden="true">
+      <path d="M200 0 L200 100 L100 100 L100 200 L0 200"
+            fill="none" stroke="#DAA520" stroke-width="1"/>
+      <circle cx="200" cy="100" r="4" fill="none" stroke="#DAA520" stroke-width="1"/>
+      <circle cx="100" cy="200" r="4" fill="none" stroke="#DAA520" stroke-width="1"/>
+      <path d="M30 0 L30 60 L130 60 L130 160 L210 160"
+            fill="none" stroke="#DAA520" stroke-width="0.5"/>
+      <circle cx="130" cy="60" r="2.5" fill="#DAA520"/>
+    </svg>
+
+    <div class="container">
+      <!--
+        LEARNING NOTE — semantic HTML:
+        <header> wraps the hero. <h1> is the most important heading
+        on the page — use it once per page. <p> is a paragraph.
+        Semantic tags help search engines and screen readers.
+      -->
+
+      <!-- The // prefix is your site's visual voice — engineering notation -->
+      <p class="hero__label">// electrical and electronics engineer — class of 2025</p>
+
+      <h1 class="hero__title">
+        Designs that<br>
+        <em>conduct.</em>
+      </h1>
+
+      <!--
+        PERSONALISE THIS:
+        Replace "BSc Electrical Engineering" with your actual
+        degree title and university name.
+      -->
+      <p class="hero__subtitle">
+        BSc Electrical Engineering &nbsp;·&nbsp; [Jomo Kenyatta University of Agriculture and Technology] &nbsp;·&nbsp; Open to Graduate traineeship /nternship
+      </p>
+
+      <p class="hero__desc">
+        From circuit schematics and AutoCAD electrical drawings to illumination
+        calculations and technical documentation — a complete record of my
+        engineering work, built and documented in the open.
+      </p>
+
+      <div class="hero__actions">
+        <a href="projects.html" class="btn btn--primary">VIEW PROJECTS</a>
+        <!--
+          PERSONALISE THIS:
+          Replace #  with the path to your CV file, e.g.:
+          href="assets/docs/your-name-cv.pdf"
+        -->
+        <a href="#" class="btn btn--ghost">DOWNLOAD CV</a>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       STATS STRIP
+       A quick snapshot of what's in the portfolio.
+       Update these numbers as you add more work.
+  ════════════════════════════════════════════════════════════ -->
+  <section class="stats" aria-label="Portfolio at a glance">
+    <div class="stats__item">
+      <div class="stats__number">6+</div>
+      <div class="stats__label">Projects</div>
+    </div>
+    <div class="stats__item">
+      <div class="stats__number">3</div>
+      <div class="stats__label">AutoCAD drawings</div>
+    </div>
+    <div class="stats__item">
+      <div class="stats__number">4</div>
+      <div class="stats__label">Technical articles</div>
+    </div>
+    <div class="stats__item">
+      <div class="stats__number">2</div>
+      <div class="stats__label">Video productions</div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       NAVIGATION CARD GRID
+       Six cards, one per section of the site.
+       The hover arrow and background glow are handled by CSS.
+  ════════════════════════════════════════════════════════════ -->
+  <section aria-label="Site sections">
+
+    <div class="container" style="padding-top: 32px; padding-bottom: 8px;">
+      <p class="section-label">// navigate</p>
+    </div>
+
+    <!--
+      LEARNING NOTE — why no .container wrapper here?
+      The nav-grid bleeds edge-to-edge intentionally. The cards
+      stretch the full width of the page, divided by hairline
+      borders. This is a deliberate layout choice.
+    -->
+    <div class="nav-grid">
+
+      <a href="about.html" class="nav-card">
+        <div class="nav-card__tag">01 / ABOUT</div>
+        <div class="nav-card__title">Background</div>
+        <div class="nav-card__desc">Education, career goals & downloadable CV</div>
+        <span class="nav-card__arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a href="projects.html" class="nav-card">
+        <div class="nav-card__tag">02 / PROJECTS</div>
+        <div class="nav-card__title">Technical work</div>
+        <div class="nav-card__desc">AutoCAD drawings, illumination calcs, final year project</div>
+        <span class="nav-card__arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a href="skills.html" class="nav-card">
+        <div class="nav-card__tag">03 / SKILLS</div>
+        <div class="nav-card__title">Capabilities</div>
+        <div class="nav-card__desc">EE core knowledge, software tools & transferable skills</div>
+        <span class="nav-card__arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a href="articles.html" class="nav-card">
+        <div class="nav-card__tag">04 / ARTICLES</div>
+        <div class="nav-card__title">Documentation</div>
+        <div class="nav-card__desc">Technical proposals, write-ups & this site's build log</div>
+        <span class="nav-card__arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a href="media.html" class="nav-card">
+        <div class="nav-card__tag">05 / MEDIA</div>
+        <div class="nav-card__title">Video & visuals</div>
+        <div class="nav-card__desc">Final year project video and edited productions</div>
+        <span class="nav-card__arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a href="contact.html" class="nav-card">
+        <div class="nav-card__tag">06 / CONTACT</div>
+        <div class="nav-card__title">Get in touch</div>
+        <div class="nav-card__desc">LinkedIn, GitHub, email & contact form</div>
+        <span class="nav-card__arrow" aria-hidden="true">↗</span>
+      </a>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOOTER
+       Shared across all pages. Copy this block to every file.
+  ════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+
+      <span class="footer__left">
+        PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS
+      </span>
+
+      <span class="footer__right">
+        <span class="footer__pulse" aria-hidden="true"></span>
+        OPEN TO OPPORTUNITIES
+      </span>
+
+    </div>
+  </footer>
+
+
+  <!--
+    LEARNING NOTE — scripts at the bottom:
+    We load JavaScript at the very end of <body>, not in <head>.
+    This means the browser renders the HTML first (so the page
+    appears fast), then loads the script. The script looks for
+    elements in the DOM — those elements must exist before the
+    script runs, which is guaranteed by placing it here.
+  -->
+  <script src="js/main.js"></script>
+
+</body>
+</html>

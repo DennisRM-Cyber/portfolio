@@ -1,0 +1,610 @@
+/* ============================================================
+   PORTFOLIO — ELECTRICAL ENGINEER
+   style.css  |  shared across all pages
+   
+   Design language: Technical Blueprint
+   - Background:  #0a0f1e  (deep navy)
+   - Grid lines:  amber at 6% opacity
+   - Accent:      #DAA520  (engineering amber / gold)
+   - Text:        #ffffff  (primary)  /  rgba(255,255,255,0.55)  (secondary)
+   - Mono font:   JetBrains Mono  (labels, nav, tags)
+   - Display font: Syne  (headings)
+   ============================================================ */
+
+
+/* ── 1. GOOGLE FONTS ──────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap');
+
+
+/* ── 2. CSS CUSTOM PROPERTIES (design tokens) ─────────────── */
+:root {
+  --navy:        #0a0f1e;
+  --navy-light:  #111827;
+  --amber:       #DAA520;
+  --amber-dim:   rgba(218, 165, 32, 0.15);
+  --amber-glow:  rgba(218, 165, 32, 0.06);
+  --white:       #ffffff;
+  --text-primary:   rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.50);
+  --text-muted:     rgba(255, 255, 255, 0.28);
+  --border:      rgba(218, 165, 32, 0.18);
+  --border-faint: rgba(218, 165, 32, 0.08);
+
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-display: 'Syne', sans-serif;
+
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg: 12px;
+
+  --max-width: 1100px;
+  --nav-height: 56px;
+}
+
+
+/* ── 3. RESET & BASE ──────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--navy);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.7;
+  min-height: 100vh;
+
+  /* Engineering grid background — the signature look */
+  background-image:
+    linear-gradient(rgba(218,165,32,0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(218,165,32,0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+
+/* ── 4. LAYOUT HELPERS ────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* The blueprint corner-marks that appear on every page */
+.page-frame::before,
+.page-frame::after {
+  content: '';
+  position: fixed;
+  width: 18px;
+  height: 18px;
+  border-color: var(--amber);
+  border-style: solid;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 100;
+}
+.page-frame::before {
+  top: 12px; left: 12px;
+  border-width: 1.5px 0 0 1.5px;
+}
+.page-frame::after {
+  bottom: 12px; right: 12px;
+  border-width: 0 1.5px 1.5px 0;
+}
+
+
+/* ── 5. NAVIGATION ────────────────────────────────────────── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--nav-height);
+  border-bottom: 0.5px solid var(--border);
+  background-color: rgba(10, 15, 30, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* Logo — monospaced, amber */
+.nav__logo {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+}
+.nav__logo span {
+  color: rgba(218, 165, 32, 0.4);
+}
+
+/* Nav links */
+.nav__links {
+  display: flex;
+  gap: 28px;
+}
+
+.nav__links a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.nav__links a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--amber);
+  transition: width 0.2s;
+}
+
+.nav__links a:hover,
+.nav__links a.active {
+  color: var(--amber);
+}
+
+.nav__links a:hover::after,
+.nav__links a.active::after {
+  width: 100%;
+}
+
+/* Hamburger — hidden on desktop, shown on mobile */
+.nav__toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 4px;
+}
+.nav__toggle span {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  background: var(--amber);
+  transition: all 0.25s;
+}
+
+
+/* ── 6. BUTTONS ───────────────────────────────────────────── */
+.btn {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding: 12px 24px;
+  transition: all 0.2s;
+}
+
+.btn--primary {
+  background: var(--amber);
+  color: var(--navy);
+  font-weight: 500;
+}
+.btn--primary:hover {
+  background: #c8940e;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 0.5px solid rgba(255, 255, 255, 0.22);
+}
+.btn--ghost:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+
+/* ── 7. PAGE HERO ─────────────────────────────────────────── */
+.hero {
+  padding: 80px 0 64px;
+  position: relative;
+}
+
+/* Circuit-trace SVG decoration — positioned top-right */
+.hero__trace {
+  position: absolute;
+  top: 0;
+  right: 0;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.hero__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--amber);
+  letter-spacing: 0.22em;
+  margin-bottom: 20px;
+  opacity: 0.85;
+}
+
+.hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 6vw, 72px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.hero__title em {
+  color: var(--amber);
+  font-style: normal;
+}
+
+.hero__subtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 24px;
+}
+
+.hero__desc {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 460px;
+  line-height: 1.75;
+  margin-bottom: 36px;
+}
+
+.hero__actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+
+/* ── 8. STAT STRIP ────────────────────────────────────────── */
+.stats {
+  border-top: 0.5px solid var(--border);
+  border-bottom: 0.5px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.stats__item {
+  padding: 20px 32px;
+  border-right: 0.5px solid var(--border);
+}
+.stats__item:last-child {
+  border-right: none;
+}
+
+.stats__number {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--amber);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stats__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+
+/* ── 9. SECTION LABELS ────────────────────────────────────── */
+/* The // prefix labels that appear throughout the site */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--amber);
+  letter-spacing: 0.22em;
+  opacity: 0.7;
+  margin-bottom: 12px;
+}
+
+
+/* ── 10. NAV CARD GRID (homepage) ─────────────────────────── */
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 0.5px solid var(--border-faint);
+  margin-top: 0;
+}
+
+.nav-card {
+  padding: 28px 28px 24px;
+  border-right: 0.5px solid var(--border-faint);
+  border-bottom: 0.5px solid var(--border-faint);
+  transition: background 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+.nav-card:nth-child(3n) {
+  border-right: none;
+}
+.nav-card:hover {
+  background: var(--amber-glow);
+}
+.nav-card:hover .nav-card__arrow {
+  opacity: 1;
+  transform: translate(3px, -3px);
+}
+
+.nav-card__tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--amber);
+  letter-spacing: 0.2em;
+  opacity: 0.65;
+  margin-bottom: 12px;
+}
+
+.nav-card__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.nav-card__desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.nav-card__arrow {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  font-size: 16px;
+  color: var(--amber);
+  opacity: 0;
+  transition: all 0.18s;
+}
+
+
+/* ── 11. FOOTER ───────────────────────────────────────────── */
+.footer {
+  border-top: 0.5px solid var(--border);
+  padding: 16px 0;
+}
+
+.footer__inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer__left,
+.footer__right {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 0.12em;
+}
+
+.footer__pulse {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  margin-right: 8px;
+  animation: pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50%       { opacity: 0.3; transform: scale(0.65); }
+}
+
+
+/* ── 12. GENERIC CONTENT SECTIONS ─────────────────────────── */
+/* Used on inner pages */
+.section {
+  padding: 64px 0;
+  border-bottom: 0.5px solid var(--border-faint);
+}
+
+.section__header {
+  margin-bottom: 40px;
+}
+
+.section__title {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.1;
+}
+
+/* Card used on Projects, Articles pages */
+.card {
+  background: var(--navy-light);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.card:hover {
+  border-color: rgba(218, 165, 32, 0.45);
+  background: rgba(17, 24, 39, 0.9);
+}
+
+.card__tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--amber);
+  letter-spacing: 0.18em;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.card__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.card__desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.card__link {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--amber);
+  letter-spacing: 0.12em;
+  transition: opacity 0.15s;
+}
+.card__link:hover {
+  opacity: 0.7;
+}
+
+
+/* ── 13. SKILL BARS (for skills page) ─────────────────────── */
+.skill-bar__label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.skill-bar__track {
+  height: 3px;
+  background: var(--amber-dim);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.skill-bar__fill {
+  height: 100%;
+  background: var(--amber);
+  border-radius: 2px;
+  /* Width set inline per skill. Animates on page load via JS */
+  width: 0;
+  transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+
+/* ── 14. RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 20px;
+  }
+
+  /* Stack nav links into a dropdown */
+  .nav__links {
+    display: none;
+    position: absolute;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 0;
+    background: var(--navy);
+    border-bottom: 0.5px solid var(--border);
+    padding: 12px 0;
+  }
+  .nav__links.open {
+    display: flex;
+  }
+  .nav__links a {
+    padding: 12px 24px;
+    font-size: 11px;
+  }
+  .nav__toggle {
+    display: flex;
+  }
+
+  /* Stats become 2-column on mobile */
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stats__item:nth-child(2) {
+    border-right: none;
+  }
+
+  /* Nav cards become single column */
+  .nav-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .nav-card:nth-child(2n) {
+    border-right: none;
+  }
+  .nav-card:nth-child(3n) {
+    border-right: 0.5px solid var(--border-faint);
+  }
+
+  .hero {
+    padding: 48px 0 40px;
+  }
+
+  .hero__title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-grid {
+    grid-template-columns: 1fr;
+  }
+  .nav-card {
+    border-right: none;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero__actions {
+    flex-direction: column;
+  }
+  .btn {
+    text-align: center;
+  }
+}
