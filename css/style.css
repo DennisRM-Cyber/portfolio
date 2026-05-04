@@ -13,23 +13,31 @@
 
 
 /* ── 1. GOOGLE FONTS ──────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap');
+/*
+  Three fonts in play:
+  - Space Grotesk:  YOUR NAME — geometric, technical, memorable
+  - Syne:           subheadings and body display text
+  - JetBrains Mono: labels, nav, tags, code-style elements
+*/
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap');
 
 
 /* ── 2. CSS CUSTOM PROPERTIES (design tokens) ─────────────── */
 :root {
-  --navy:        #0a0f1e;
-  --navy-light:  #111827;
-  --amber:       #DAA520;
-  --amber-dim:   rgba(218, 165, 32, 0.15);
-  --amber-glow:  rgba(218, 165, 32, 0.06);
+  --navy:        #080d1a;
+  --navy-light:  #0f1729;
+  --amber:       #F0A500;           /* brighter amber — more energy */
+  --amber-dim:   rgba(240, 165, 0, 0.18);
+  --amber-glow:  rgba(240, 165, 0, 0.07);
+  --amber-vivid: rgba(240, 165, 0, 0.22);
   --white:       #ffffff;
-  --text-primary:   rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.50);
-  --text-muted:     rgba(255, 255, 255, 0.28);
-  --border:      rgba(218, 165, 32, 0.18);
-  --border-faint: rgba(218, 165, 32, 0.08);
+  --text-primary:   rgba(255, 255, 255, 0.93);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted:     rgba(255, 255, 255, 0.32);
+  --border:      rgba(240, 165, 0, 0.22);
+  --border-faint: rgba(240, 165, 0, 0.10);
 
+  --font-name:    'Space Grotesk', sans-serif;   /* your name only */
   --font-mono:    'JetBrains Mono', monospace;
   --font-display: 'Syne', sans-serif;
 
@@ -37,7 +45,7 @@
   --radius-md:  8px;
   --radius-lg: 12px;
 
-  --max-width: 1100px;
+  --max-width: 1200px;   /* wider for large screens / TVs */
   --nav-height: 56px;
 }
 
@@ -61,11 +69,18 @@ body {
   line-height: 1.7;
   min-height: 100vh;
 
-  /* Engineering grid background — the signature look */
+  /*
+    VIBRANT BACKGROUND — three layers stacked:
+    1. Radial amber glow centred top-left (hero area warmth)
+    2. Horizontal grid lines — amber, more visible than before
+    3. Vertical grid lines — amber
+    Each layer composites on top of the next.
+  */
   background-image:
-    linear-gradient(rgba(218,165,32,0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(218,165,32,0.055) 1px, transparent 1px);
-  background-size: 28px 28px;
+    radial-gradient(ellipse 80vw 60vh at 10% 0%, rgba(240,165,0,0.09) 0%, transparent 70%),
+    linear-gradient(rgba(240,165,0,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(240,165,0,0.08) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
 }
 
 a {
@@ -93,9 +108,16 @@ button {
 /* ── 4. LAYOUT HELPERS ────────────────────────────────────── */
 .container {
   width: 100%;
-  max-width: var(--max-width);
+  /*
+    clamp(min, preferred, max):
+    - Never narrower than 320px (tiny phones)
+    - Prefers 90% of viewport width (scales fluidly)
+    - Never wider than 1200px (ultrawide / TV screens)
+    This single rule handles phones → tablets → desktops → 4K TVs.
+  */
+  max-width: clamp(320px, 90vw, var(--max-width));
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 clamp(16px, 4vw, 48px); /* padding also scales with screen */
 }
 
 /* The blueprint corner-marks that appear on every page */
@@ -260,7 +282,7 @@ button {
 
 .hero__title {
   font-family: var(--font-display);
-  font-size: clamp(42px, 6vw, 72px);
+  font-size: clamp(38px, 6vw, 76px);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.02em;
@@ -268,9 +290,39 @@ button {
   margin-bottom: 8px;
 }
 
+/*
+  Your NAME gets its own font — Space Grotesk.
+  Bolder, wider, more geometric than Syne.
+  Commanding presence. Stands apart from the title line.
+*/
+.hero__name {
+  font-family: var(--font-name);
+  font-size: clamp(44px, 7vw, 88px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--white);
+  display: block;
+  /*
+    Subtle text shadow — gives depth against the dark background.
+    Makes the name feel like it's lit from within.
+  */
+  text-shadow: 0 0 60px rgba(240,165,0,0.15), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/*
+  "Electrical Engineer" — amber, elegant, slightly lighter weight.
+  Uses Syne (the body display font) so it contrasts with the name.
+*/
 .hero__title em {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 700;
   color: var(--amber);
   font-style: normal;
+  display: block;
+  margin-top: 6px;
+  letter-spacing: -0.01em;
 }
 
 .hero__subtitle {
@@ -531,7 +583,140 @@ button {
 }
 
 
-/* ── 14. RESPONSIVE ───────────────────────────────────────── */
+/* ── 15. ADD-EXPERIENCE CARD ──────────────────────────────── 
+   The expandable placeholder card that appears at the end of
+   every section grid (Projects, Articles, Media, etc.)
+   Clicking it in future versions will open an add form.
+   For now it's a visual placeholder — styled as a dashed outline.
+──────────────────────────────────────────────────────────── */
+.card--add {
+  background: transparent;
+  border: 1.5px dashed rgba(240, 165, 0, 0.25);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  gap: 10px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+  text-align: center;
+}
+.card--add:hover {
+  border-color: var(--amber);
+  background: var(--amber-glow);
+}
+
+.card--add__icon {
+  font-size: 24px;
+  color: var(--amber);
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  line-height: 1;
+}
+.card--add:hover .card--add__icon {
+  opacity: 1;
+}
+
+.card--add__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.18em;
+  transition: color 0.2s;
+}
+.card--add:hover .card--add__label {
+  color: var(--amber);
+}
+
+
+/* ── 16. LARGE SCREENS: TABLETS, TVs, ULTRAWIDE ───────────── */
+
+/* Tablet landscape & small desktop (769px – 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .nav-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Large desktop (1280px – 1920px — standard monitors) */
+@media (min-width: 1280px) {
+  .hero__desc {
+    max-width: 560px;
+    font-size: 16px;
+  }
+  .nav-card {
+    padding: 36px 32px 30px;
+  }
+  .stats__item {
+    padding: 24px 40px;
+  }
+  .stats__number {
+    font-size: 32px;
+  }
+}
+
+/* TV / ultrawide / HDMI output (1920px+) 
+   
+   LEARNING NOTE:
+   When plugged into a TV via HDMI, the browser viewport is typically
+   1920px wide or more. Without this rule, content would stretch too wide
+   or feel tiny. We scale up typography and lock the max-width.
+*/
+@media (min-width: 1920px) {
+  :root {
+    --max-width: 1400px;   /* wider container for 4K/ultrawide */
+    --nav-height: 68px;
+  }
+  body {
+    font-size: 18px;
+  }
+  .nav__logo {
+    font-size: 14px;
+  }
+  .nav__links a {
+    font-size: 12px;
+    gap: 36px;
+  }
+  .hero__label {
+    font-size: 13px;
+  }
+  .hero__subtitle {
+    font-size: 14px;
+  }
+  .hero__desc {
+    font-size: 18px;
+    max-width: 640px;
+  }
+  .stats__number {
+    font-size: 38px;
+  }
+  .nav-card__title {
+    font-size: 18px;
+  }
+  .nav-card__desc {
+    font-size: 13px;
+  }
+  .btn {
+    font-size: 12px;
+    padding: 14px 32px;
+  }
+}
+
+/* 4K screens (3840px+) */
+@media (min-width: 3840px) {
+  :root {
+    --max-width: 2400px;
+  }
+  html {
+    font-size: 24px; /* base scale up — everything else scales with it */
+  }
+}
 @media (max-width: 768px) {
   .container {
     padding: 0 20px;
