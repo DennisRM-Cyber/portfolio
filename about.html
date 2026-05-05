@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Rubui Mwangi</title>
+  <meta name="description" content="Background, experience and education of Rubui Mwangi — Electrical & Electronics Engineer, JKUAT graduate, Kenya Power attaché, IoT systems builder." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body class="page-frame">
+
+  <!-- ═══════════════════════════════════════════════════════
+       NAVIGATION — identical across all pages
+  ════════════════════════════════════════════════════════════ -->
+  <nav class="nav">
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__logo">
+        <span>// </span>portfolio.ee<span> _</span>
+      </a>
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html">home</a></li>
+        <li><a href="about.html">about</a></li>
+        <li><a href="projects.html">projects</a></li>
+        <li><a href="skills.html">skills</a></li>
+        <li><a href="articles.html">articles</a></li>
+        <li><a href="media.html">media</a></li>
+        <li><a href="contact.html">contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       SCROLL SURFACE — frosted panel over the fixed grid
+  ════════════════════════════════════════════════════════════ -->
+  <div class="scroll-surface">
+    <div class="container">
+
+
+      <!-- ── ABOUT HERO: achievement + photo ────────────────
+           LEARNING NOTE:
+           We lead with the strongest technical proof point,
+           not a personal statement. The photo sits right —
+           recruiters register a face, then read the content.
+      ─────────────────────────────────────────────────────── -->
+      <div class="about-hero">
+
+        <!-- LEFT: content -->
+        <div class="about-hero__content">
+
+          <p class="hero__label">// about</p>
+          <h1 class="hero__title" style="font-size: clamp(32px, 4vw, 52px); margin-bottom: 32px;">
+            Rubui Mwangi
+          </h1>
+
+          <!--
+            KEY ACHIEVEMENT BANNER
+            This is the first thing a recruiter reads.
+            It leads with a tangible result, not a trait.
+            Update this as your career grows — it should always
+            reflect your single most impressive proof point.
+          -->
+          <div class="achievement-banner fade-in">
+            <div class="achievement-banner__label">// strongest proof point</div>
+            <p class="achievement-banner__text">
+              Built a real-time <em>IoT fault detection system</em> from hardware 
+              to cloud — Arduino sensors transmitting live data to Firebase, 
+              visualised on a custom web dashboard. Independently managed the 
+              full stack: firmware, cloud integration, and front-end.
+            </p>
+          </div>
+
+          <!--
+            QUICK FACTS — the at-a-glance panel recruiters scan
+            before deciding whether to read further.
+          -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+
+            <div class="stats__item fade-in" style="padding: 16px 18px;">
+              <div class="stats__label" style="margin-bottom: 4px;">Degree</div>
+              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700; line-height: 1.3;">
+                BSc Electrical &amp; Electronics Engineering
+              </div>
+            </div>
+
+            <div class="stats__item fade-in" style="padding: 16px 18px;">
+              <div class="stats__label" style="margin-bottom: 4px;">University</div>
+              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700; line-height: 1.3;">
+                JKUAT — Graduated Dec 2025
+              </div>
+            </div>
+
+            <div class="stats__item fade-in" style="padding: 16px 18px;">
+              <div class="stats__label" style="margin-bottom: 4px;">Location</div>
+              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700;">
+                Nairobi, Kenya
+              </div>
+            </div>
+
+            <div class="stats__item fade-in" style="padding: 16px 18px;">
+              <div class="stats__label" style="margin-bottom: 4px;">Languages</div>
+              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700;">
+                English · Swahili
+              </div>
+            </div>
+
+          </div>
+
+          <!-- CV download -->
+          <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <!--
+              PERSONALISE: once your CV PDF is in assets/docs/,
+              replace # with:  href="assets/docs/rubui-mwangi-cv.pdf"
+            -->
+            <a href="#" class="btn btn--primary">DOWNLOAD CV</a>
+            <a href="contact.html" class="btn btn--ghost">GET IN TOUCH</a>
+          </div>
+
+        </div><!-- end left -->
+
+        <!-- RIGHT: photo -->
+        <div class="about-hero__photo fade-in">
+          <div class="about-hero__img-wrap">
+            <!--
+              PHOTO INSTRUCTIONS:
+              1. Add your photo to:  assets/images/rubui-mwangi.jpg
+              2. Delete the placeholder div below
+              3. Uncomment this img tag:
+              
+              <img src="assets/images/rubui-mwangi.jpg"
+                   alt="Rubui Mwangi — Electrical Engineer" />
+            -->
+            <div class="about-hero__placeholder">
+              <div class="about-hero__placeholder-icon">◻</div>
+              <div class="about-hero__placeholder-text">
+                PHOTO<br>COMING SOON
+              </div>
+            </div>
+          </div>
+
+          <!-- Availability badge -->
+          <div class="about-hero__badge">
+            <div class="about-hero__badge-dot"></div>
+            <div class="about-hero__badge-text">
+              OPEN TO INTERNSHIP<br>OPPORTUNITIES
+            </div>
+          </div>
+        </div><!-- end right -->
+
+      </div><!-- end about-hero -->
+
+
+      <!-- ── PROFESSIONAL EXPERIENCE ─────────────────────────
+           Three attachments in card layout.
+           Most recent first — Gatundu (2024) is top-left,
+           Ministry (2023) top-right, Kiambu (2022) bottom-left.
+           The add card sits bottom-right.
+
+           HOW TO ADD A NEW ROLE:
+           1. Copy any .exp-card block
+           2. Fill in org, role, meta, and bullet points
+           3. Move the .exp-card--add to the end
+           No backend, no database — just copy, paste, fill.
+      ─────────────────────────────────────────────────────── -->
+
+      <div class="section-divider fade-in">
+        <span class="section-divider__label">// 01 — professional experience</span>
+        <div class="section-divider__line"></div>
+      </div>
+
+      <!-- Top row: 2 cards -->
+      <div class="exp-grid">
+
+        <!-- Kenya Power 2024 — most recent, most senior -->
+        <div class="exp-card fade-in">
+          <div class="exp-card__org">KENYA POWER AND LIGHTING COMPANY</div>
+          <div class="exp-card__role">Operations &amp; Maintenance Attaché</div>
+          <div class="exp-card__meta">May 2024 – July 2024 &nbsp;·&nbsp; Gatundu Branch, Kiambu County</div>
+          <ul class="exp-card__bullets">
+            <li>Executed field repairs on 11kV distribution lines — replacing damaged poles, burnt fuses, and loose transformer connections</li>
+            <li>Assisted in maintenance of switchgear, circuit breakers, and isolators; participated in substation commissioning</li>
+            <li>Contributed to protection DC circuit testing and protection system grading validation</li>
+            <li>Maintained strict safety protocols (Lockout-Tagout, isolation, earthing) and field intervention logs</li>
+          </ul>
+        </div>
+
+        <!-- Ministry of Lands 2023 -->
+        <div class="exp-card fade-in">
+          <div class="exp-card__org">MINISTRY OF LANDS, PUBLIC WORKS, HOUSING &amp; URBAN DEV.</div>
+          <div class="exp-card__role">Electrical Design Attaché</div>
+          <div class="exp-card__meta">May 2023 – July 2023 &nbsp;·&nbsp; Electrical Dept., Hill Plaza, Nairobi</div>
+          <ul class="exp-card__bullets">
+            <li>Developed electrical layouts and single-line diagrams using AutoCAD for government infrastructure projects</li>
+            <li>Conducted load calculations and cable sizing for power and lighting circuits to meet safety compliance</li>
+            <li>Applied interior lighting design considerations across residential and commercial building plans</li>
+            <li>Assisted in fire detection system design and prepared Bills of Quantities (BOQ) for project tendering</li>
+          </ul>
+        </div>
+
+      </div><!-- end top exp-grid -->
+
+      <!-- Bottom row: 1 card + add card -->
+      <div class="exp-grid--bottom">
+
+        <!-- Kenya Power 2022 — earliest -->
+        <div class="exp-card fade-in">
+          <div class="exp-card__org">KENYA POWER AND LIGHTING COMPANY</div>
+          <div class="exp-card__role">Maintenance Attaché</div>
+          <div class="exp-card__meta">May 2022 – July 2022 &nbsp;·&nbsp; Kiambu Town, Northeastern Region</div>
+          <ul class="exp-card__bullets">
+            <li>Maintained detailed logs of field interventions, equipment status, and test results</li>
+            <li>Participated in protection system grading tests — analysed system performance and recommended adjustments</li>
+            <li>Worked closely with field engineers and technicians executing maintenance schedules in fast-paced environments</li>
+          </ul>
+        </div>
+
+        <!--
+          ADD EXPERIENCE CARD
+          When you land an internship or job, copy any exp-card
+          above, fill it in, and delete this add card — then
+          paste a new add card at the end.
+        -->
+        <div class="exp-card exp-card--add fade-in">
+          <div class="exp-card--add__icon">+</div>
+          <div class="exp-card--add__label">ADD EXPERIENCE</div>
+          <div class="exp-card--add__hint">
+            Copy any experience card above,<br>
+            fill in your new role details,<br>
+            and paste it here.
+          </div>
+        </div>
+
+      </div><!-- end bottom exp-grid -->
+
+
+      <!-- ── EDUCATION ─────────────────────────────────────── -->
+      <div class="section-divider fade-in">
+        <span class="section-divider__label">// 02 — education</span>
+        <div class="section-divider__line"></div>
+      </div>
+
+      <div class="edu-block fade-in">
+        <div class="edu-block__degree">
+          Bachelor of Science — Electrical &amp; Electronics Engineering
+        </div>
+        <div class="edu-block__uni">
+          Jomo Kenyatta University of Agriculture and Technology (JKUAT)
+        </div>
+        <div class="edu-block__meta">
+          2020 – 2025 &nbsp;·&nbsp; Main Campus &nbsp;·&nbsp; Graduated 5th December 2025
+        </div>
+        <!--
+          Core modules — add or remove tags to match your transcript.
+          These help keyword-match your profile to job descriptions.
+        -->
+        <div class="edu-block__modules">
+          <span class="edu-block__tag">Power Systems</span>
+          <span class="edu-block__tag">Protection &amp; Control</span>
+          <span class="edu-block__tag">Circuit Theory</span>
+          <span class="edu-block__tag">Electronics</span>
+          <span class="edu-block__tag">Embedded Systems</span>
+          <span class="edu-block__tag">AutoCAD</span>
+          <span class="edu-block__tag">Illumination Design</span>
+          <span class="edu-block__tag">Signal Processing</span>
+          <span class="edu-block__tag">Telecommunications</span>
+          <span class="edu-block__tag">Engineering Mathematics</span>
+          <span class="edu-block__tag">Project Management</span>
+        </div>
+      </div>
+
+
+      <!-- ── KEY PROJECT ────────────────────────────────────── -->
+      <div class="section-divider fade-in">
+        <span class="section-divider__label">// 03 — final year project</span>
+        <div class="section-divider__line"></div>
+      </div>
+
+      <div class="project-highlight fade-in">
+        <div>
+          <div class="project-highlight__label">// KEY PROJECT — DEC 2024 – 2025</div>
+          <div class="project-highlight__title">
+            Power Line Fault Detection &amp; Alert System
+          </div>
+          <p class="project-highlight__desc">
+            Designed and built an IoT-based real-time monitoring system that
+            detects faults on power lines, transmits live sensor data to a
+            Firebase cloud database, and visualises metrics on a custom web
+            dashboard accessible remotely. Independently managed the full
+            project lifecycle — from hardware prototyping and firmware
+            development to cloud integration and front-end delivery.
+          </p>
+          <div class="project-highlight__tags">
+            <span class="project-highlight__tag">Arduino</span>
+            <span class="project-highlight__tag">ESP32</span>
+            <span class="project-highlight__tag">Firebase</span>
+            <span class="project-highlight__tag">IoT</span>
+            <span class="project-highlight__tag">C/C++</span>
+            <span class="project-highlight__tag">Web Dashboard</span>
+            <span class="project-highlight__tag">Real-time Data</span>
+          </div>
+        </div>
+        <!--
+          PERSONALISE: link to your project page or video once built.
+          Replace # with href="projects.html" or href="media.html"
+        -->
+        <a href="projects.html" class="project-highlight__link">
+          VIEW PROJECT →
+        </a>
+      </div>
+
+
+      <!-- Bottom padding inside scroll surface -->
+      <div style="padding-bottom: 56px;"></div>
+
+    </div><!-- end .container -->
+  </div><!-- end .scroll-surface -->
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOOTER — identical across all pages
+  ════════════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__left">
+        PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS
+      </span>
+      <span class="footer__right">
+        <span class="footer__pulse" aria-hidden="true"></span>
+        OPEN TO OPPORTUNITIES
+      </span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+
+</body>
+</html>
