@@ -1,231 +1,300 @@
 /* ============================================================
-   editor.js — Inline Content Editor
+   editor.js — Secured Editor + Owner Controls
    portfolio / Rubui Mwangi
 
-   WHAT THIS DOES:
-   Adds a floating toolbar to every page that lets you:
-   1. Toggle "Edit Mode" — highlights every editable text block
-   2. Click any highlighted block and type your changes directly
-   3. Save — stores all changes in your browser (localStorage)
-   4. Reset — clears saved changes and restores original text
+   HOW IT WORKS:
+   - All .owner-control and .owner-control--block elements are
+     hidden via CSS by default — invisible to every visitor
+   - Secret shortcut Ctrl+Shift+E opens a passphrase prompt
+   - On correct passphrase → edit-mode class added to <body>
+     which reveals ALL owner controls (add buttons, edit toolbar)
+   - Content editing, add cards, and the toolbar are all gated
+     behind the same single authentication
+   - Auto-locks after 30 minutes of inactivity
+   - Session persists across page navigation until tab closes
 
-   HOW CHANGES ARE SAVED:
-   Each editable element needs a unique data-edit-id attribute.
-   When you save, the script reads the text of every element
-   with that attribute and stores it under that ID key.
-   On page load, it reads back and re-applies your saved text.
-
-   LEARNING NOTE — localStorage:
-   localStorage is a browser API that stores key-value pairs
-   permanently on your computer (until you clear browser data).
-   It works offline, needs no server, and persists across sessions.
-   Think of it as a tiny notepad your browser keeps for this site.
-
-   IMPORTANT — this is for LOCAL EDITING ONLY.
-   Changes saved here live in YOUR browser on YOUR computer.
-   To make changes permanent for everyone (like a real visitor),
-   you still need to edit the HTML files and push to GitHub.
-   This tool is for drafting, tweaking tone, and reviewing
-   phrasing before you commit changes to the actual files.
+   FIRST-TIME SETUP:
+   Press Ctrl+Shift+E → set a passphrase (min 6 chars)
+   From then on: Ctrl+Shift+E → enter passphrase → full access
 ============================================================ */
 
+(function initSecuredEditor() {
+  'use strict';
 
-(function initEditor() {
+  const CONFIG = {
+    keyHash:    'pe__auth__hash',
+    keySession: 'pe__auth__session',
+    keyContent: 'pe__content__',
+    timeout:    30 * 60 * 1000   /* 30 minutes */
+  };
 
-  /* ── STEP 1: Build and inject the floating toolbar ───────── */
+  let authenticated = false;
+  let editActive    = false;
+  let sessionTimer  = null;
+  let toolbar       = null;
 
-  const toolbar = document.createElement('div');
-  toolbar.className = 'edit-toolbar';
-  toolbar.setAttribute('role', 'toolbar');
-  toolbar.setAttribute('aria-label', 'Content editor');
+  /* ─── SHA-256 (Web Crypto — built into every modern browser) ─ */
+  async function sha256(str) {
+    const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
 
-  toolbar.innerHTML = `
-    <div class="edit-toolbar__dot" id="edit-dot"></div>
-    <span class="edit-toolbar__label" id="edit-label">EDIT MODE</span>
-    <button class="edit-toolbar__btn edit-toolbar__btn--toggle" id="btn-toggle">
-      ENABLE EDITING
-    </button>
-    <button class="edit-toolbar__btn edit-toolbar__btn--save" id="btn-save">
-      SAVE CHANGES
-    </button>
-    <button class="edit-toolbar__btn edit-toolbar__btn--reset" id="btn-reset">
-      RESET
-    </button>
-  `;
+  /* ─── Session ─────────────────────────────────────────────── */
+  function sessionSave() {
+    sessionStorage.setItem(CONFIG.keySession,
+      JSON.stringify({ expiry: Date.now() + CONFIG.timeout }));
+  }
+  function sessionValid() {
+    try {
+      const s = JSON.parse(sessionStorage.getItem(CONFIG.keySession) || '{}');
+      return s.expiry && Date.now() < s.expiry;
+    } catch { return false; }
+  }
+  function sessionClear() { sessionStorage.removeItem(CONFIG.keySession); }
 
-  document.body.appendChild(toolbar);
+  function resetTimer() {
+    if (!authenticated) return;
+    clearTimeout(sessionTimer);
+    sessionSave();
+    sessionTimer = setTimeout(() => lock('Session timed out.'), CONFIG.timeout);
+  }
 
-  const dot       = document.getElementById('edit-dot');
-  const label     = document.getElementById('edit-label');
-  const btnToggle = document.getElementById('btn-toggle');
-  const btnSave   = document.getElementById('btn-save');
-  const btnReset  = document.getElementById('btn-reset');
+  /* ─── Passphrase ──────────────────────────────────────────── */
+  const hasHash   = ()         => !!localStorage.getItem(CONFIG.keyHash);
+  const saveHash  = async (p)  => localStorage.setItem(CONFIG.keyHash, await sha256(p.trim()));
+  const checkHash = async (p)  => (await sha256(p.trim())) === localStorage.getItem(CONFIG.keyHash);
 
+  /* ─── Modal ───────────────────────────────────────────────── */
+  function showModal(mode) {
+    document.getElementById('pe-modal')?.remove();
+    const setup = mode === 'setup';
+    const el = document.createElement('div');
+    el.id = 'pe-modal';
+    el.style.cssText = [
+      'position:fixed;inset:0;z-index:9999',
+      'background:rgba(5,8,18,0.93)',
+      'backdrop-filter:blur(20px)',
+      '-webkit-backdrop-filter:blur(20px)',
+      'display:flex;align-items:center;justify-content:center',
+      "font-family:'JetBrains Mono',monospace"
+    ].join(';');
 
-  /* ── STEP 2: Track edit mode state ───────────────────────── */
+    el.innerHTML = `
+      <div style="background:rgba(8,13,28,0.99);border:1px solid rgba(240,165,0,0.32);
+        border-radius:18px;padding:36px 40px;width:100%;max-width:400px;position:relative;
+        box-shadow:0 24px 64px rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.05);">
+        <div style="position:absolute;top:0;left:15%;right:15%;height:1px;
+          background:linear-gradient(90deg,transparent,rgba(240,165,0,0.6),transparent)"></div>
 
-  let editMode = false;
+        <div style="font-size:9px;color:rgba(240,165,0,0.7);letter-spacing:.22em;margin-bottom:16px">
+          // editor access
+        </div>
+        <div style="font-size:17px;font-weight:800;color:#fff;font-family:'Syne',sans-serif;margin-bottom:6px">
+          ${setup ? 'Set your passphrase' : 'Enter passphrase'}
+        </div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.38);margin-bottom:24px;line-height:1.6">
+          ${setup
+            ? 'Choose a passphrase to protect the editor.<br>Only the hash is stored — never the passphrase itself.'
+            : 'Editor access is restricted to the site owner.'}
+        </div>
 
-  function enableEditMode() {
-    editMode = true;
-    document.body.classList.add('edit-mode');
+        <input id="pe-p1" type="password" placeholder="${setup ? 'choose a passphrase...' : 'enter passphrase...'}"
+          autocomplete="off"
+          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);
+            border:1px solid rgba(240,165,0,0.25);border-radius:10px;padding:12px 16px;
+            color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;
+            letter-spacing:.08em;outline:none;margin-bottom:8px;transition:border-color .2s" />
 
-    // Make every editable element actually editable
-    getEditables().forEach(el => {
-      el.setAttribute('contenteditable', 'true');
+        ${setup ? `<input id="pe-p2" type="password" placeholder="confirm passphrase..."
+          autocomplete="off"
+          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);
+            border:1px solid rgba(240,165,0,0.25);border-radius:10px;padding:12px 16px;
+            color:#fff;font-family:'JetBrains Mono',monospace;font-size:13px;
+            letter-spacing:.08em;outline:none;margin-bottom:8px" />` : ''}
+
+        <div id="pe-err" style="font-size:10px;color:#f87171;letter-spacing:.1em;
+          min-height:16px;margin-bottom:16px"></div>
+
+        <div style="display:flex;gap:10px">
+          <button id="pe-ok" style="flex:1;background:rgba(240,165,0,1);color:#080d1a;
+            border:none;border-radius:10px;padding:12px;font-family:'JetBrains Mono',monospace;
+            font-size:10px;font-weight:500;letter-spacing:.14em;cursor:pointer">
+            ${setup ? 'SET PASSPHRASE' : 'UNLOCK'}
+          </button>
+          <button id="pe-x" style="background:transparent;color:rgba(255,255,255,.35);
+            border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 18px;
+            font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;cursor:pointer">
+            CANCEL
+          </button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(el);
+
+    const p1  = document.getElementById('pe-p1');
+    const p2  = document.getElementById('pe-p2');
+    const ok  = document.getElementById('pe-ok');
+    const err = document.getElementById('pe-err');
+
+    setTimeout(() => p1.focus(), 60);
+    p1.addEventListener('focus', () => p1.style.borderColor = 'rgba(240,165,0,.65)');
+    p1.addEventListener('blur',  () => p1.style.borderColor = 'rgba(240,165,0,.25)');
+
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  ok.click();
+      if (e.key === 'Escape') el.remove();
     });
+    document.getElementById('pe-x').addEventListener('click', () => el.remove());
 
-    // Update toolbar UI
-    dot.classList.add('active');
-    label.classList.add('active');
-    label.textContent = 'EDITING';
-    btnToggle.textContent = 'STOP EDITING';
-    btnToggle.classList.add('active');
-    btnSave.classList.add('visible');
-    btnReset.classList.add('visible');
-  }
+    ok.addEventListener('click', async () => {
+      const val = p1.value;
+      if (!val || val.length < 6) { err.textContent = 'MINIMUM 6 CHARACTERS'; return; }
 
-  function disableEditMode() {
-    editMode = false;
-    document.body.classList.remove('edit-mode');
-
-    // Remove contenteditable from all elements
-    getEditables().forEach(el => {
-      el.setAttribute('contenteditable', 'false');
-    });
-
-    // Update toolbar UI
-    dot.classList.remove('active');
-    label.classList.remove('active');
-    label.textContent = 'EDIT MODE';
-    btnToggle.textContent = 'ENABLE EDITING';
-    btnToggle.classList.remove('active');
-    btnSave.classList.remove('visible');
-    btnReset.classList.remove('visible');
-  }
-
-  btnToggle.addEventListener('click', function() {
-    if (editMode) {
-      disableEditMode();
-    } else {
-      enableEditMode();
-    }
-  });
-
-
-  /* ── STEP 3: Save changes to localStorage ─────────────────
-     Storage key format:  portfolio__edit__PAGENAME__ELEMENTID
-     This namespacing prevents conflicts between pages.
-  ──────────────────────────────────────────────────────────── */
-
-  // Get the current page name to namespace storage keys
-  const pageName = window.location.pathname.split('/').pop().replace('.html', '') || 'index';
-
-  function storageKey(id) {
-    return 'portfolio__edit__' + pageName + '__' + id;
-  }
-
-  function saveChanges() {
-    let savedCount = 0;
-    getEditables().forEach(function(el) {
-      const id = el.getAttribute('data-edit-id');
-      if (id) {
-        localStorage.setItem(storageKey(id), el.innerHTML);
-        savedCount++;
-      }
-    });
-
-    // Visual feedback on the save button
-    btnSave.textContent = 'SAVED ✓';
-    btnSave.style.background = '#4ade80';
-    setTimeout(function() {
-      btnSave.textContent = 'SAVE CHANGES';
-      btnSave.style.background = '';
-    }, 1800);
-  }
-
-  btnSave.addEventListener('click', saveChanges);
-
-
-  /* ── STEP 4: Load saved changes on page open ─────────────── */
-
-  function loadSavedChanges() {
-    getEditables().forEach(function(el) {
-      const id = el.getAttribute('data-edit-id');
-      if (id) {
-        const saved = localStorage.getItem(storageKey(id));
-        if (saved !== null) {
-          el.innerHTML = saved;
+      if (setup) {
+        if (val !== (p2?.value || '')) { err.textContent = 'PASSPHRASES DO NOT MATCH'; return; }
+        await saveHash(val);
+        el.remove();
+        unlock();
+      } else {
+        ok.textContent = 'CHECKING...'; ok.disabled = true;
+        if (await checkHash(val)) { el.remove(); unlock(); }
+        else {
+          err.textContent = 'INCORRECT PASSPHRASE';
+          p1.value = ''; p1.focus();
+          ok.textContent = 'UNLOCK'; ok.disabled = false;
         }
       }
     });
   }
 
+  /* ─── UNLOCK — grants full owner access ──────────────────── */
+  function unlock() {
+    authenticated = true;
+    editActive    = true;
+    sessionSave();
 
-  /* ── STEP 5: Reset — clear all saved changes ─────────────── */
+    /* edit-mode on <body> reveals ALL owner controls at once:
+       - .owner-control (inline, e.g. edit hints)
+       - .owner-control--block (block, e.g. add cards)
+       - contenteditable highlights
+       - the toolbar itself                                    */
+    document.body.classList.add('edit-mode');
 
-  btnReset.addEventListener('click', function() {
-    const confirmed = window.confirm(
-      'Reset all changes on this page?\n\nThis will restore the original text from your HTML files. ' +
-      'Any edits you saved in the browser will be cleared.'
-    );
-    if (!confirmed) return;
+    if (!toolbar) buildToolbar();
+    toolbar.style.display = 'flex';
 
-    getEditables().forEach(function(el) {
-      const id = el.getAttribute('data-edit-id');
-      if (id) {
-        localStorage.removeItem(storageKey(id));
-      }
-    });
+    // Make every labelled element editable
+    getEditables().forEach(el => el.setAttribute('contenteditable', 'true'));
 
-    // Reload to restore original HTML
-    window.location.reload();
-  });
+    // Load any previously saved edits
+    loadContent();
 
-
-  /* ── STEP 6: Helper — get all editable elements ──────────── */
-
-  function getEditables() {
-    return document.querySelectorAll('[data-edit-id]');
+    // Start inactivity watch
+    ['mousemove','keydown','click','scroll'].forEach(e =>
+      document.addEventListener(e, resetTimer, { passive: true }));
+    resetTimer();
   }
 
+  /* ─── LOCK — removes all owner access ────────────────────── */
+  function lock(msg) {
+    authenticated = false;
+    editActive    = false;
+    clearTimeout(sessionTimer);
+    sessionClear();
 
-  /* ── STEP 7: Auto-save when user leaves the page ─────────── 
-     If editing is active and the user navigates away,
-     save automatically so no changes are lost.
-  ──────────────────────────────────────────────────────────── */
+    document.body.classList.remove('edit-mode');
+    if (toolbar) toolbar.style.display = 'none';
+    getEditables().forEach(el => el.setAttribute('contenteditable', 'false'));
 
-  window.addEventListener('beforeunload', function() {
-    if (editMode) {
-      saveChanges();
+    ['mousemove','keydown','click','scroll'].forEach(e =>
+      document.removeEventListener(e, resetTimer));
+
+    if (msg) {
+      const note = Object.assign(document.createElement('div'), { textContent: msg });
+      note.style.cssText = [
+        'position:fixed;bottom:80px;left:50%;transform:translateX(-50%)',
+        'background:rgba(8,13,28,.97);border:1px solid rgba(240,165,0,.3)',
+        'border-radius:30px;padding:10px 22px',
+        "font-family:'JetBrains Mono',monospace;font-size:10px",
+        'color:rgba(240,165,0,.85);letter-spacing:.12em',
+        'z-index:300;pointer-events:none'
+      ].join(';');
+      document.body.appendChild(note);
+      setTimeout(() => note.remove(), 3500);
     }
-  });
+  }
 
+  /* ─── TOOLBAR ─────────────────────────────────────────────── */
+  function buildToolbar() {
+    toolbar = document.createElement('div');
+    toolbar.className = 'edit-toolbar';
+    toolbar.style.display = 'none';
+    toolbar.innerHTML = `
+      <div class="edit-toolbar__dot active" id="et-dot"></div>
+      <span class="edit-toolbar__label active" id="et-lbl">OWNER MODE</span>
+      <button class="edit-toolbar__btn edit-toolbar__btn--save visible" id="et-save">SAVE</button>
+      <button class="edit-toolbar__btn edit-toolbar__btn--reset visible" id="et-reset">RESET PAGE</button>
+      <button class="edit-toolbar__btn edit-toolbar__btn--reset visible" id="et-lock" style="margin-left:4px">LOCK</button>`;
+    document.body.appendChild(toolbar);
 
-  /* ── STEP 8: Load saved content immediately on page load ──── */
+    document.getElementById('et-save').addEventListener('click', saveContent);
+    document.getElementById('et-reset').addEventListener('click', resetContent);
+    document.getElementById('et-lock').addEventListener('click', () => lock('Editor locked.'));
+  }
 
-  // Small delay ensures DOM is fully ready
-  setTimeout(loadSavedChanges, 50);
+  /* ─── CONTENT persistence ─────────────────────────────────── */
+  const page       = window.location.pathname.split('/').pop().replace('.html','') || 'index';
+  const cKey       = id  => CONFIG.keyContent + page + '__' + id;
+  const getEditables = () => document.querySelectorAll('[data-edit-id]');
 
+  function saveContent() {
+    getEditables().forEach(el => {
+      const id = el.dataset.editId;
+      if (id) localStorage.setItem(cKey(id), el.innerHTML);
+    });
+    const btn = document.getElementById('et-save');
+    if (btn) {
+      btn.textContent = 'SAVED ✓'; btn.style.background = '#4ade80';
+      setTimeout(() => { btn.textContent = 'SAVE'; btn.style.background = ''; }, 1800);
+    }
+  }
 
-  /* ── STEP 9: Keyboard shortcut — Ctrl+E to toggle edit mode ─ */
+  function loadContent() {
+    getEditables().forEach(el => {
+      const id = el.dataset.editId;
+      if (id) { const s = localStorage.getItem(cKey(id)); if (s !== null) el.innerHTML = s; }
+    });
+  }
 
-  document.addEventListener('keydown', function(e) {
-    // Ctrl+E (Windows/Linux) or Cmd+E (Mac)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-      e.preventDefault(); // stop browser's default Ctrl+E
-      if (editMode) {
-        disableEditMode();
+  function resetContent() {
+    if (!confirm('Reset all saved edits on this page?\nOriginal HTML text will be restored.')) return;
+    getEditables().forEach(el => { const id = el.dataset.editId; if (id) localStorage.removeItem(cKey(id)); });
+    window.location.reload();
+  }
+
+  /* ─── SECRET SHORTCUT: Ctrl+Shift+E ──────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+      e.preventDefault();
+      if (authenticated) {
+        // Toggle toolbar visibility while staying unlocked
+        toolbar.style.display = toolbar.style.display === 'none' ? 'flex' : 'none';
+      } else if (sessionValid()) {
+        unlock();   // Silent restore — session still alive from another page
       } else {
-        enableEditMode();
+        showModal(hasHash() ? 'verify' : 'setup');
       }
     }
-    // Ctrl+S to save while in edit mode
-    if ((e.ctrlKey || e.metaKey) && e.key === 's' && editMode) {
-      e.preventDefault();
-      saveChanges();
+    // Ctrl+S saves while unlocked
+    if ((e.ctrlKey || e.metaKey) && e.key === 's' && authenticated) {
+      e.preventDefault(); saveContent();
     }
   });
 
+  /* ─── Auto-save on page navigation ───────────────────────── */
+  window.addEventListener('beforeunload', () => { if (authenticated) saveContent(); });
 
-})(); // end initEditor
+  /* ─── Restore session silently on page load ──────────────── */
+  if (sessionValid()) setTimeout(unlock, 80);
+
+})();
