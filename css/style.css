@@ -70,17 +70,46 @@ body {
   min-height: 100vh;
 
   /*
-    VIBRANT BACKGROUND — three layers stacked:
-    1. Radial amber glow centred top-left (hero area warmth)
-    2. Horizontal grid lines — amber, more visible than before
-    3. Vertical grid lines — amber
-    Each layer composites on top of the next.
+    STATIC BACKGROUND — fixed to the viewport, never scrolls.
+    Content floats above it as you scroll through the page.
+    Three layers:
+    1. Deep radial amber glow — warmth behind the hero
+    2. Secondary glow bottom-right — balances the composition  
+    3. Engineering grid — the signature blueprint texture
   */
+  background-attachment: fixed;
   background-image:
-    radial-gradient(ellipse 80vw 60vh at 10% 0%, rgba(240,165,0,0.09) 0%, transparent 70%),
-    linear-gradient(rgba(240,165,0,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(240,165,0,0.08) 1px, transparent 1px);
-  background-size: 100% 100%, 28px 28px, 28px 28px;
+    radial-gradient(ellipse 70vw 55vh at 8% 5%,  rgba(240,165,0,0.11) 0%, transparent 65%),
+    radial-gradient(ellipse 50vw 40vh at 92% 90%, rgba(240,165,0,0.06) 0%, transparent 60%),
+    linear-gradient(rgba(240,165,0,0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(240,165,0,0.09) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+}
+
+/*
+  SCROLL SURFACE — the translucent frosted panel that lifts off
+  the fixed grid background. Scrolls normally while the grid stays locked.
+  
+  Think of it like a glass control panel sitting above graph paper.
+  Rounded corners on top give it a "card lifted from the surface" feel.
+*/
+.scroll-surface {
+  background: rgba(6, 10, 22, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* Rounded top corners — the panel lifts cleanly off the grid */
+  border-radius: 24px 24px 0 0;
+  border: 1px solid rgba(240, 165, 0, 0.14);
+  border-bottom: none;
+  /* Horizontal margin — the panel doesn't go full-width, grid peeks at sides */
+  margin: 0 clamp(12px, 3vw, 48px);
+  position: relative;
+  z-index: 1;
+  /* Inner top glow — makes it feel lit from above */
+  box-shadow:
+    inset 0 1px 0 rgba(240,165,0,0.12),
+    inset 0 0 80px rgba(240,165,0,0.03),
+    0 -4px 40px rgba(0,0,0,0.5);
 }
 
 a {
@@ -115,9 +144,14 @@ button {
     - Never wider than 1200px (ultrawide / TV screens)
     This single rule handles phones → tablets → desktops → 4K TVs.
   */
-  max-width: clamp(320px, 90vw, var(--max-width));
+  max-width: clamp(320px, 82vw, var(--max-width));
   margin: 0 auto;
-  padding: 0 clamp(16px, 4vw, 48px); /* padding also scales with screen */
+  /*
+    Horizontal padding ensures content never touches the window edge.
+    clamp scales it: 24px on small phones → 5% of viewport → 64px max.
+    Font sizes are NOT affected — this only moves the content inward.
+  */
+  padding: 0 clamp(24px, 5vw, 64px);
 }
 
 /* The blueprint corner-marks that appear on every page */
@@ -138,8 +172,8 @@ button {
   border-width: 1.5px 0 0 1.5px;
 }
 .page-frame::after {
-  bottom: 19px; right: 19px;
-  border-width: 0 1.9px 1.9px 0;
+  bottom: 12px; right: 12px;
+  border-width: 0 1.5px 1.5px 0;
 }
 
 
@@ -170,7 +204,7 @@ button {
   letter-spacing: 0.08em;
 }
 .nav__logo span {
-  color: rgba(230, 187, 81, 0.4);
+  color: rgba(218, 165, 32, 0.4);
 }
 
 /* Nav links */
@@ -350,18 +384,39 @@ button {
 
 /* ── 8. STAT STRIP ────────────────────────────────────────── */
 .stats {
-  border-top: 0.5px solid var(--border);
-  border-bottom: 0.5px solid var(--border);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 32px 0 28px;
 }
 
 .stats__item {
-  padding: 20px 32px;
-  border-right: 0.5px solid var(--border);
+  padding: 22px 24px;
+  background: rgba(15, 23, 41, 0.70);
+  border: 1px solid rgba(240, 165, 0, 0.20);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.22s, background 0.22s, transform 0.22s, box-shadow 0.22s;
+  position: relative;
+  overflow: hidden;
 }
-.stats__item:last-child {
-  border-right: none;
+/* Amber hairline across the top of each stat card */
+.stats__item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  opacity: 0.6;
+}
+.stats__item:hover {
+  border-color: rgba(240, 165, 0, 0.55);
+  background: rgba(20, 32, 58, 0.85);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,0.35),
+    0 0 0 1px rgba(240,165,0,0.10);
 }
 
 .stats__number {
@@ -396,23 +451,65 @@ button {
 .nav-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  border-top: 0.5px solid var(--border-faint);
-  margin-top: 0;
+  gap: 14px;
+  padding: 0 0 48px;
 }
 
 .nav-card {
-  padding: 28px 28px 24px;
-  border-right: 0.5px solid var(--border-faint);
-  border-bottom: 0.5px solid var(--border-faint);
-  transition: background 0.18s;
+  padding: 30px 28px 26px;
+  background: rgba(10, 16, 34, 0.75);
+  border: 1px solid rgba(240, 165, 0, 0.18);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.25s, border-color 0.25s, transform 0.25s, box-shadow 0.25s;
   position: relative;
   overflow: hidden;
+  text-decoration: none;
+  display: block;
+  /*
+    Layered shadow:
+    - Inner top highlight = light catching the top edge of the card
+    - Drop shadow = card floating above the panel surface
+  */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 2px 16px rgba(0,0,0,0.28);
 }
-.nav-card:nth-child(3n) {
-  border-right: none;
+
+/* Ambient radial glow in bottom-left — appears on hover */
+.nav-card::before {
+  content: '';
+  position: absolute;
+  bottom: -30px; left: -30px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240,165,0,0.14) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s;
 }
+/* Thin amber accent line across top of card */
+.nav-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240,165,0,0.5), transparent);
+  border-radius: 0 0 1px 1px;
+}
+
 .nav-card:hover {
-  background: var(--amber-glow);
+  background: rgba(18, 28, 54, 0.92);
+  border-color: rgba(240, 165, 0, 0.48);
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 12px 36px rgba(0,0,0,0.40),
+    0 0 0 1px rgba(240,165,0,0.10);
+}
+.nav-card:hover::before {
+  opacity: 1;
 }
 .nav-card:hover .nav-card__arrow {
   opacity: 1;
@@ -749,41 +846,29 @@ button {
   /* Stats become 2-column on mobile */
   .stats {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .stats__item:nth-child(2) {
-    border-right: none;
+    gap: 10px;
   }
 
-  /* Nav cards become single column */
+  /* Nav cards become 2-column on tablet */
   .nav-grid {
     grid-template-columns: 1fr 1fr;
-  }
-  .nav-card:nth-child(2n) {
-    border-right: none;
-  }
-  .nav-card:nth-child(3n) {
-    border-right: 0.5px solid var(--border-faint);
+    gap: 10px;
   }
 
   .hero {
-    padding: 48px 0 40px;
-  }
-
-  .hero__title {
-    font-size: 36px;
+    padding: 48px 0 32px;
   }
 }
 
 @media (max-width: 480px) {
   .nav-grid {
     grid-template-columns: 1fr;
-  }
-  .nav-card {
-    border-right: none;
+    gap: 10px;
   }
 
   .stats {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .hero__actions {
