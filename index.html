@@ -105,10 +105,10 @@
       </p>
 
       <p class="hero__desc">
-        Electrical engineering graduate with practical experience in power systems maintenance, 
-        AutoCAD electrical design, and embedded systems prototyping. Skilled in Arduino/ESP32 
-        programming, circuit simulation, and building IoT monitoring solutions. Combines hands-on field
-        exposure from three industry attachments with strong documentation and problem-solving abilities.
+        Maintained live 11kV infrastructure at Kenya Power, designed electrical
+        layouts for government buildings, and built a cloud-connected fault
+        detection system from scratch. Three years of real field and design
+        experience — all documented here.
       </p>
 
       <div class="hero__actions">
@@ -209,10 +209,10 @@
             <span class="nav-card__arrow" aria-hidden="true">↗</span>
           </a>
 
-          <!-- ADD-EXPERIENCE PLACEHOLDER -->
-          <div class="nav-card card--add" title="More sections coming as your career grows">
+          <!-- ADD-EXPERIENCE PLACEHOLDER — owner only -->
+          <div class="nav-card card--add owner-only" title="Add a new section">
             <div class="card--add__icon">+</div>
-            <div class="card--add__label">MORE COMING SOON</div>
+            <div class="card--add__label">ADD SECTION</div>
           </div>
 
         </div><!-- end .nav-grid -->
@@ -250,7 +250,23 @@
     elements in the DOM — those elements must exist before the
     script runs, which is guaranteed by placing it here.
   -->
+  <!-- Passphrase lock overlay — MUST be before editor.js -->
+  <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
+    <div class="lock-modal">
+      <div class="lock-modal__label">// owner access</div>
+      <div class="lock-modal__title">Unlock editing</div>
+      <div class="lock-modal__hint">Enter your passphrase to reveal add/edit controls and enable content editing.</div>
+      <input class="lock-modal__input" id="lock-input" type="password" placeholder="passphrase" autocomplete="off" />
+      <div class="lock-modal__actions">
+        <button class="lock-modal__submit" id="lock-submit">UNLOCK</button>
+        <button class="lock-modal__cancel" id="lock-cancel">CANCEL</button>
+      </div>
+      <div class="lock-modal__error" id="lock-error">Incorrect passphrase</div>
+    </div>
+  </div>
+
   <script src="js/main.js"></script>
+  <script src="js/editor.js"></script>
 
 </body>
 </html>

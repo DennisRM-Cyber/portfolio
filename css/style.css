@@ -87,28 +87,19 @@ body {
 }
 
 /*
-  SCROLL SURFACE — the translucent frosted panel that lifts off
-  the fixed grid background. Scrolls normally while the grid stays locked.
-  
-  Think of it like a glass control panel sitting above graph paper.
-  Rounded corners on top give it a "card lifted from the surface" feel.
+  SCROLL SURFACE — now fully transparent.
+  Cards float directly on the raw blueprint grid.
+  No panel, no frosted glass — pure grid visibility.
 */
 .scroll-surface {
-  background: rgba(5, 8, 18, 0.91);  /* deeper — text pops cleanly */
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 24px 24px 0 0;
-  border: 1px solid rgba(240, 165, 0, 0.16);
-  border-bottom: none;
-  /* Horizontal margin — the panel doesn't go full-width, grid peeks at sides */
-  margin: 0 clamp(12px, 3vw, 48px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  margin: 0;
   position: relative;
   z-index: 1;
-  /* Inner top glow — makes it feel lit from above */
-  box-shadow:
-    inset 0 1px 0 rgba(240,165,0,0.12),
-    inset 0 0 80px rgba(240,165,0,0.03),
-    0 -4px 40px rgba(0,0,0,0.5);
+  box-shadow: none;
 }
 
 a {
@@ -391,14 +382,15 @@ button {
 
 .stats__item {
   padding: 22px 24px;
-  background: rgba(15, 23, 41, 0.70);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240, 165, 0, 0.20);
   border-radius: 14px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: border-color 0.22s, background 0.22s, transform 0.22s, box-shadow 0.22s;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.3);
 }
 /* Amber hairline across the top of each stat card */
 .stats__item::before {
@@ -456,24 +448,20 @@ button {
 
 .nav-card {
   padding: 30px 28px 26px;
-  background: rgba(8, 13, 28, 0.88);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240, 165, 0, 0.18);
   border-radius: 18px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: background 0.25s, border-color 0.25s, transform 0.25s, box-shadow 0.25s;
   position: relative;
   overflow: hidden;
   text-decoration: none;
   display: block;
-  /*
-    Layered shadow:
-    - Inner top highlight = light catching the top edge of the card
-    - Drop shadow = card floating above the panel surface
-  */
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.05),
-    0 2px 16px rgba(0,0,0,0.28);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
 }
 
 /* Ambient radial glow in bottom-left — appears on hover */
@@ -1074,7 +1062,7 @@ button {
 }
 
 .exp-card {
-  background: rgba(8, 13, 28, 0.92);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240,165,0,0.18);
   border-radius: 18px;
   padding: 28px 26px 24px;
@@ -1083,7 +1071,8 @@ button {
   transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.04),
-    0 4px 20px rgba(0,0,0,0.25);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
 }
 .exp-card::after {
   content: '';
@@ -1195,7 +1184,7 @@ button {
 
 /* ── EDUCATION BLOCK ──────────────────────────────────────── */
 .edu-block {
-  background: rgba(8, 13, 28, 0.92);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240,165,0,0.18);
   border-radius: 18px;
   padding: 28px 28px 24px;
@@ -1203,7 +1192,8 @@ button {
   overflow: hidden;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.04),
-    0 4px 20px rgba(0,0,0,0.25);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
 }
 .edu-block::after {
   content: '';
@@ -1251,7 +1241,7 @@ button {
 
 /* ── KEY PROJECT HIGHLIGHT ────────────────────────────────── */
 .project-highlight {
-  background: rgba(8, 13, 28, 0.92);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240,165,0,0.18);
   border-radius: 18px;
   padding: 28px 28px 24px;
@@ -1259,7 +1249,8 @@ button {
   overflow: hidden;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.04),
-    0 4px 20px rgba(0,0,0,0.25);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 24px;
@@ -1440,3 +1431,188 @@ button {
 [contenteditable="true"] { outline: none; border-radius: 4px; transition: background 0.18s, box-shadow 0.18s; }
 .edit-mode [contenteditable="true"] { background: rgba(240,165,0,0.06); box-shadow: 0 0 0 1.5px rgba(240,165,0,0.25); cursor: text; position: relative; }
 .edit-mode [contenteditable="true"]:focus { background: rgba(240,165,0,0.10); box-shadow: 0 0 0 2px rgba(240,165,0,0.45); }
+
+
+/* ═══════════════════════════════════════════════════════════
+   OWNER-LOCKED CONTROLS
+   Add/edit controls are hidden by default.
+   They appear only when body has class "owner-unlocked",
+   which editor.js sets after the correct passphrase is entered.
+═══════════════════════════════════════════════════════════ */
+
+/* Lock button — always visible, floats alongside the edit toolbar */
+.lock-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  padding: 10px 16px;
+  background: rgba(5, 8, 18, 0.96);
+  border: 1px solid rgba(240,165,0,0.28);
+  border-radius: 40px;
+  color: var(--amber);
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+  transition: background 0.18s, border-color 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lock-btn:hover {
+  background: rgba(15, 22, 42, 0.98);
+  border-color: var(--amber);
+}
+.lock-btn__icon { font-size: 12px; line-height: 1; }
+body.owner-unlocked .lock-btn { border-color: rgba(74,222,128,0.4); color: #4ade80; }
+
+/* All add-card / owner-only elements: hidden by default */
+.owner-only {
+  display: none !important;
+}
+body.owner-unlocked .owner-only {
+  display: flex !important;
+}
+/* For block-level owner elements that aren't flex */
+body.owner-unlocked .owner-only--block {
+  display: block !important;
+}
+
+/* Lock overlay — the passphrase modal */
+.lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(5, 8, 18, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.lock-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.lock-modal {
+  background: rgba(8, 13, 28, 0.98);
+  border: 1px solid rgba(240,165,0,0.3);
+  border-radius: 20px;
+  padding: 40px 44px;
+  width: min(400px, 90vw);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 24px 64px rgba(0,0,0,0.6);
+  position: relative;
+}
+.lock-modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  opacity: 0.5;
+}
+
+.lock-modal__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--amber);
+  letter-spacing: 0.22em;
+  opacity: 0.75;
+  margin-bottom: 14px;
+}
+.lock-modal__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.lock-modal__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.lock-modal__input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(240,165,0,0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--white);
+  letter-spacing: 0.1em;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  margin-bottom: 12px;
+}
+.lock-modal__input:focus {
+  border-color: var(--amber);
+  background: rgba(240,165,0,0.05);
+}
+.lock-modal__input.error {
+  border-color: #f87171;
+  animation: shake 0.35s ease;
+}
+
+.lock-modal__actions {
+  display: flex;
+  gap: 10px;
+}
+.lock-modal__submit {
+  flex: 1;
+  background: var(--amber);
+  color: var(--navy);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  padding: 11px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.18s;
+}
+.lock-modal__submit:hover { background: #c8940e; }
+.lock-modal__cancel {
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding: 11px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: color 0.18s, border-color 0.18s;
+}
+.lock-modal__cancel:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+
+.lock-modal__error {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #f87171;
+  letter-spacing: 0.1em;
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.lock-modal__error.visible { opacity: 1; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-6px); }
+  75%       { transform: translateX(6px); }
+}

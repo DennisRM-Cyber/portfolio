@@ -134,7 +134,7 @@
           </ul>
         </div>
 
-        <div class="exp-card exp-card--add fade-in">
+        <div class="exp-card exp-card--add owner-only fade-in">
           <div class="exp-card--add__icon">+</div>
           <div class="exp-card--add__label">ADD EXPERIENCE</div>
           <div class="exp-card--add__hint">Copy any experience card above,<br>fill in your new role,<br>and paste it here.</div>
@@ -204,6 +204,21 @@
       <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span>OPEN TO OPPORTUNITIES</span>
     </div>
   </footer>
+
+  <!-- Passphrase lock overlay — MUST be before editor.js -->
+  <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
+    <div class="lock-modal">
+      <div class="lock-modal__label">// owner access</div>
+      <div class="lock-modal__title">Unlock editing</div>
+      <div class="lock-modal__hint">Enter your passphrase to reveal add/edit controls and enable content editing.</div>
+      <input class="lock-modal__input" id="lock-input" type="password" placeholder="passphrase" autocomplete="off" />
+      <div class="lock-modal__actions">
+        <button class="lock-modal__submit" id="lock-submit">UNLOCK</button>
+        <button class="lock-modal__cancel" id="lock-cancel">CANCEL</button>
+      </div>
+      <div class="lock-modal__error" id="lock-error">Incorrect passphrase</div>
+    </div>
+  </div>
 
   <script src="js/main.js"></script>
   <script src="js/editor.js"></script>
