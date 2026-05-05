@@ -88,15 +88,23 @@ body {
 
 /*
   SCROLL SURFACE — now fully transparent.
+<<<<<<< HEAD
   Cards float directly on the fixed blueprint grid.
   The grid stays locked; only the cards scroll.
   Each card carries its own dark background and border.
+=======
+  Cards float directly on the raw blueprint grid.
+  No panel, no frosted glass — pure grid visibility.
+>>>>>>> 264ec882fc946444fe7b78ccb4f1b1ef98f67f66
 */
 .scroll-surface {
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+<<<<<<< HEAD
   border-radius: 0;
+=======
+>>>>>>> 264ec882fc946444fe7b78ccb4f1b1ef98f67f66
   border: none;
   margin: 0;
   position: relative;
@@ -384,14 +392,23 @@ button {
 
 .stats__item {
   padding: 22px 24px;
+<<<<<<< HEAD
   background: rgba(5, 8, 18, 0.94);
   border: 1px solid rgba(240, 165, 0, 0.20);
   border-radius: 14px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+=======
+  background: rgba(5, 9, 22, 0.96);
+  border: 1px solid rgba(240, 165, 0, 0.20);
+  border-radius: 14px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+>>>>>>> 264ec882fc946444fe7b78ccb4f1b1ef98f67f66
   transition: border-color 0.22s, background 0.22s, transform 0.22s, box-shadow 0.22s;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.3);
 }
 /* Amber hairline across the top of each stat card */
 .stats__item::before {
@@ -449,24 +466,28 @@ button {
 
 .nav-card {
   padding: 30px 28px 26px;
+<<<<<<< HEAD
   background: rgba(5, 8, 18, 0.94);
   border: 1px solid rgba(240, 165, 0, 0.18);
   border-radius: 18px;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+=======
+  background: rgba(5, 9, 22, 0.96);
+  border: 1px solid rgba(240, 165, 0, 0.18);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+>>>>>>> 264ec882fc946444fe7b78ccb4f1b1ef98f67f66
   transition: background 0.25s, border-color 0.25s, transform 0.25s, box-shadow 0.25s;
   position: relative;
   overflow: hidden;
   text-decoration: none;
   display: block;
-  /*
-    Layered shadow:
-    - Inner top highlight = light catching the top edge of the card
-    - Drop shadow = card floating above the panel surface
-  */
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.05),
-    0 2px 16px rgba(0,0,0,0.28);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
 }
 
 /* Ambient radial glow in bottom-left — appears on hover */
@@ -1067,7 +1088,7 @@ button {
 }
 
 .exp-card {
-  background: rgba(8, 13, 28, 0.92);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240,165,0,0.18);
   border-radius: 18px;
   padding: 28px 26px 24px;
@@ -1076,7 +1097,8 @@ button {
   transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.04),
-    0 4px 20px rgba(0,0,0,0.25);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
 }
 .exp-card::after {
   content: '';
@@ -1188,7 +1210,7 @@ button {
 
 /* ── EDUCATION BLOCK ──────────────────────────────────────── */
 .edu-block {
-  background: rgba(8, 13, 28, 0.92);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240,165,0,0.18);
   border-radius: 18px;
   padding: 28px 28px 24px;
@@ -1196,7 +1218,8 @@ button {
   overflow: hidden;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.04),
-    0 4px 20px rgba(0,0,0,0.25);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
 }
 .edu-block::after {
   content: '';
@@ -1244,7 +1267,7 @@ button {
 
 /* ── KEY PROJECT HIGHLIGHT ────────────────────────────────── */
 .project-highlight {
-  background: rgba(8, 13, 28, 0.92);
+  background: rgba(5, 9, 22, 0.96);
   border: 1px solid rgba(240,165,0,0.18);
   border-radius: 18px;
   padding: 28px 28px 24px;
@@ -1252,7 +1275,8 @@ button {
   overflow: hidden;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.04),
-    0 4px 20px rgba(0,0,0,0.25);
+    0 4px 24px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(0,0,0,0.3);
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 24px;
@@ -1436,6 +1460,7 @@ button {
 
 
 /* ═══════════════════════════════════════════════════════════
+<<<<<<< HEAD
    LOCKED OWNER CONTROLS
    Add buttons, edit icons — hidden from everyone by default.
    Only revealed when the editor is unlocked (body.edit-mode).
@@ -1454,10 +1479,77 @@ button {
 /* Reveal them ONLY in edit mode */
 .edit-mode .owner-control {
   display: flex !important;
+=======
+   OWNER-LOCKED CONTROLS
+   Add/edit controls are hidden by default.
+   They appear only when body has class "owner-unlocked",
+   which editor.js sets after the correct passphrase is entered.
+═══════════════════════════════════════════════════════════ */
+
+/* Lock button — always visible, floats alongside the edit toolbar */
+.lock-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  padding: 10px 16px;
+  background: rgba(5, 8, 18, 0.96);
+  border: 1px solid rgba(240,165,0,0.28);
+  border-radius: 40px;
+  color: var(--amber);
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+  transition: background 0.18s, border-color 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lock-btn:hover {
+  background: rgba(15, 22, 42, 0.98);
+  border-color: var(--amber);
+}
+.lock-btn__icon { font-size: 12px; line-height: 1; }
+body.owner-unlocked .lock-btn { border-color: rgba(74,222,128,0.4); color: #4ade80; }
+
+/* All add-card / owner-only elements: hidden by default */
+.owner-only {
+  display: none !important;
+}
+body.owner-unlocked .owner-only {
+  display: flex !important;
+}
+/* For block-level owner elements that aren't flex */
+body.owner-unlocked .owner-only--block {
+  display: block !important;
+}
+
+/* Lock overlay — the passphrase modal */
+.lock-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(5, 8, 18, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.lock-overlay.visible {
+>>>>>>> 264ec882fc946444fe7b78ccb4f1b1ef98f67f66
   opacity: 1;
   pointer-events: all;
 }
 
+<<<<<<< HEAD
 /* For block-level owner controls (add cards etc.) */
 .owner-control--block {
   display: none !important;
@@ -1481,4 +1573,119 @@ button {
 }
 .edit-mode .edit-hint {
   display: inline;
+=======
+.lock-modal {
+  background: rgba(8, 13, 28, 0.98);
+  border: 1px solid rgba(240,165,0,0.3);
+  border-radius: 20px;
+  padding: 40px 44px;
+  width: min(400px, 90vw);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 24px 64px rgba(0,0,0,0.6);
+  position: relative;
+}
+.lock-modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  opacity: 0.5;
+}
+
+.lock-modal__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--amber);
+  letter-spacing: 0.22em;
+  opacity: 0.75;
+  margin-bottom: 14px;
+}
+.lock-modal__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.lock-modal__hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.lock-modal__input {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(240,165,0,0.25);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--white);
+  letter-spacing: 0.1em;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  margin-bottom: 12px;
+}
+.lock-modal__input:focus {
+  border-color: var(--amber);
+  background: rgba(240,165,0,0.05);
+}
+.lock-modal__input.error {
+  border-color: #f87171;
+  animation: shake 0.35s ease;
+}
+
+.lock-modal__actions {
+  display: flex;
+  gap: 10px;
+}
+.lock-modal__submit {
+  flex: 1;
+  background: var(--amber);
+  color: var(--navy);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  padding: 11px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.18s;
+}
+.lock-modal__submit:hover { background: #c8940e; }
+.lock-modal__cancel {
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding: 11px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: color 0.18s, border-color 0.18s;
+}
+.lock-modal__cancel:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+
+.lock-modal__error {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #f87171;
+  letter-spacing: 0.1em;
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.lock-modal__error.visible { opacity: 1; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-6px); }
+  75%       { transform: translateX(6px); }
+>>>>>>> 264ec882fc946444fe7b78ccb4f1b1ef98f67f66
 }
