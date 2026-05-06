@@ -505,11 +505,7 @@
   function unlock() {
     document.body.classList.add('owner-unlocked');
     sessionStorage.setItem(SESSION_KEY, '1');
-<<<<<<< HEAD
-    toolbar.style.display = 'flex';
-=======
     toolbar.style.display = '';
->>>>>>> db0aca4160fb530ab09cedd5c7521e5c13948fe7
     lockBtn.innerHTML = '<span class="lock-btn__icon">🔓</span><span class="lock-btn__text">LOCK</span>';
     wireAddCards();
   }
