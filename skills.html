@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skills — Rubui Mwangi</title>
+  <meta name="description" content="Technical and professional skills of Rubui Mwangi — Electrical & Electronics Engineer. Power systems, AutoCAD, IoT, embedded systems and more." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ═══════════════════════════════════════════════
+       SKILLS PAGE — LOCAL STYLES
+    ═══════════════════════════════════════════════ */
+
+    /* ── PAGE HERO ─────────────────────────────── */
+    .skills-hero {
+      padding: 56px 0 44px;
+    }
+
+    /* ── SUMMARY STRIP ─────────────────────────── */
+    .skills-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 52px;
+    }
+    .skills-summary__item {
+      background: rgba(5,9,22,0.96);
+      border: 1px solid rgba(240,165,0,0.18);
+      border-radius: 14px;
+      padding: 18px 20px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+      transition: border-color 0.22s, transform 0.22s;
+    }
+    .skills-summary__item:hover {
+      border-color: rgba(240,165,0,0.4);
+      transform: translateY(-2px);
+    }
+    .skills-summary__number {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--amber);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .skills-summary__label {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+    }
+
+    /* ── CATEGORY SECTION ──────────────────────── */
+    .skill-section {
+      margin-bottom: 56px;
+    }
+    .skill-section__header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .skill-section__icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .skill-section__meta { flex: 1; }
+    .skill-section__label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      margin-bottom: 2px;
+    }
+    .skill-section__title {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--white);
+    }
+    .skill-section__line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(240,165,0,0.25), transparent);
+    }
+    .skill-section__count {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+    }
+
+    /* Category colour themes */
+    .theme-ee    { --cat-color: #60a5fa; --cat-bg: rgba(96,165,250,0.08);  --cat-border: rgba(96,165,250,0.3); }
+    .theme-code  { --cat-color: #4ade80; --cat-bg: rgba(74,222,128,0.08);  --cat-border: rgba(74,222,128,0.3); }
+    .theme-cad   { --cat-color: #f0a500; --cat-bg: rgba(240,165,0,0.08);   --cat-border: rgba(240,165,0,0.3);  }
+    .theme-field { --cat-color: #fb923c; --cat-bg: rgba(251,146,60,0.08);  --cat-border: rgba(251,146,60,0.3); }
+    .theme-soft  { --cat-color: #a78bfa; --cat-bg: rgba(167,139,250,0.08); --cat-border: rgba(167,139,250,0.3);}
+
+    .skill-section__icon  { background: var(--cat-bg);     border-color: var(--cat-border); }
+    .skill-section__label { color: var(--cat-color); }
+    .skill-section__line  { background: linear-gradient(90deg, var(--cat-border), transparent); }
+
+    /* ── SKILL CARD GRID ───────────────────────── */
+    .skill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+
+    .skill-card {
+      background: rgba(5,9,22,0.96);
+      border: 1px solid rgba(240,165,0,0.14);
+      border-radius: 14px;
+      padding: 18px 20px 16px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+      transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+      position: relative;
+    }
+    .skill-card:hover {
+      border-color: var(--cat-border, rgba(240,165,0,0.35));
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+    }
+    /* Accent left stripe */
+    .skill-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 16px; bottom: 16px;
+      width: 3px;
+      border-radius: 3px;
+      background: var(--cat-color, var(--amber));
+      opacity: 0.5;
+      transition: opacity 0.22s;
+    }
+    .skill-card:hover::before { opacity: 1; }
+
+    .skill-card__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .skill-card__name {
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.3;
+    }
+    .skill-card__pct {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cat-color, var(--amber));
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── PROGRESS BAR ──────────────────────────── */
+    .skill-bar {
+      height: 5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .skill-bar__track {
+      height: 100%;
+      border-radius: 10px;
+      width: 0;                          /* starts at 0, animated by JS */
+      transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    /* Shimmer sweep on the bar */
+    .skill-bar__track::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -60%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      animation: shimmer 2.4s ease-in-out infinite;
+      animation-delay: 1.2s;
+    }
+    @keyframes shimmer {
+      0%   { left: -60%; }
+      100% { left: 120%; }
+    }
+
+    /* Bar fill colours per category */
+    .theme-ee   .skill-bar__track { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .theme-code .skill-bar__track { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .theme-cad  .skill-bar__track { background: linear-gradient(90deg, #b45309, #f0a500); }
+    .theme-field .skill-bar__track{ background: linear-gradient(90deg, #c2410c, #fb923c); }
+    .theme-soft .skill-bar__track { background: linear-gradient(90deg, #6d28d9, #a78bfa); }
+
+    .skill-card__context {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── ADD SKILL CARD ────────────────────────── */
+    .skill-add-card {
+      background: transparent;
+      border: 1.5px dashed rgba(240,165,0,0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: var(--font-mono);
+      min-height: 100px;
+    }
+    .skill-add-card:hover {
+      border-color: var(--cat-color, var(--amber));
+      background: rgba(240,165,0,0.04);
+    }
+    .skill-add-card__icon {
+      font-size: 20px;
+      color: rgba(240,165,0,0.3);
+      transition: color 0.2s;
+    }
+    .skill-add-card:hover .skill-add-card__icon { color: var(--cat-color, var(--amber)); }
+    .skill-add-card__label {
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+    .skill-add-card:hover .skill-add-card__label { color: var(--cat-color, var(--amber)); }
+
+    /* ── CERTIFICATIONS STRIP ──────────────────── */
+    .certs-strip {
+      margin: 20px 0 60px;
+    }
+    .certs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+    .cert-card {
+      background: rgba(5,9,22,0.96);
+      border: 1px solid rgba(240,165,0,0.16);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transition: border-color 0.22s, transform 0.22s;
+    }
+    .cert-card:hover {
+      border-color: rgba(240,165,0,0.4);
+      transform: translateY(-2px);
+    }
+    .cert-card__icon {
+      font-size: 22px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .cert-card__name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 3px;
+      line-height: 1.3;
+    }
+    .cert-card__issuer {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+
+    button.skill-add-card,
+    button.cert-add-card {
+      width: 100%;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .cert-add-card {
+      background: transparent;
+      border: 1.5px dashed rgba(240,165,0,0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: var(--font-mono);
+    }
+    .cert-add-card:hover {
+      border-color: var(--amber);
+      background: rgba(240,165,0,0.04);
+    }
+    .cert-add-card__icon { font-size: 18px; color: rgba(240,165,0,0.3); transition: color 0.2s; }
+    .cert-add-card:hover .cert-add-card__icon { color: var(--amber); }
+    .cert-add-card__label { font-size: 9px; letter-spacing: 0.18em; color: var(--text-muted); transition: color 0.2s; }
+    .cert-add-card:hover .cert-add-card__label { color: var(--amber); }
+
+    /* ── RESPONSIVE ────────────────────────────── */
+    @media (max-width: 600px) {
+      .skill-grid { grid-template-columns: 1fr; }
+      .skills-summary { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+
+<body class="page-frame">
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html">home</a></li>
+        <li><a href="about.html">about</a></li>
+        <li><a href="projects.html">projects</a></li>
+        <li><a href="skills.html">skills</a></li>
+        <li><a href="articles.html">articles</a></li>
+        <li><a href="media.html">media</a></li>
+        <li><a href="contact.html">contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="scroll-surface">
+    <div class="container">
+
+      <!-- HERO -->
+      <div class="skills-hero fade-in">
+        <p class="hero__label">// skills</p>
+        <h1 class="hero__title" style="font-size:clamp(28px,4vw,52px); margin-bottom:14px;">
+          <span data-edit-id="skills-hero-title">Capabilities</span>
+        </h1>
+        <p style="font-size:15px; color:var(--text-secondary); max-width:560px; line-height:1.7;" data-edit-id="skills-hero-desc">
+          Five years of engineering study, three industrial attachments, and independent
+          project work — translated into a skills profile honest about depth and context.
+        </p>
+      </div>
+
+      <!-- SUMMARY STRIP -->
+      <div class="skills-summary">
+        <div class="skills-summary__item fade-in">
+          <div class="skills-summary__number" data-edit-id="s-count-1">5+</div>
+          <div class="skills-summary__label">YEARS STUDYING EE</div>
+        </div>
+        <div class="skills-summary__item fade-in">
+          <div class="skills-summary__number" data-edit-id="s-count-2">3</div>
+          <div class="skills-summary__label">INDUSTRIAL ATTACHMENTS</div>
+        </div>
+        <div class="skills-summary__item fade-in">
+          <div class="skills-summary__number" data-edit-id="s-count-3">6+</div>
+          <div class="skills-summary__label">TOOLS &amp; LANGUAGES</div>
+        </div>
+        <div class="skills-summary__item fade-in">
+          <div class="skills-summary__number" data-edit-id="s-count-4">2</div>
+          <div class="skills-summary__label">DESIGN DISCIPLINES</div>
+        </div>
+      </div>
+
+
+      <!-- ═══════════════════════════════════════
+           01 — CORE ELECTRICAL ENGINEERING
+      ═══════════════════════════════════════ -->
+      <section class="skill-section theme-ee fade-in" id="sec-ee">
+        <div class="skill-section__header">
+          <div class="skill-section__icon">⚡</div>
+          <div class="skill-section__meta">
+            <div class="skill-section__label">// 01</div>
+            <div class="skill-section__title" data-edit-id="ee-title">Core Electrical Engineering</div>
+          </div>
+          <div class="skill-section__line"></div>
+          <span class="skill-section__count" data-edit-id="ee-count">6 SKILLS</span>
+        </div>
+
+        <div class="skill-grid">
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="ee1-name">Power Systems Analysis</div>
+              <div class="skill-card__pct" data-edit-id="ee1-pct">80%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="80"></div></div>
+            <div class="skill-card__context" data-edit-id="ee1-ctx">BSc coursework · Kenya Power attachment · protection grading tests</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="ee2-name">Protection &amp; Control Systems</div>
+              <div class="skill-card__pct" data-edit-id="ee2-pct">75%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="75"></div></div>
+            <div class="skill-card__context" data-edit-id="ee2-ctx">DC circuit testing · protection grading · switchgear commissioning at KPLC</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="ee3-name">Circuit Theory &amp; Analysis</div>
+              <div class="skill-card__pct" data-edit-id="ee3-pct">85%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="85"></div></div>
+            <div class="skill-card__context" data-edit-id="ee3-ctx">Core JKUAT module · 5 years applied across projects and design work</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="ee4-name">Electronics &amp; Embedded Systems</div>
+              <div class="skill-card__pct" data-edit-id="ee4-pct">78%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="78"></div></div>
+            <div class="skill-card__context" data-edit-id="ee4-ctx">Arduino · ESP32 · sensor interfacing · FYP hardware build</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="ee5-name">Cable Sizing &amp; Load Calculations</div>
+              <div class="skill-card__pct" data-edit-id="ee5-pct">75%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="75"></div></div>
+            <div class="skill-card__context" data-edit-id="ee5-ctx">Ministry of Lands attachment · residential &amp; commercial designs</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="ee6-name">Signal Processing</div>
+              <div class="skill-card__pct" data-edit-id="ee6-pct">65%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="65"></div></div>
+            <div class="skill-card__context" data-edit-id="ee6-ctx">JKUAT coursework · applied in FYP sensor data filtering</div>
+          </div>
+
+          <!-- ADD SKILL — EE -->
+          <button class="skill-add-card owner-only" data-add-section="ee" title="Add EE skill">
+            <span class="skill-add-card__icon">+</span>
+            <span class="skill-add-card__label">ADD SKILL</span>
+          </button>
+
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════
+           02 — SOFTWARE & PROGRAMMING
+      ═══════════════════════════════════════ -->
+      <section class="skill-section theme-code fade-in" id="sec-code">
+        <div class="skill-section__header">
+          <div class="skill-section__icon">💻</div>
+          <div class="skill-section__meta">
+            <div class="skill-section__label">// 02</div>
+            <div class="skill-section__title" data-edit-id="code-title">Software &amp; Programming</div>
+          </div>
+          <div class="skill-section__line"></div>
+          <span class="skill-section__count" data-edit-id="code-count">6 SKILLS</span>
+        </div>
+
+        <div class="skill-grid">
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="c1-name">C / C++ (Embedded)</div>
+              <div class="skill-card__pct" data-edit-id="c1-pct">75%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="75"></div></div>
+            <div class="skill-card__context" data-edit-id="c1-ctx">Arduino &amp; ESP32 firmware · FYP sensor system · 2+ years</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="c2-name">Firebase (Realtime DB)</div>
+              <div class="skill-card__pct" data-edit-id="c2-pct">70%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="70"></div></div>
+            <div class="skill-card__context" data-edit-id="c2-ctx">FYP cloud backend · live sensor data streaming · rules &amp; auth</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="c3-name">HTML / CSS / JavaScript</div>
+              <div class="skill-card__pct" data-edit-id="c3-pct">70%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="70"></div></div>
+            <div class="skill-card__context" data-edit-id="c3-ctx">This portfolio · FYP web dashboard · self-taught during build</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="c4-name">IoT Protocols (MQTT / HTTP)</div>
+              <div class="skill-card__pct" data-edit-id="c4-pct">65%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="65"></div></div>
+            <div class="skill-card__context" data-edit-id="c4-ctx">ESP32 to Firebase data pipeline · FYP real-time telemetry</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="c5-name">Git &amp; GitHub</div>
+              <div class="skill-card__pct" data-edit-id="c5-pct">60%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="60"></div></div>
+            <div class="skill-card__context" data-edit-id="c5-ctx">Version control · GitHub Pages deployment · this portfolio repo</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="c6-name">Python (Basics)</div>
+              <div class="skill-card__pct" data-edit-id="c6-pct">45%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="45"></div></div>
+            <div class="skill-card__context" data-edit-id="c6-ctx">Data scripting · currently developing · JKUAT intro module</div>
+          </div>
+
+          <button class="skill-add-card owner-only" data-add-section="code" title="Add programming skill">
+            <span class="skill-add-card__icon">+</span>
+            <span class="skill-add-card__label">ADD SKILL</span>
+          </button>
+
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════
+           03 — DESIGN TOOLS
+      ═══════════════════════════════════════ -->
+      <section class="skill-section theme-cad fade-in" id="sec-cad">
+        <div class="skill-section__header">
+          <div class="skill-section__icon">📐</div>
+          <div class="skill-section__meta">
+            <div class="skill-section__label">// 03</div>
+            <div class="skill-section__title" data-edit-id="cad-title">Design Tools</div>
+          </div>
+          <div class="skill-section__line"></div>
+          <span class="skill-section__count" data-edit-id="cad-count">3 TOOLS</span>
+        </div>
+
+        <div class="skill-grid">
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="d1-name">AutoCAD (Electrical)</div>
+              <div class="skill-card__pct" data-edit-id="d1-pct">80%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="80"></div></div>
+            <div class="skill-card__context" data-edit-id="d1-ctx">Ministry of Lands · electrical layouts · single-line diagrams · 2 attachments</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="d2-name">Illumination Design Software</div>
+              <div class="skill-card__pct" data-edit-id="d2-pct">65%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="65"></div></div>
+            <div class="skill-card__context" data-edit-id="d2-ctx">Lux calculations · luminaire selection · commercial &amp; residential</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="d3-name">Microsoft Office Suite</div>
+              <div class="skill-card__pct" data-edit-id="d3-pct">85%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="85"></div></div>
+            <div class="skill-card__context" data-edit-id="d3-ctx">Technical reports · BOQ preparation · FYP documentation (52-page paper)</div>
+          </div>
+
+          <button class="skill-add-card owner-only" data-add-section="cad" title="Add design tool">
+            <span class="skill-add-card__icon">+</span>
+            <span class="skill-add-card__label">ADD TOOL</span>
+          </button>
+
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════
+           04 — FIELD & PRACTICAL SKILLS
+      ═══════════════════════════════════════ -->
+      <section class="skill-section theme-field fade-in" id="sec-field">
+        <div class="skill-section__header">
+          <div class="skill-section__icon">🔧</div>
+          <div class="skill-section__meta">
+            <div class="skill-section__label">// 04</div>
+            <div class="skill-section__title" data-edit-id="field-title">Field &amp; Practical Skills</div>
+          </div>
+          <div class="skill-section__line"></div>
+          <span class="skill-section__count" data-edit-id="field-count">5 SKILLS</span>
+        </div>
+
+        <div class="skill-grid">
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="f1-name">11kV Distribution Line Maintenance</div>
+              <div class="skill-card__pct" data-edit-id="f1-pct">70%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="70"></div></div>
+            <div class="skill-card__context" data-edit-id="f1-ctx">KPLC Gatundu &amp; Kiambu · pole replacement · transformer connections · 2 seasons</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="f2-name">Switchgear &amp; Circuit Breaker Maintenance</div>
+              <div class="skill-card__pct" data-edit-id="f2-pct">65%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="65"></div></div>
+            <div class="skill-card__context" data-edit-id="f2-ctx">Substation commissioning · isolator maintenance · KPLC 2024</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="f3-name">Lockout-Tagout &amp; Electrical Safety</div>
+              <div class="skill-card__pct" data-edit-id="f3-pct">80%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="80"></div></div>
+            <div class="skill-card__context" data-edit-id="f3-ctx">Live network safety protocols · earthing · isolation · KPLC field standard</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="f4-name">Protection System Testing</div>
+              <div class="skill-card__pct" data-edit-id="f4-pct">68%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="68"></div></div>
+            <div class="skill-card__context" data-edit-id="f4-ctx">Grading validation · DC circuit tests · performance analysis · KPLC 2022 &amp; 2024</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="f5-name">Hardware Prototyping</div>
+              <div class="skill-card__pct" data-edit-id="f5-pct">72%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="72"></div></div>
+            <div class="skill-card__context" data-edit-id="f5-ctx">FYP PCB &amp; breadboard work · sensor wiring · Arduino &amp; ESP32 integration</div>
+          </div>
+
+          <button class="skill-add-card owner-only" data-add-section="field" title="Add field skill">
+            <span class="skill-add-card__icon">+</span>
+            <span class="skill-add-card__label">ADD SKILL</span>
+          </button>
+
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════
+           05 — TRANSFERABLE SKILLS
+      ═══════════════════════════════════════ -->
+      <section class="skill-section theme-soft fade-in" id="sec-soft">
+        <div class="skill-section__header">
+          <div class="skill-section__icon">🧠</div>
+          <div class="skill-section__meta">
+            <div class="skill-section__label">// 05</div>
+            <div class="skill-section__title" data-edit-id="soft-title">Transferable Skills</div>
+          </div>
+          <div class="skill-section__line"></div>
+          <span class="skill-section__count" data-edit-id="soft-count">5 SKILLS</span>
+        </div>
+
+        <div class="skill-grid">
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="s1-name">Technical Report Writing</div>
+              <div class="skill-card__pct" data-edit-id="s1-pct">82%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="82"></div></div>
+            <div class="skill-card__context" data-edit-id="s1-ctx">52-page FYP paper · BOQ documents · field intervention logs · proposals</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="s2-name">Project Management</div>
+              <div class="skill-card__pct" data-edit-id="s2-pct">70%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="70"></div></div>
+            <div class="skill-card__context" data-edit-id="s2-ctx">Full FYP lifecycle (hardware → firmware → cloud → dashboard) managed solo</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="s3-name">Problem Solving &amp; Fault Diagnosis</div>
+              <div class="skill-card__pct" data-edit-id="s3-pct">78%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="78"></div></div>
+            <div class="skill-card__context" data-edit-id="s3-ctx">Live network faults · embedded debugging · system integration challenges</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="s4-name">Teamwork &amp; Field Collaboration</div>
+              <div class="skill-card__pct" data-edit-id="s4-pct">85%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="85"></div></div>
+            <div class="skill-card__context" data-edit-id="s4-ctx">3 attachments working with engineers &amp; technicians in live environments</div>
+          </div>
+
+          <div class="skill-card fade-in">
+            <div class="skill-card__top">
+              <div class="skill-card__name" data-edit-id="s5-name">Self-Directed Learning</div>
+              <div class="skill-card__pct" data-edit-id="s5-pct">88%</div>
+            </div>
+            <div class="skill-bar"><div class="skill-bar__track" data-level="88"></div></div>
+            <div class="skill-card__context" data-edit-id="s5-ctx">Taught Firebase, ESP32, web dev, and this portfolio entirely independently</div>
+          </div>
+
+          <button class="skill-add-card owner-only" data-add-section="soft" title="Add transferable skill">
+            <span class="skill-add-card__icon">+</span>
+            <span class="skill-add-card__label">ADD SKILL</span>
+          </button>
+
+        </div>
+      </section>
+
+
+      <!-- ═══════════════════════════════════════
+           CERTIFICATIONS / QUALIFICATIONS
+      ═══════════════════════════════════════ -->
+      <div class="certs-strip">
+        <div class="cat-header fade-in" style="display:flex;align-items:center;gap:18px;margin-bottom:0;">
+          <span style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.22em;color:var(--amber);white-space:nowrap;">// 06 — QUALIFICATIONS &amp; CERTIFICATIONS</span>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(240,165,0,0.3),transparent);"></div>
+        </div>
+        <div class="certs-grid">
+
+          <div class="cert-card fade-in">
+            <div class="cert-card__icon">🎓</div>
+            <div>
+              <div class="cert-card__name" data-edit-id="cert1-name">BSc Electrical &amp; Electronics Engineering</div>
+              <div class="cert-card__issuer" data-edit-id="cert1-issuer">JKUAT · Graduated December 2025</div>
+            </div>
+          </div>
+
+          <div class="cert-card fade-in">
+            <div class="cert-card__icon">🏭</div>
+            <div>
+              <div class="cert-card__name" data-edit-id="cert2-name">Industrial Attachment Certificate — Kenya Power</div>
+              <div class="cert-card__issuer" data-edit-id="cert2-issuer">KPLC · 2022 &amp; 2024 · Kiambu &amp; Gatundu</div>
+            </div>
+          </div>
+
+          <div class="cert-card fade-in">
+            <div class="cert-card__icon">🏛️</div>
+            <div>
+              <div class="cert-card__name" data-edit-id="cert3-name">Industrial Attachment Certificate — Ministry of Lands</div>
+              <div class="cert-card__issuer" data-edit-id="cert3-issuer">Electrical Dept. · 2023 · Hill Plaza, Nairobi</div>
+            </div>
+          </div>
+
+          <!-- Placeholder for future certs -->
+          <div class="cert-card fade-in" style="border-style:dashed; opacity:0.5;">
+            <div class="cert-card__icon">📋</div>
+            <div>
+              <div class="cert-card__name" data-edit-id="cert4-name">Professional Certification</div>
+              <div class="cert-card__issuer" data-edit-id="cert4-issuer">Coming soon — add when earned</div>
+            </div>
+          </div>
+
+          <!-- ADD CERT BUTTON -->
+          <button class="cert-add-card owner-only" id="btn-add-cert" title="Add certification">
+            <span class="cert-add-card__icon">+</span>
+            <span class="cert-add-card__label">ADD CERTIFICATION</span>
+          </button>
+
+        </div>
+      </div>
+
+      <div style="padding-bottom:64px;"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
+      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span>OPEN TO OPPORTUNITIES</span>
+    </div>
+  </footer>
+
+  <!-- OWNER LOCK OVERLAY — must be before editor.js -->
+  <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
+    <div class="lock-modal">
+      <div class="lock-modal__label">// owner access</div>
+      <div class="lock-modal__title">Unlock editing</div>
+      <div class="lock-modal__hint">Enter your passphrase to reveal add/edit controls and enable content editing.</div>
+      <input class="lock-modal__input" id="lock-input" type="password" placeholder="passphrase" autocomplete="off" />
+      <div class="lock-modal__actions">
+        <button class="lock-modal__submit" id="lock-submit">UNLOCK</button>
+        <button class="lock-modal__cancel" id="lock-cancel">CANCEL</button>
+      </div>
+      <div class="lock-modal__error" id="lock-error">Incorrect passphrase</div>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+
+  <script>
+  /* ═══════════════════════════════════════════════
+     skills.js — add skill cards + add cert cards
+  ═══════════════════════════════════════════════ */
+  (function() {
+
+    /* ── Skill bar animation is handled by main.js (initSkillBars)
+       but we also need to re-trigger for dynamically added cards ── */
+
+    function animateBar(fill) {
+      var level = fill.getAttribute('data-level') || '0';
+      // small delay so the card render is visible first
+      setTimeout(function() { fill.style.width = level + '%'; }, 120);
+    }
+
+    // Animate any bars already in the DOM when they scroll in
+    // (main.js IntersectionObserver handles .skill-bar__fill,
+    //  but our bars use .skill-bar__track — wire separately here)
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          animateBar(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.skill-bar__track').forEach(function(el) {
+      observer.observe(el);
+    });
+
+
+    /* ── ADD SKILL CARD ──────────────────────────────── */
+    function makeSkillCardHTML(uid) {
+      return [
+        '<div class="skill-card new-card fade-in visible" data-new-id="' + uid + '">',
+        '  <button class="new-card__delete owner-only" title="Delete" aria-label="Delete skill">✕</button>',
+        '  <div class="skill-card__top">',
+        '    <div class="skill-card__name" contenteditable="false">Skill Name</div>',
+        '    <div class="skill-card__pct" contenteditable="false">0%</div>',
+        '  </div>',
+        '  <div class="skill-bar"><div class="skill-bar__track" data-level="0" style="width:0%"></div></div>',
+        '  <div class="skill-card__context" contenteditable="false">Add context — where did you use this skill?</div>',
+        '</div>'
+      ].join('\n');
+    }
+
+    function wireNewSkillCard(card) {
+      var delBtn = card.querySelector('.new-card__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          if (window.confirm('Remove this skill?')) card.remove();
+        });
+      }
+      // Wire the percentage field to update the bar live
+      var pctEl  = card.querySelector('.skill-card__pct');
+      var barEl  = card.querySelector('.skill-bar__track');
+      if (pctEl && barEl) {
+        pctEl.addEventListener('input', function() {
+          var num = parseInt(pctEl.textContent) || 0;
+          num = Math.max(0, Math.min(100, num));
+          barEl.setAttribute('data-level', num);
+          barEl.style.width = num + '%';
+        });
+      }
+    }
+
+    function wireAddSkillBtns() {
+      document.querySelectorAll('.skill-add-card').forEach(function(btn) {
+        if (btn._wired) return;
+        btn._wired = true;
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (!document.body.classList.contains('owner-unlocked')) return;
+          var id = 'skill-' + Date.now();
+          var tmp = document.createElement('div');
+          tmp.innerHTML = makeSkillCardHTML(id);
+          var card = tmp.firstElementChild;
+          btn.parentNode.insertBefore(card, btn);
+          wireNewSkillCard(card);
+
+          // Focus the skill name field
+          var nameEl = card.querySelector('.skill-card__name');
+          if (nameEl) {
+            nameEl.setAttribute('contenteditable', 'true');
+            setTimeout(function() {
+              nameEl.focus();
+              var range = document.createRange();
+              range.selectNodeContents(nameEl);
+              window.getSelection().removeAllRanges();
+              window.getSelection().addRange(range);
+            }, 60);
+          }
+        });
+      });
+    }
+    wireAddSkillBtns();
+
+
+    /* ── ADD CERT CARD ───────────────────────────────── */
+    function makeCertCardHTML(uid) {
+      return [
+        '<div class="cert-card new-card fade-in visible" data-new-id="' + uid + '">',
+        '  <button class="new-card__delete owner-only" title="Delete" aria-label="Delete cert">✕</button>',
+        '  <div class="cert-card__icon" contenteditable="false">📋</div>',
+        '  <div>',
+        '    <div class="cert-card__name" contenteditable="false">Certification Name</div>',
+        '    <div class="cert-card__issuer" contenteditable="false">Issuing Organisation · Year</div>',
+        '  </div>',
+        '</div>'
+      ].join('\n');
+    }
+
+    var addCertBtn = document.getElementById('btn-add-cert');
+    if (addCertBtn) {
+      addCertBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!document.body.classList.contains('owner-unlocked')) return;
+        var id = 'cert-' + Date.now();
+        var tmp = document.createElement('div');
+        tmp.innerHTML = makeCertCardHTML(id);
+        var card = tmp.firstElementChild;
+        addCertBtn.parentNode.insertBefore(card, addCertBtn);
+
+        var delBtn = card.querySelector('.new-card__delete');
+        if (delBtn) {
+          delBtn.addEventListener('click', function(e2) {
+            e2.preventDefault(); e2.stopPropagation();
+            if (window.confirm('Remove this certification?')) card.remove();
+          });
+        }
+        var nameEl = card.querySelector('.cert-card__name');
+        if (nameEl) {
+          nameEl.setAttribute('contenteditable', 'true');
+          setTimeout(function() {
+            nameEl.focus();
+            var range = document.createRange();
+            range.selectNodeContents(nameEl);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+          }, 60);
+        }
+      });
+    }
+
+  })();
+  </script>
+
+  <script src="js/editor.js"></script>
+
+</body>
+</html>
