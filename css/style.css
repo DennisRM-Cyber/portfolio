@@ -1824,3 +1824,358 @@ button.card--add {
   font-family: inherit;
   cursor: pointer;
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   SETTINGS PANEL
+   Slides in from the top-left. Toggled by the ⚙ button.
+   Controls: contrast presets, font size, reduce-motion.
+   Settings persisted in localStorage.
+═══════════════════════════════════════════════════════════ */
+
+.settings-btn {
+  position: fixed;
+  top: 72px;
+  left: 16px;
+  z-index: 210;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(240,165,0,0.28);
+  background: rgba(16,26,52,0.96);
+  color: var(--amber);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: border-color 0.18s, background 0.18s, transform 0.18s;
+}
+.settings-btn:hover {
+  border-color: var(--amber);
+  background: rgba(22,36,72,0.98);
+  transform: rotate(45deg);
+}
+
+.settings-panel {
+  position: fixed;
+  top: 116px;
+  left: 16px;
+  z-index: 209;
+  width: 260px;
+  background: rgba(14,20,44,0.99);
+  border: 1px solid rgba(240,165,0,0.28);
+  border-radius: 16px;
+  padding: 20px 18px 18px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 12px 40px rgba(0,0,0,0.55);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.settings-panel.open {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+.settings-panel__title {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.settings-group {
+  margin-bottom: 16px;
+}
+.settings-group__label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Contrast presets */
+.contrast-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.contrast-btn {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  padding: 7px 4px;
+  border-radius: 7px;
+  border: 1px solid rgba(240,165,0,0.2);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.contrast-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.contrast-btn.active {
+  background: var(--amber);
+  color: var(--navy);
+  border-color: var(--amber);
+  font-weight: 700;
+}
+
+/* Font size toggle */
+.fontsize-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.fontsize-btn {
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  padding: 7px 4px;
+  border-radius: 7px;
+  border: 1px solid rgba(240,165,0,0.2);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.fontsize-btn:hover { border-color: var(--amber); color: var(--amber); }
+.fontsize-btn.active {
+  background: var(--amber);
+  color: var(--navy);
+  border-color: var(--amber);
+  font-weight: 700;
+}
+.fontsize-btn[data-size="small"]  { font-size: 9px; }
+.fontsize-btn[data-size="medium"] { font-size: 11px; }
+.fontsize-btn[data-size="large"]  { font-size: 13px; }
+
+/* Reduce motion toggle */
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.settings-toggle__label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+.toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.toggle-switch__track {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(240,165,0,0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.toggle-switch input:checked + .toggle-switch__track {
+  background: var(--amber);
+  border-color: var(--amber);
+}
+.toggle-switch__track::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle-switch input:checked + .toggle-switch__track::after {
+  transform: translateX(16px);
+  background: var(--navy);
+}
+
+/* ── CONTRAST THEMES applied to :root ── */
+/* Default = brightest (set in JS on load) */
+body.contrast-bright {
+  --navy: #0d1526;
+  --navy-light: #172040;
+  --text-secondary: rgba(255,255,255,0.68);
+  --text-muted: rgba(255,255,255,0.42);
+  filter: none;
+}
+body.contrast-medium {
+  --navy: #090f1e;
+  --navy-light: #111829;
+  --text-secondary: rgba(255,255,255,0.58);
+  --text-muted: rgba(255,255,255,0.35);
+  filter: brightness(0.88);
+}
+body.contrast-dark {
+  --navy: #060a14;
+  --navy-light: #0a1020;
+  --text-secondary: rgba(255,255,255,0.50);
+  --text-muted: rgba(255,255,255,0.28);
+  filter: brightness(0.74);
+}
+
+/* ── FONT SIZE THEMES ── */
+body.font-small  { font-size: 14px; }
+body.font-medium { font-size: 16px; }
+body.font-large  { font-size: 18px; }
+
+/* ── REDUCE MOTION ── */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   SLIDEABLE SKILL BARS (owner-unlocked mode)
+   When unlocked, the bar gets a draggable thumb.
+═══════════════════════════════════════════════════════════ */
+body.owner-unlocked .skill-bar {
+  height: 14px;
+  border-radius: 10px;
+  cursor: ew-resize;
+  position: relative;
+}
+body.owner-unlocked .skill-bar__track {
+  height: 100%;
+  border-radius: 10px;
+  position: relative;
+  transition: none; /* disable CSS transition while dragging */
+}
+/* Draggable thumb */
+body.owner-unlocked .skill-bar__thumb {
+  display: flex;
+}
+.skill-bar__thumb {
+  display: none;
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--amber);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: ew-resize;
+  z-index: 2;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.skill-bar__thumb:hover,
+.skill-bar__thumb.dragging {
+  transform: translateY(-50%) scale(1.25);
+  box-shadow: 0 0 0 4px rgba(240,165,0,0.25), 0 2px 8px rgba(0,0,0,0.4);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   DELETE BUTTON — now on ALL cards, not just new ones.
+   Visible only when owner-unlocked.
+   Applied via JS to every existing card on unlock.
+═══════════════════════════════════════════════════════════ */
+.card-delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  background: rgba(248,113,113,0.12);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 50%;
+  color: #f87171;
+  font-size: 10px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.15s;
+  z-index: 10;
+  line-height: 1;
+  font-family: var(--font-mono);
+}
+.card-delete-btn:hover {
+  background: rgba(248,113,113,0.3);
+  transform: scale(1.15);
+}
+body.owner-unlocked .card-delete-btn {
+  display: flex;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CIRCUIT ANIMATION — homepage hero right panel
+═══════════════════════════════════════════════════════════ */
+
+/* Hero becomes a two-column layout on desktop */
+.hero .container {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  align-items: center;
+  gap: 40px;
+  position: relative;
+}
+
+.circuit-canvas {
+  width: 420px;
+  height: 560px;
+  flex-shrink: 0;
+  position: relative;
+  pointer-events: none;
+  /* Fade out at edges */
+  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 50%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 50%, transparent 100%);
+}
+
+#circuit-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Hide circuit on small screens, keep hero text full-width */
+@media (max-width: 900px) {
+  .hero .container {
+    grid-template-columns: 1fr;
+  }
+  .circuit-canvas {
+    display: none;
+  }
+}
+
+/* Respect reduce-motion */
+body.reduce-motion .circuit-canvas {
+  display: none;
+}
