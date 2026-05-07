@@ -24,7 +24,7 @@
   settingsBtn.innerHTML = '⚙';
   document.body.appendChild(settingsBtn);
 
-  // Inject settings panel
+  // Inject settings panel — LIGHT / DARK only for contrast
   var settingsPanel = document.createElement('div');
   settingsPanel.className = 'settings-panel';
   settingsPanel.setAttribute('role', 'dialog');
@@ -35,18 +35,17 @@
     '<div class="settings-group">',
     '  <span class="settings-group__label">CONTRAST</span>',
     '  <div class="contrast-btns">',
-    '    <button class="contrast-btn" data-contrast="bright">BRIGHT</button>',
-    '    <button class="contrast-btn" data-contrast="medium">MEDIUM</button>',
-    '    <button class="contrast-btn" data-contrast="dark">DARK</button>',
+    '    <button class="contrast-btn" data-contrast="light" title="Light — bright warm grey background">☀ LIGHT</button>',
+    '    <button class="contrast-btn" data-contrast="dark"  title="Dark — original deep navy">🌙 DARK</button>',
     '  </div>',
     '</div>',
 
     '<div class="settings-group">',
     '  <span class="settings-group__label">FONT SIZE</span>',
     '  <div class="fontsize-btns">',
-    '    <button class="fontsize-btn" data-size="small">A</button>',
-    '    <button class="fontsize-btn" data-size="medium">A</button>',
-    '    <button class="fontsize-btn" data-size="large">A</button>',
+    '    <button class="fontsize-btn" data-size="small"  style="font-size:10px">A</button>',
+    '    <button class="fontsize-btn" data-size="medium" style="font-size:13px">A</button>',
+    '    <button class="fontsize-btn" data-size="large"  style="font-size:16px">A</button>',
     '  </div>',
     '</div>',
 
@@ -61,85 +60,151 @@
     '</div>',
 
     '<div class="settings-group">',
-    '  <div class="settings-toggle">',
-    '    <span class="settings-toggle__label">LANGUAGE</span>',
-    '    <select id="lang-select" style="background:transparent;border:1px solid rgba(240,165,0,0.25);border-radius:6px;color:var(--amber);font-family:var(--font-mono);font-size:9px;padding:4px 8px;letter-spacing:0.1em;cursor:pointer;">',
-    '      <option value="en">EN</option>',
-    '      <option value="sw">SW</option>',
-    '    </select>',
+    '  <span class="settings-group__label">LANGUAGE</span>',
+    '  <div class="contrast-btns">',
+    '    <button class="contrast-btn lang-btn" data-lang="en">EN</button>',
+    '    <button class="contrast-btn lang-btn" data-lang="sw">SW</button>',
     '  </div>',
     '</div>',
   ].join('');
   document.body.appendChild(settingsPanel);
+
+  // ── TRANSLATION MAP ──────────────────────────────────────
+  // data-i18n attributes on elements get swapped on language change.
+  // Add data-i18n="key" to any HTML element you want translated.
+  // Keys below cover the shared nav and footer — page-specific
+  // text uses data-edit-id and gets translated via the map too.
+  var translations = {
+    en: {
+      // Nav
+      'nav.home':     'home',
+      'nav.about':    'about',
+      'nav.projects': 'projects',
+      'nav.skills':   'skills',
+      'nav.articles': 'articles',
+      'nav.media':    'media',
+      'nav.contact':  'contact',
+      // Hero (index)
+      'hero.label':    '// electrical engineer — class of 2025',
+      'hero.subtitle': 'BSc Electrical & Electronics Engineering · JKUAT · Open to internship',
+      'hero.btn1':     'VIEW PROJECTS',
+      'hero.btn2':     'DOWNLOAD CV',
+      // Footer
+      'footer.status': 'OPEN TO OPPORTUNITIES',
+      // About
+      'about.label':   '// about',
+      'about.btn1':    'DOWNLOAD CV',
+      'about.btn2':    'GET IN TOUCH',
+      // Settings panel labels
+      'settings.contrast':    'CONTRAST',
+      'settings.fontsize':    'FONT SIZE',
+      'settings.motion':      'REDUCE ANIMATIONS',
+      'settings.language':    'LANGUAGE',
+    },
+    sw: {
+      // Nav
+      'nav.home':     'nyumbani',
+      'nav.about':    'kuhusu',
+      'nav.projects': 'miradi',
+      'nav.skills':   'ujuzi',
+      'nav.articles': 'makala',
+      'nav.media':    'midia',
+      'nav.contact':  'wasiliana',
+      // Hero (index)
+      'hero.label':    '// mhandisi wa umeme — darasa la 2025',
+      'hero.subtitle': 'BSc Uhandisi wa Umeme na Elektroniki · JKUAT · Natafuta internship',
+      'hero.btn1':     'TAZAMA MIRADI',
+      'hero.btn2':     'PAKUA CV',
+      // Footer
+      'footer.status': 'WAZI KWA FURSA',
+      // About
+      'about.label':   '// kuhusu',
+      'about.btn1':    'PAKUA CV',
+      'about.btn2':    'WASILIANA',
+      // Settings panel labels
+      'settings.contrast':    'MWANGA',
+      'settings.fontsize':    'UKUBWA WA FONTI',
+      'settings.motion':      'PUNGUZA MWENDO',
+      'settings.language':    'LUGHA',
+    }
+  };
+
+  function applyLanguage(lang) {
+    var t = translations[lang] || translations['en'];
+    // Translate all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      var key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) el.textContent = t[key];
+    });
+    // Highlight active lang button
+    document.querySelectorAll('.lang-btn').forEach(function(b) {
+      b.classList.toggle('active', b.getAttribute('data-lang') === lang);
+    });
+    savedSettings.language = lang;
+    saveSettings();
+  }
 
   // Load saved settings
   var savedSettings = {};
   try { savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch(e) {}
 
   function applyContrast(val) {
-    document.body.classList.remove('contrast-bright','contrast-medium','contrast-dark');
+    document.body.classList.remove('contrast-light', 'contrast-dark');
     document.body.classList.add('contrast-' + val);
-    document.querySelectorAll('.contrast-btn').forEach(function(b) {
+    document.querySelectorAll('.contrast-btn:not(.lang-btn)').forEach(function(b) {
       b.classList.toggle('active', b.getAttribute('data-contrast') === val);
     });
+    savedSettings.contrast = val;
+    saveSettings();
   }
 
   function applyFontSize(val) {
-    document.body.classList.remove('font-small','font-medium','font-large');
+    document.body.classList.remove('font-small', 'font-medium', 'font-large');
     document.body.classList.add('font-' + val);
     document.querySelectorAll('.fontsize-btn').forEach(function(b) {
       b.classList.toggle('active', b.getAttribute('data-size') === val);
     });
+    savedSettings.fontSize = val;
+    saveSettings();
   }
 
   function saveSettings() {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(savedSettings));
   }
 
-  // Apply defaults (bright contrast, medium font)
-  applyContrast(savedSettings.contrast || 'bright');
-  applyFontSize(savedSettings.fontSize || 'medium');
+  // Apply on load — default is LIGHT contrast, MEDIUM font
+  applyContrast(savedSettings.contrast || 'light');
+  applyFontSize(savedSettings.fontSize  || 'medium');
 
   var motionToggle = document.getElementById('toggle-motion');
   if (savedSettings.reduceMotion) {
     motionToggle.checked = true;
     document.body.classList.add('reduce-motion');
   }
+  setTimeout(function() {
+    applyLanguage(savedSettings.language || 'en');
+  }, 100);
 
   // Contrast buttons
-  settingsPanel.querySelectorAll('.contrast-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var val = btn.getAttribute('data-contrast');
-      applyContrast(val);
-      savedSettings.contrast = val;
-      saveSettings();
-    });
+  settingsPanel.querySelectorAll('.contrast-btn:not(.lang-btn)').forEach(function(btn) {
+    btn.addEventListener('click', function() { applyContrast(btn.getAttribute('data-contrast')); });
   });
 
   // Font size buttons
   settingsPanel.querySelectorAll('.fontsize-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var val = btn.getAttribute('data-size');
-      applyFontSize(val);
-      savedSettings.fontSize = val;
-      saveSettings();
-    });
+    btn.addEventListener('click', function() { applyFontSize(btn.getAttribute('data-size')); });
   });
 
-  // Reduce motion toggle
+  // Reduce motion
   motionToggle.addEventListener('change', function() {
     document.body.classList.toggle('reduce-motion', motionToggle.checked);
     savedSettings.reduceMotion = motionToggle.checked;
     saveSettings();
   });
 
-  // Language select (placeholder — swap strings in future)
-  var langSelect = document.getElementById('lang-select');
-  langSelect.value = savedSettings.language || 'en';
-  langSelect.addEventListener('change', function() {
-    savedSettings.language = langSelect.value;
-    saveSettings();
-    // Future: swap page text to Swahili here
+  // Language buttons
+  settingsPanel.querySelectorAll('.lang-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { applyLanguage(btn.getAttribute('data-lang')); });
   });
 
   // Toggle panel open/close

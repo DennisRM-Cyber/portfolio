@@ -1910,7 +1910,7 @@ button.card--add {
 /* Contrast presets */
 .contrast-btns {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
 }
 .contrast-btn {
@@ -2020,34 +2020,98 @@ button.card--add {
   background: var(--navy);
 }
 
-/* ── CONTRAST THEMES applied to :root ── */
-/* Default = brightest (set in JS on load) */
-body.contrast-bright {
-  --navy: #0d1526;
-  --navy-light: #172040;
-  --text-secondary: rgba(255,255,255,0.68);
-  --text-muted: rgba(255,255,255,0.42);
-  filter: none;
+/* ══════════════════════════════════════════════════════
+   CONTRAST THEMES
+   LIGHT = default, maximum readability — bright warm grey
+           background, dark navy text, amber accents pop.
+   DARK  = original dark blueprint — white text on navy.
+══════════════════════════════════════════════════════ */
+
+/* LIGHT theme — default */
+body.contrast-light {
+  --navy:          #e8eaf2;   /* warm light grey — the "page" colour */
+  --navy-light:    #d0d4e8;   /* slightly darker for hover states */
+  --text-primary:  rgba(12, 18, 40, 0.92);   /* near-black text */
+  --text-secondary:rgba(12, 18, 40, 0.65);
+  --text-muted:    rgba(12, 18, 40, 0.40);
+  --amber:         #b87800;   /* deeper amber — readable on light bg */
+  background-color: #e8eaf2;
 }
-body.contrast-medium {
-  --navy: #090f1e;
-  --navy-light: #111829;
-  --text-secondary: rgba(255,255,255,0.58);
-  --text-muted: rgba(255,255,255,0.35);
-  filter: brightness(0.88);
+/* Invert card backgrounds on light theme */
+body.contrast-light .nav-card,
+body.contrast-light .stats__item,
+body.contrast-light .exp-card,
+body.contrast-light .edu-block,
+body.contrast-light .project-highlight,
+body.contrast-light .skill-card,
+body.contrast-light .cert-card,
+body.contrast-light .nav,
+body.contrast-light .footer,
+body.contrast-light .lock-btn,
+body.contrast-light .settings-panel,
+body.contrast-light .edit-toolbar {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(12, 18, 40, 0.14) !important;
+  color: rgba(12,18,40,0.9);
 }
+body.contrast-light .nav__links a,
+body.contrast-light .hero__title,
+body.contrast-light .hero__subtitle,
+body.contrast-light .hero__desc,
+body.contrast-light .hero__label,
+body.contrast-light .card-title,
+body.contrast-light .skill-card__name,
+body.contrast-light .exp-card__org,
+body.contrast-light .exp-card__role {
+  color: rgba(12,18,40,0.92) !important;
+}
+/* Grid lines on light theme — dark navy, subtle */
+body.contrast-light {
+  background-image:
+    radial-gradient(ellipse 70vw 55vh at 8% 5%,  rgba(12,18,40,0.06) 0%, transparent 65%),
+    radial-gradient(ellipse 50vw 40vh at 92% 90%, rgba(12,18,40,0.04) 0%, transparent 60%),
+    linear-gradient(rgba(12,18,40,0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12,18,40,0.09) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+}
+/* Amber accent stays readable on light */
+body.contrast-light .hero__label,
+body.contrast-light .section-label,
+body.contrast-light .nav__logo,
+body.contrast-light .stats__label,
+body.contrast-light .nav-card__tag,
+body.contrast-light .skill-card__pct,
+body.contrast-light .card-cat-badge {
+  opacity: 0.9;
+}
+
+/* DARK theme — original deep navy */
 body.contrast-dark {
-  --navy: #060a14;
-  --navy-light: #0a1020;
-  --text-secondary: rgba(255,255,255,0.50);
-  --text-muted: rgba(255,255,255,0.28);
-  filter: brightness(0.74);
+  --navy:           #0d1526;
+  --navy-light:     #172040;
+  --text-primary:   rgba(255,255,255,0.95);
+  --text-secondary: rgba(255,255,255,0.68);
+  --text-muted:     rgba(255,255,255,0.42);
+  --amber:          #F0A500;
+  background-color: #0d1526;
+  background-image:
+    radial-gradient(ellipse 70vw 55vh at 8% 5%,  rgba(240,165,0,0.13) 0%, transparent 65%),
+    radial-gradient(ellipse 50vw 40vh at 92% 90%, rgba(240,165,0,0.08) 0%, transparent 60%),
+    linear-gradient(rgba(240,165,0,0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(240,165,0,0.13) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
 }
 
 /* ── FONT SIZE THEMES ── */
-body.font-small  { font-size: 14px; }
-body.font-medium { font-size: 16px; }
-body.font-large  { font-size: 18px; }
+/* Use !important to override all the hardcoded font-sizes in component CSS */
+body.font-small  { font-size: 13px !important; }
+body.font-small p, body.font-small li, body.font-small div:not([class*="number"]) { font-size: 0.9em; }
+
+body.font-medium { font-size: 16px !important; }
+
+body.font-large  { font-size: 19px !important; }
+body.font-large p, body.font-large li { font-size: 1.05em; }
+body.font-large .hero__title { font-size: clamp(36px, 5vw, 62px) !important; }
 
 /* ── REDUCE MOTION ── */
 body.reduce-motion *,
@@ -2137,27 +2201,21 @@ body.owner-unlocked .card-delete-btn {
 
 
 /* ═══════════════════════════════════════════════════════════
-   CIRCUIT ANIMATION — homepage hero right panel
+   CIRCUIT ANIMATION — small corner decoration, does NOT
+   affect hero layout. Positioned absolute top-right of hero.
 ═══════════════════════════════════════════════════════════ */
 
-/* Hero becomes a two-column layout on desktop */
-.hero .container {
-  display: grid;
-  grid-template-columns: 1fr 420px;
-  align-items: center;
-  gap: 40px;
-  position: relative;
-}
-
 .circuit-canvas {
-  width: 420px;
-  height: 560px;
-  flex-shrink: 0;
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 220px;
+  height: 280px;
   pointer-events: none;
-  /* Fade out at edges */
-  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 50%, transparent 100%);
-  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 50%, transparent 100%);
+  opacity: 0.55;
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 70% 30%, black 40%, transparent 100%);
+  mask-image: radial-gradient(ellipse 80% 80% at 70% 30%, black 40%, transparent 100%);
+  z-index: 0;
 }
 
 #circuit-svg {
@@ -2165,17 +2223,16 @@ body.owner-unlocked .card-delete-btn {
   height: 100%;
 }
 
-/* Hide circuit on small screens, keep hero text full-width */
-@media (max-width: 900px) {
-  .hero .container {
-    grid-template-columns: 1fr;
-  }
-  .circuit-canvas {
-    display: none;
-  }
+/* Hero content sits above the circuit */
+.hero .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hide on small screens */
+@media (max-width: 700px) {
+  .circuit-canvas { display: none; }
 }
 
 /* Respect reduce-motion */
-body.reduce-motion .circuit-canvas {
-  display: none;
-}
+body.reduce-motion .circuit-canvas { display: none; }
