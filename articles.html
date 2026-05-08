@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Articles — Rubui Mwangi</title>
+  <meta name="description" content="Technical articles, build log, field experience reports and proposals by Rubui Mwangi — Electrical & Electronics Engineer." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .articles-hero { padding: 56px 0 40px; }
+
+    .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin:28px 0 44px; }
+    .filter-btn { font-family:var(--font-mono); font-size:9px; letter-spacing:0.16em; padding:8px 18px; border-radius:30px; border:1px solid rgba(240,165,0,0.22); background:rgba(16,26,52,0.85); color:var(--text-muted); cursor:pointer; transition:all 0.18s; backdrop-filter:blur(10px); }
+    .filter-btn:hover { border-color:var(--amber); color:var(--amber); }
+    .filter-btn.active { background:var(--amber); color:var(--navy); border-color:var(--amber); font-weight:600; }
+
+    .article-list { display:flex; flex-direction:column; gap:0; }
+
+    .article-row { display:grid; grid-template-columns:120px 1fr auto; gap:0 28px; align-items:start; padding:28px 0; border-bottom:1px solid rgba(240,165,0,0.10); position:relative; transition:background 0.18s; cursor:pointer; }
+    .article-row:first-child { border-top:1px solid rgba(240,165,0,0.10); }
+    .article-row:hover { background:rgba(240,165,0,0.03); }
+    .article-row:hover .article-row__arrow { opacity:1; transform:translateX(0); }
+
+    .article-row__date { font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; color:var(--text-muted); padding-top:4px; line-height:1.5; }
+    .article-row__date-day { font-size:22px; font-weight:800; font-family:var(--font-heading); color:var(--amber); line-height:1; margin-bottom:3px; }
+
+    .article-row__meta { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+    .article-badge { font-family:var(--font-mono); font-size:8px; letter-spacing:0.16em; padding:3px 10px; border-radius:20px; border:1px solid; white-space:nowrap; }
+    .badge--buildlog  { color:#f0a500; border-color:rgba(240,165,0,0.35);   background:rgba(240,165,0,0.08); }
+    .badge--technical { color:#60a5fa; border-color:rgba(96,165,250,0.35);  background:rgba(96,165,250,0.08); }
+    .badge--field     { color:#fb923c; border-color:rgba(251,146,60,0.35);  background:rgba(251,146,60,0.08); }
+    .badge--proposal  { color:#a78bfa; border-color:rgba(167,139,250,0.35); background:rgba(167,139,250,0.08); }
+    .article-row__read-time { font-family:var(--font-mono); font-size:8px; letter-spacing:0.1em; color:var(--text-muted); }
+
+    .article-row__title { font-family:var(--font-heading); font-size:clamp(16px,2vw,20px); font-weight:800; color:var(--text-primary); line-height:1.3; margin-bottom:10px; transition:color 0.18s; }
+    .article-row:hover .article-row__title { color:var(--amber); }
+    .article-row__preview { font-size:13px; color:var(--text-secondary); line-height:1.7; max-width:680px; margin-bottom:14px; }
+    .article-row__tags { display:flex; flex-wrap:wrap; gap:6px; }
+    .article-tag { font-family:var(--font-mono); font-size:8px; letter-spacing:0.1em; padding:2px 8px; border-radius:4px; background:rgba(240,165,0,0.07); border:1px solid rgba(240,165,0,0.16); color:var(--amber); }
+    .article-row__arrow { font-size:18px; color:var(--amber); opacity:0; transform:translateX(-6px); transition:opacity 0.18s,transform 0.18s; padding-top:4px; align-self:center; }
+
+    .article-row--featured { background:rgba(240,165,0,0.04); border:1px solid rgba(240,165,0,0.18); border-radius:18px; padding:28px; margin-bottom:12px; grid-template-columns:100px 1fr auto; }
+    .article-row--featured .article-row__title { font-size:clamp(18px,2.5vw,24px); }
+    .article-row--featured .article-row__arrow { opacity:0.4; transform:none; }
+    .article-row--featured:hover .article-row__arrow { opacity:1; }
+
+    .articles-section { margin-bottom:48px; }
+    .articles-section-header { display:flex; align-items:center; gap:16px; margin-bottom:4px; padding-top:8px; }
+    .articles-section-label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.22em; color:var(--amber); white-space:nowrap; }
+    .articles-section-line { flex:1; height:1px; background:linear-gradient(90deg,rgba(240,165,0,0.3),transparent); }
+    .articles-section-count { font-family:var(--font-mono); font-size:9px; color:var(--text-muted); letter-spacing:0.1em; }
+
+    /* Reader overlay */
+    .reader-overlay { position:fixed; inset:0; z-index:600; background:rgba(3,6,14,0.97); backdrop-filter:blur(24px); opacity:0; pointer-events:none; transition:opacity 0.22s; display:flex; flex-direction:column; }
+    .reader-overlay.open { opacity:1; pointer-events:all; }
+    .reader-topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; border-bottom:1px solid rgba(240,165,0,0.16); background:rgba(14,20,44,0.99); flex-shrink:0; gap:16px; }
+    .reader-topbar__left { display:flex; align-items:center; gap:14px; overflow:hidden; }
+    .reader-topbar__label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.18em; color:var(--amber); white-space:nowrap; }
+    .reader-topbar__title { font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .reader-close { font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; padding:8px 16px; border-radius:8px; border:1px solid rgba(248,113,113,0.3); background:transparent; color:#f87171; cursor:pointer; transition:all 0.15s; flex-shrink:0; }
+    .reader-close:hover { background:rgba(248,113,113,0.12); border-color:#f87171; }
+    .reader-body { flex:1; overflow-y:auto; padding:48px 0 80px; }
+    .reader-content { max-width:720px; margin:0 auto; padding:0 28px; }
+
+    .reader-content .art-label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.22em; color:var(--amber); margin-bottom:14px; }
+    .reader-content .art-title { font-family:var(--font-heading); font-size:clamp(24px,4vw,38px); font-weight:900; color:var(--text-primary); line-height:1.2; margin-bottom:20px; }
+    .reader-content .art-meta { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:36px; padding-bottom:28px; border-bottom:1px solid rgba(240,165,0,0.14); }
+    .reader-content .art-meta-item { font-family:var(--font-mono); font-size:9px; letter-spacing:0.12em; color:var(--text-muted); }
+    .reader-content .art-meta-dot { width:3px; height:3px; border-radius:50%; background:rgba(240,165,0,0.35); flex-shrink:0; }
+    .reader-content h2 { font-family:var(--font-heading); font-size:18px; font-weight:800; color:var(--text-primary); margin:36px 0 14px; padding-left:14px; border-left:3px solid var(--amber); }
+    .reader-content h3 { font-family:var(--font-heading); font-size:15px; font-weight:700; color:var(--text-primary); margin:28px 0 10px; }
+    .reader-content p { font-size:15px; color:var(--text-secondary); line-height:1.8; margin-bottom:18px; }
+    .reader-content ul,.reader-content ol { padding-left:20px; margin-bottom:18px; }
+    .reader-content li { font-size:15px; color:var(--text-secondary); line-height:1.75; margin-bottom:6px; }
+    .reader-content li::marker { color:var(--amber); }
+    .reader-content strong { color:var(--text-primary); font-weight:700; }
+    .reader-content em { color:var(--amber); font-style:normal; font-weight:600; }
+    .reader-content code { font-family:var(--font-mono); font-size:12px; background:rgba(240,165,0,0.08); border:1px solid rgba(240,165,0,0.18); border-radius:5px; padding:2px 7px; color:var(--amber); }
+    .reader-content pre { background:rgba(5,9,22,0.96); border:1px solid rgba(240,165,0,0.18); border-radius:10px; padding:18px 20px; overflow-x:auto; margin-bottom:20px; }
+    .reader-content pre code { background:none; border:none; padding:0; font-size:12px; }
+    .reader-content table { width:100%; border-collapse:collapse; margin-bottom:24px; font-size:13px; }
+    .reader-content th { font-family:var(--font-mono); font-size:8px; letter-spacing:0.14em; color:var(--amber); text-align:left; padding:10px 14px; border-bottom:1px solid rgba(240,165,0,0.25); background:rgba(240,165,0,0.05); }
+    .reader-content td { padding:10px 14px; border-bottom:1px solid rgba(240,165,0,0.08); color:var(--text-secondary); vertical-align:top; line-height:1.55; }
+    .reader-content tr:hover td { background:rgba(240,165,0,0.03); }
+    .reader-callout { border-left:3px solid var(--amber); background:rgba(240,165,0,0.06); border-radius:0 10px 10px 0; padding:14px 18px; margin:20px 0; }
+    .reader-callout p { margin-bottom:0; font-size:13px; }
+    .reader-callout--info { border-color:#60a5fa; background:rgba(96,165,250,0.06); }
+    .reader-callout--warn { border-color:#fb923c; background:rgba(251,146,60,0.06); }
+    .reader-callout--check { border-color:#4ade80; background:rgba(74,222,128,0.06); }
+
+    /* Add row */
+    .article-add-row { display:flex; align-items:center; gap:14px; padding:20px 0; border-bottom:1px dashed rgba(240,165,0,0.18); cursor:pointer; transition:background 0.18s; border-radius:8px; background:transparent; width:100%; font-family:inherit; }
+    .article-add-row:hover { background:rgba(240,165,0,0.04); }
+    .article-add-row__icon { width:36px; height:36px; border-radius:50%; border:1.5px dashed rgba(240,165,0,0.35); display:flex; align-items:center; justify-content:center; font-size:18px; color:rgba(240,165,0,0.45); flex-shrink:0; transition:border-color 0.18s,color 0.18s; }
+    .article-add-row:hover .article-add-row__icon { border-color:var(--amber); color:var(--amber); }
+    .article-add-row__label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.18em; color:var(--text-muted); transition:color 0.18s; }
+    .article-add-row:hover .article-add-row__label { color:var(--amber); }
+
+    /* Light theme */
+    body.contrast-light .article-row:hover { background:rgba(13,110,110,0.04); }
+    body.contrast-light .article-row--featured { background:rgba(13,110,110,0.04); border-color:rgba(13,110,110,0.18); }
+    body.contrast-light .article-row__date-day,.contrast-light .article-row__arrow { color:#0d6e6e; }
+    body.contrast-light .article-row:hover .article-row__title { color:#0d6e6e !important; }
+    body.contrast-light .filter-btn { background:rgba(255,255,255,0.75) !important; border-color:rgba(14,20,32,0.18) !important; color:#4a556e !important; }
+    body.contrast-light .filter-btn.active { background:#0d6e6e !important; border-color:#0d6e6e !important; color:#fff !important; }
+    body.contrast-light .article-tag { background:rgba(13,110,110,0.08) !important; border-color:rgba(13,110,110,0.22) !important; color:#0d6e6e !important; }
+    body.contrast-light .articles-section-label { color:#0d6e6e !important; }
+    body.contrast-light .articles-section-line { background:linear-gradient(90deg,rgba(13,110,110,0.35),transparent) !important; }
+    body.contrast-light .badge--buildlog  { color:#8a5a00 !important; border-color:rgba(138,90,0,0.3) !important;   background:rgba(138,90,0,0.08) !important; }
+    body.contrast-light .badge--technical { color:#1a4fa0 !important; border-color:rgba(26,79,160,0.3) !important;  background:rgba(26,79,160,0.08) !important; }
+    body.contrast-light .badge--field     { color:#a03010 !important; border-color:rgba(160,48,16,0.3) !important;  background:rgba(160,48,16,0.08) !important; }
+    body.contrast-light .badge--proposal  { color:#5c3a9e !important; border-color:rgba(92,58,158,0.3) !important;  background:rgba(92,58,158,0.08) !important; }
+
+    @media(max-width:640px) {
+      .article-row { grid-template-columns:70px 1fr 20px; gap:0 14px; }
+      .article-row--featured { padding:20px 16px; }
+      .article-row__preview { display:none; }
+    }
+  </style>
+</head>
+<body class="page-frame">
+
+  <nav class="nav">
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
+        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
+        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
+        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
+        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
+        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
+        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="scroll-surface">
+    <div class="container">
+
+      <div class="articles-hero fade-in">
+        <p class="hero__label">// articles &amp; docs</p>
+        <h1 class="hero__title" style="font-size:clamp(28px,4vw,52px);margin-bottom:14px;" data-edit-id="art-hero-title">Documentation</h1>
+        <p style="font-size:15px;color:var(--text-secondary);max-width:580px;line-height:1.7;" data-edit-id="art-hero-desc">Build logs, technical write-ups, field experience reports and project proposals — all documented as I go. Every article is readable in-page without downloading.</p>
+      </div>
+
+      <div class="stats" style="margin-bottom:36px;">
+        <div class="stats__item fade-in"><div class="stats__number" data-edit-id="art-s1">4</div><div class="stats__label">Total articles</div></div>
+        <div class="stats__item fade-in"><div class="stats__number" data-edit-id="art-s2">1</div><div class="stats__label">Build log entries</div></div>
+        <div class="stats__item fade-in"><div class="stats__number" data-edit-id="art-s3">2</div><div class="stats__label">Field reports</div></div>
+        <div class="stats__item fade-in"><div class="stats__number" data-edit-id="art-s4">1</div><div class="stats__label">Technical proposals</div></div>
+      </div>
+
+      <div class="filter-bar" role="tablist">
+        <button class="filter-btn active" data-filter="all">ALL</button>
+        <button class="filter-btn" data-filter="buildlog">BUILD LOG</button>
+        <button class="filter-btn" data-filter="technical">TECHNICAL</button>
+        <button class="filter-btn" data-filter="field">FIELD REPORTS</button>
+        <button class="filter-btn" data-filter="proposal">PROPOSALS</button>
+      </div>
+
+      <!-- BUILD LOG -->
+      <div class="articles-section" data-category="buildlog">
+        <div class="articles-section-header fade-in">
+          <span class="articles-section-label">// BUILD LOG</span>
+          <div class="articles-section-line"></div>
+          <span class="articles-section-count" data-edit-id="bl-count">1 ENTRY</span>
+        </div>
+        <div class="article-list">
+          <div class="article-row article-row--featured fade-in" data-category="buildlog" data-article-id="bl1" role="button" tabindex="0">
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="bl1-day">01</div><div data-edit-id="bl1-month">MAY 2025</div></div>
+            <div class="article-row__body">
+              <div class="article-row__meta"><span class="article-badge badge--buildlog">BUILD LOG</span><span class="article-row__read-time" data-edit-id="bl1-read">8 MIN READ</span></div>
+              <div class="article-row__title" data-edit-id="bl1-title">Build Log #1 — Project Setup, Homepage &amp; Design System</div>
+              <div class="article-row__preview" data-edit-id="bl1-preview">Phase 1 complete. Defined the full site architecture (6 pages), chose the tech stack — pure HTML/CSS/JS hosted on GitHub Pages — and established the Technical Blueprint design language: dark navy, amber grid, monospaced labels. Built index.html, style.css and main.js from scratch.</div>
+              <div class="article-row__tags"><span class="article-tag">HTML/CSS/JS</span><span class="article-tag">GitHub Pages</span><span class="article-tag">Design System</span><span class="article-tag">Phase 1</span></div>
+            </div>
+            <div class="article-row__arrow">→</div>
+          </div>
+          <button class="article-add-row owner-only" data-add-category="buildlog"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD BUILD LOG ENTRY</span></button>
+        </div>
+      </div>
+
+      <!-- TECHNICAL -->
+      <div class="articles-section" data-category="technical">
+        <div class="articles-section-header fade-in">
+          <span class="articles-section-label">// TECHNICAL WRITE-UPS</span>
+          <div class="articles-section-line"></div>
+          <span class="articles-section-count" data-edit-id="tw-count">1 ARTICLE</span>
+        </div>
+        <div class="article-list">
+          <div class="article-row fade-in" data-category="technical" data-article-id="tw1" role="button" tabindex="0">
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="tw1-day">15</div><div data-edit-id="tw1-month">DEC 2024</div></div>
+            <div class="article-row__body">
+              <div class="article-row__meta"><span class="article-badge badge--technical">TECHNICAL</span><span class="article-row__read-time" data-edit-id="tw1-read">12 MIN READ</span></div>
+              <div class="article-row__title" data-edit-id="tw1-title">IoT Fault Detection — System Architecture &amp; Design Decisions</div>
+              <div class="article-row__preview" data-edit-id="tw1-preview">A detailed breakdown of the hardware-to-cloud architecture behind my final year project. Covers sensor selection, ESP32 firmware design, Firebase Realtime Database schema, and the web dashboard data pipeline. Includes key tradeoffs and how I resolved them.</div>
+              <div class="article-row__tags"><span class="article-tag">IoT</span><span class="article-tag">ESP32</span><span class="article-tag">Firebase</span><span class="article-tag">Architecture</span></div>
+            </div>
+            <div class="article-row__arrow">→</div>
+          </div>
+          <button class="article-add-row owner-only" data-add-category="technical"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD TECHNICAL ARTICLE</span></button>
+        </div>
+      </div>
+
+      <!-- FIELD REPORTS -->
+      <div class="articles-section" data-category="field">
+        <div class="articles-section-header fade-in">
+          <span class="articles-section-label">// FIELD EXPERIENCE REPORTS</span>
+          <div class="articles-section-line"></div>
+          <span class="articles-section-count" data-edit-id="fr-count">2 REPORTS</span>
+        </div>
+        <div class="article-list">
+          <div class="article-row fade-in" data-category="field" data-article-id="fr1" role="button" tabindex="0">
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="fr1-day">31</div><div data-edit-id="fr1-month">JUL 2024</div></div>
+            <div class="article-row__body">
+              <div class="article-row__meta"><span class="article-badge badge--field">FIELD REPORT</span><span class="article-row__read-time" data-edit-id="fr1-read">10 MIN READ</span></div>
+              <div class="article-row__title" data-edit-id="fr1-title">Kenya Power Attachment 2024 — 11kV Operations &amp; Maintenance, Gatundu</div>
+              <div class="article-row__preview" data-edit-id="fr1-preview">Three months working with Kenya Power's operations team in Gatundu, Kiambu County. Covers field repairs on 11kV distribution lines, substation commissioning, protection DC circuit testing, safety protocols (LOTO, earthing, isolation), and lessons learned from live network infrastructure.</div>
+              <div class="article-row__tags"><span class="article-tag">Kenya Power</span><span class="article-tag">11kV</span><span class="article-tag">Operations</span><span class="article-tag">2024</span></div>
+            </div>
+            <div class="article-row__arrow">→</div>
+          </div>
+          <div class="article-row fade-in" data-category="field" data-article-id="fr2" role="button" tabindex="0">
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="fr2-day">31</div><div data-edit-id="fr2-month">JUL 2023</div></div>
+            <div class="article-row__body">
+              <div class="article-row__meta"><span class="article-badge badge--field">FIELD REPORT</span><span class="article-row__read-time" data-edit-id="fr2-read">9 MIN READ</span></div>
+              <div class="article-row__title" data-edit-id="fr2-title">Ministry of Lands Attachment 2023 — Electrical Design, Hill Plaza Nairobi</div>
+              <div class="article-row__preview" data-edit-id="fr2-preview">Three months in the Electrical Department at Hill Plaza, Nairobi. Documents the AutoCAD electrical layout and single-line diagram work for government buildings, load calculations, cable sizing, illumination design, fire detection system design, and BOQ preparation.</div>
+              <div class="article-row__tags"><span class="article-tag">Ministry of Lands</span><span class="article-tag">AutoCAD</span><span class="article-tag">Design</span><span class="article-tag">2023</span></div>
+            </div>
+            <div class="article-row__arrow">→</div>
+          </div>
+          <button class="article-add-row owner-only" data-add-category="field"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD FIELD REPORT</span></button>
+        </div>
+      </div>
+
+      <!-- PROPOSALS -->
+      <div class="articles-section" data-category="proposal">
+        <div class="articles-section-header fade-in">
+          <span class="articles-section-label">// PROPOSALS &amp; DOCUMENTATION</span>
+          <div class="articles-section-line"></div>
+          <span class="articles-section-count" data-edit-id="pr-count">1 DOCUMENT</span>
+        </div>
+        <div class="article-list">
+          <div class="article-row fade-in" data-category="proposal" data-article-id="pr1" role="button" tabindex="0">
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="pr1-day">01</div><div data-edit-id="pr1-month">DEC 2024</div></div>
+            <div class="article-row__body">
+              <div class="article-row__meta"><span class="article-badge badge--proposal">PROPOSAL</span><span class="article-row__read-time" data-edit-id="pr1-read">15 MIN READ</span></div>
+              <div class="article-row__title" data-edit-id="pr1-title">FYP Proposal — Power Line Fault Detection &amp; Alert System</div>
+              <div class="article-row__preview" data-edit-id="pr1-preview">The original project proposal submitted to JKUAT. Covers the problem statement, proposed IoT architecture, expected outcomes, timeline, component list and budget estimate. Forms the foundation of the 52-page project report.</div>
+              <div class="article-row__tags"><span class="article-tag">FYP</span><span class="article-tag">JKUAT</span><span class="article-tag">IoT</span><span class="article-tag">Proposal</span></div>
+            </div>
+            <div class="article-row__arrow">→</div>
+          </div>
+          <button class="article-add-row owner-only" data-add-category="proposal"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD PROPOSAL / DOCUMENT</span></button>
+        </div>
+      </div>
+
+      <div style="padding-bottom:64px;"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
+      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span><span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span></span>
+    </div>
+  </footer>
+
+  <!-- READER OVERLAY -->
+  <div class="reader-overlay" id="reader-overlay" role="dialog" aria-modal="true">
+    <div class="reader-topbar">
+      <div class="reader-topbar__left">
+        <span class="reader-topbar__label">// READING</span>
+        <span class="reader-topbar__title" id="reader-topbar-title"></span>
+      </div>
+      <button class="reader-close" id="reader-close">✕ CLOSE</button>
+    </div>
+    <div class="reader-body"><div class="reader-content" id="reader-content"></div></div>
+  </div>
+
+  <!-- OWNER LOCK OVERLAY -->
+  <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
+    <div class="lock-modal">
+      <div class="lock-modal__label">// owner access</div>
+      <div class="lock-modal__title">Unlock editing</div>
+      <div class="lock-modal__hint">Enter your passphrase to reveal add/edit controls and enable content editing.</div>
+      <input class="lock-modal__input" id="lock-input" type="password" placeholder="passphrase" autocomplete="off" />
+      <div class="lock-modal__actions">
+        <button class="lock-modal__submit" id="lock-submit">UNLOCK</button>
+        <button class="lock-modal__cancel" id="lock-cancel">CANCEL</button>
+      </div>
+      <div class="lock-modal__error" id="lock-error">Incorrect passphrase</div>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>
+  (function() {
+    var articles = {
+      bl1: { label:'// BUILD LOG — ENTRY #1', title:'Build Log #1 — Project Setup, Homepage & Design System', date:'May 2025', readTime:'8 min read', content:'<h2>What was built</h2><p>Phase 1 of the portfolio is complete. This entry documents every decision made during the initial setup — from folder structure to the final design language.</p><ul><li>Defined the full site architecture: <strong>6 pages</strong> (Home, About, Projects, Skills, Articles, Media, Contact)</li><li>Created the folder structure and initialised the GitHub repository</li><li>Chose the tech stack: <em>pure HTML / CSS / JavaScript</em>, hosted on GitHub Pages</li><li>Defined the design language: <em>Technical Blueprint</em> — dark navy, amber grid, monospaced labels</li><li>Built <code>index.html</code>, <code>css/style.css</code> and <code>js/main.js</code> from scratch</li></ul><h2>Design decisions</h2><table><thead><tr><th>Decision</th><th>Choice</th><th>Reason</th></tr></thead><tbody><tr><td>Framework</td><td>Vanilla HTML/CSS/JS</td><td>Learn fundamentals, no build step, easy GitHub Pages deploy</td></tr><tr><td>Hosting</td><td>GitHub Pages</td><td>Free, ties directly to repo, URL on CV</td></tr><tr><td>Visual theme</td><td>Dark blueprint</td><td>Differentiates from generic portfolios; fits engineering identity</td></tr><tr><td>Fonts</td><td>Syne + JetBrains Mono</td><td>Geometric headings + technical mono labels</td></tr><tr><td>Accent colour</td><td>#F0A500 amber</td><td>Engineering drawing colour; visible on dark background</td></tr></tbody></table><h2>Key concepts learned</h2><h3>CSS Custom Properties</h3><p>All colours, fonts, and spacing defined once in <code>:root{}</code> and reused everywhere. Change one variable — whole site updates.</p><h3>IntersectionObserver API</h3><p>Used to detect when elements scroll into view, triggering animations only when visible — no wasted repaints off-screen.</p><h3>Sticky Navigation</h3><p><code>position:sticky; top:0</code> keeps nav visible while scrolling. <code>backdrop-filter:blur()</code> creates the frosted-glass effect.</p><div class="reader-callout reader-callout--check"><p><strong>Phase 1 status:</strong> Complete. All files deployed and live on GitHub Pages.</p></div><h2>What\'s next — Phase 2</h2><ul><li><code>about.html</code> — bio, education, downloadable CV</li><li><code>projects.html</code> — card grid with file downloads</li><li><code>skills.html</code> — animated skill bars</li></ul>' },
+      tw1: { label:'// TECHNICAL WRITE-UP', title:'IoT Fault Detection — System Architecture & Design Decisions', date:'December 2024', readTime:'12 min read', content:'<h2>Overview</h2><p>This write-up documents the full hardware-to-cloud architecture behind my final year project — a real-time power line fault detection system.</p><div class="reader-callout"><p><strong>Stack:</strong> Arduino + ESP32 (firmware) · Firebase Realtime DB (cloud) · HTML/CSS/JS (dashboard)</p></div><h2>Hardware layer</h2><p>Add your hardware description here — sensors used, wiring, PCB layout, component choices and why you made them.</p><h2>Firmware architecture</h2><p>Document your C/C++ firmware — how the ESP32 reads sensors, formats data, and pushes to Firebase.</p><pre><code>// Firebase push example\nFirebaseData fbData;\nFirebase.setFloat(fbData, "/sensors/voltage", voltageReading);\nFirebase.setFloat(fbData, "/sensors/current", currentReading);</code></pre><h2>Cloud integration</h2><p>Explain your Firebase database schema, security rules, and how the web dashboard reads live data using the Firebase JS SDK.</p><h2>Key design tradeoffs</h2><p>Document the tradeoffs — polling vs. streaming, local vs. cloud processing, power consumption, latency.</p><div class="reader-callout reader-callout--info"><p>Unlock and edit to fill in your full technical write-up.</p></div>' },
+      fr1: { label:'// FIELD REPORT', title:'Kenya Power Attachment 2024 — 11kV Operations & Maintenance, Gatundu', date:'July 2024', readTime:'10 min read', content:'<h2>Overview</h2><p>Three months (May–July 2024) with Kenya Power and Lighting Company\'s operations team at Gatundu Branch, Kiambu County — working on live 11kV distribution infrastructure.</p><h2>Key tasks completed</h2><ul><li>Field repairs on 11kV distribution lines — replacing damaged poles, burnt fuses, and loose transformer connections</li><li>Maintenance of switchgear, circuit breakers, and isolators</li><li>Participation in substation commissioning</li><li>Protection DC circuit testing and grading validation</li><li>Maintaining field intervention logs and equipment status records</li></ul><h2>Safety protocols observed</h2><div class="reader-callout reader-callout--warn"><p>All field work on live network infrastructure followed strict Lockout-Tagout (LOTO), isolation, and earthing procedures as per KPLC operational standards.</p></div><h2>Technical learnings</h2><p>Add your detailed technical learnings here — what you observed, what surprised you, and how it connects to your university coursework.</p><h2>Reflections</h2><p>Add your personal reflections — what you\'d do differently, skills to develop, and how the experience shaped your engineering approach.</p>' },
+      fr2: { label:'// FIELD REPORT', title:'Ministry of Lands Attachment 2023 — Electrical Design, Hill Plaza Nairobi', date:'July 2023', readTime:'9 min read', content:'<h2>Overview</h2><p>Three months (May–July 2023) in the Electrical Department, Ministry of Lands, Hill Plaza, Nairobi — focused on electrical design work for government infrastructure projects.</p><h2>Key tasks completed</h2><ul><li>Electrical layouts and single-line diagrams in AutoCAD for government buildings</li><li>Load calculations and cable sizing for power and lighting circuits</li><li>Interior lighting design — lux calculations and luminaire selection</li><li>Fire detection system layout and zone planning</li><li>Bills of Quantities (BOQ) preparation for project tendering</li></ul><h2>AutoCAD work</h2><p>Describe the specific drawings you worked on — building types, floor areas, circuit configurations, and any interesting design challenges you solved.</p><h2>Standards applied</h2><p>Document the electrical standards and codes referenced — IEE Wiring Regulations, Kenya Bureau of Standards requirements, etc.</p><h2>Reflections</h2><p>Add your reflections — the gap between university theory and real design practice, skills gained, and what you want to learn next.</p>' },
+      pr1: { label:'// PROJECT PROPOSAL', title:'FYP Proposal — Power Line Fault Detection & Alert System', date:'December 2024', readTime:'15 min read', content:'<h2>Problem statement</h2><p>Power line faults in distribution networks cause significant economic losses and safety hazards. Manual fault detection is slow and dependent on customer complaints. This project proposes an automated, real-time IoT-based detection and alert system.</p><h2>Proposed solution</h2><p>An Arduino/ESP32-based monitoring node that measures voltage, current, and fault indicators on a simulated power line, transmits data to Firebase Realtime Database via WiFi, and visualises it on a custom web dashboard.</p><h2>System architecture</h2><ul><li><strong>Sensing layer:</strong> Current transformers, voltage dividers, fault simulation circuit</li><li><strong>Processing layer:</strong> Arduino Uno + ESP32 WiFi module</li><li><strong>Cloud layer:</strong> Firebase Realtime Database</li><li><strong>Presentation layer:</strong> Custom HTML/CSS/JS web dashboard</li></ul><h2>Expected outcomes</h2><ul><li>Real-time fault detection with &lt;2 second alert latency</li><li>Web dashboard accessible from any browser, no app required</li><li>Historical fault log stored in Firebase</li><li>Scalable architecture — additional nodes can be added</li></ul><h2>Timeline</h2><table><thead><tr><th>Phase</th><th>Activity</th><th>Duration</th></tr></thead><tbody><tr><td>1</td><td>Literature review &amp; component sourcing</td><td>4 weeks</td></tr><tr><td>2</td><td>Hardware prototyping &amp; sensor calibration</td><td>6 weeks</td></tr><tr><td>3</td><td>Firmware development &amp; Firebase integration</td><td>6 weeks</td></tr><tr><td>4</td><td>Dashboard development &amp; testing</td><td>4 weeks</td></tr><tr><td>5</td><td>Documentation &amp; final report</td><td>4 weeks</td></tr></tbody></table><div class="reader-callout reader-callout--check"><p><strong>Status:</strong> Proposal approved. Project completed December 2025. Full report on the Projects page.</p></div>' }
+    };
+
+    var overlay      = document.getElementById('reader-overlay');
+    var readerTitle  = document.getElementById('reader-topbar-title');
+    var readerContent= document.getElementById('reader-content');
+    var readerClose  = document.getElementById('reader-close');
+
+    function openReader(id) {
+      var a = articles[id]; if (!a) return;
+      readerTitle.textContent = a.title;
+      readerContent.innerHTML = '<div class="art-label">'+a.label+'</div><div class="art-title">'+a.title+'</div><div class="art-meta"><span class="art-meta-item">'+a.date+'</span><span class="art-meta-dot"></span><span class="art-meta-item">'+a.readTime+'</span></div>'+a.content;
+      overlay.classList.add('open');
+      overlay.querySelector('.reader-body').scrollTop = 0;
+      document.body.style.overflow = 'hidden';
+    }
+    function closeReader() { overlay.classList.remove('open'); document.body.style.overflow = ''; }
+    readerClose.addEventListener('click', closeReader);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) closeReader(); });
+
+    function wireRows() {
+      document.querySelectorAll('.article-row[data-article-id]').forEach(function(row) {
+        if (row._wired) return; row._wired = true;
+        row.addEventListener('click', function() { openReader(row.getAttribute('data-article-id')); });
+        row.addEventListener('keydown', function(e) { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); openReader(row.getAttribute('data-article-id')); } });
+      });
+    }
+    wireRows();
+
+    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var f = btn.getAttribute('data-filter');
+        document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+        btn.classList.add('active');
+        document.querySelectorAll('.articles-section').forEach(function(s){ s.style.display=(f==='all'||s.getAttribute('data-category')===f)?'':'none'; });
+      });
+    });
+
+    var counter = 0;
+    function wireAddBtns() {
+      document.querySelectorAll('.article-add-row').forEach(function(btn) {
+        if (btn._wired) return; btn._wired = true;
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (!document.body.classList.contains('owner-unlocked')) return;
+          counter++;
+          var cat = btn.getAttribute('data-add-category')||'buildlog';
+          var label = cat==='buildlog'?'BUILD LOG':cat==='technical'?'TECHNICAL':cat==='field'?'FIELD REPORT':'PROPOSAL';
+          var badgeCls = 'badge--'+cat;
+          var id = 'art-new-'+counter;
+          var html = '<div class="article-row new-card fade-in visible" data-category="'+cat+'" data-new-id="'+id+'" data-article-id="" role="button" tabindex="0"><div class="article-row__date"><div class="article-row__date-day" contenteditable="false">01</div><div contenteditable="false">MON YEAR</div></div><div class="article-row__body"><div class="article-row__meta"><span class="article-badge '+badgeCls+'">'+label+'</span><span class="article-row__read-time" contenteditable="false">X MIN READ</span></div><div class="article-row__title" contenteditable="false">Article Title</div><div class="article-row__preview" contenteditable="false">Write a short preview of this article.</div><div class="article-row__tags"><span class="article-tag" contenteditable="false">Tag</span></div></div><div class="article-row__arrow">→</div></div>';
+          var tmp = document.createElement('div'); tmp.innerHTML = html;
+          var row = tmp.firstElementChild;
+          btn.parentNode.insertBefore(row, btn);
+          wireRows();
+          var t = row.querySelector('.article-row__title');
+          if (t) { t.setAttribute('contenteditable','true'); setTimeout(function(){ t.focus(); var r=document.createRange(); r.selectNodeContents(t); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); },60); }
+        });
+      });
+    }
+    wireAddBtns();
+
+    document.addEventListener('keydown', function(e) { if (e.key==='Escape'&&overlay.classList.contains('open')) closeReader(); });
+  })();
+  </script>
+  <script src="js/editor.js"></script>
+</body>
+</html>
+HTMLEOF
+echo "done"
