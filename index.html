@@ -78,7 +78,7 @@
       <svg id="circuit-svg" viewBox="0 0 420 560" xmlns="http://www.w3.org/2000/svg">
 
         <!-- ── GRID DOTS ── -->
-        <g opacity="0.18">
+        <g opacity="0.55">
           <circle cx="40"  cy="40"  r="1.5" fill="#F0A500"/>
           <circle cx="100" cy="40"  r="1.5" fill="#F0A500"/>
           <circle cx="160" cy="40"  r="1.5" fill="#F0A500"/>
@@ -138,50 +138,50 @@
         <!-- ── STATIC CIRCUIT TRACES ── -->
         <g fill="none" stroke="#F0A500" stroke-linecap="round" stroke-linejoin="round">
           <!-- Main trunk vertical -->
-          <path d="M220 40 L220 160 L160 160 L160 280 L220 280 L220 400 L280 400 L280 460" stroke-width="1.5" opacity="0.35"/>
+          <path d="M220 40 L220 160 L160 160 L160 280 L220 280 L220 400 L280 400 L280 460" stroke-width="2"   opacity="0.85"/>
           <!-- Branch left -->
-          <path d="M160 160 L100 160 L100 280 L40 280 L40 400" stroke-width="1" opacity="0.25"/>
+          <path d="M160 160 L100 160 L100 280 L40 280 L40 400" stroke-width="1.5" opacity="0.70"/>
           <!-- Branch right top -->
-          <path d="M280 100 L340 100 L340 220 L280 220 L280 280 L340 280 L340 400" stroke-width="1" opacity="0.25"/>
+          <path d="M280 100 L340 100 L340 220 L280 220 L280 280 L340 280 L340 400" stroke-width="1.5" opacity="0.70"/>
           <!-- Cross trace middle -->
-          <path d="M100 220 L220 220" stroke-width="1" opacity="0.2"/>
-          <path d="M220 340 L340 340" stroke-width="1" opacity="0.2"/>
+          <path d="M100 220 L220 220" stroke-width="1.5" opacity="0.60"/>
+          <path d="M220 340 L340 340" stroke-width="1.5" opacity="0.60"/>
           <!-- Bottom bus -->
-          <path d="M40 460 L340 460" stroke-width="1.5" opacity="0.3"/>
+          <path d="M40 460 L340 460" stroke-width="2"   opacity="0.80"/>
           <!-- Top entry -->
-          <path d="M40 40 L340 40" stroke-width="1" opacity="0.18"/>
+          <path d="M40 40 L340 40" stroke-width="1.5" opacity="0.55"/>
           <!-- Verticals left column -->
-          <path d="M40 40 L40 280" stroke-width="1" opacity="0.22"/>
-          <path d="M100 40 L100 160" stroke-width="1" opacity="0.18"/>
+          <path d="M40 40 L40 280" stroke-width="1.5" opacity="0.65"/>
+          <path d="M100 40 L100 160" stroke-width="1.5" opacity="0.55"/>
           <!-- Verticals right column -->
-          <path d="M340 40 L340 100" stroke-width="1" opacity="0.18"/>
+          <path d="M340 40 L340 100" stroke-width="1.5" opacity="0.55"/>
           <!-- Diagonal hint -->
-          <path d="M160 400 L160 460" stroke-width="1" opacity="0.2"/>
-          <path d="M100 400 L100 460" stroke-width="1" opacity="0.18"/>
+          <path d="M160 400 L160 460" stroke-width="1.5" opacity="0.60"/>
+          <path d="M100 400 L100 460" stroke-width="1.5" opacity="0.55"/>
         </g>
 
         <!-- ── COMPONENT PADS (junction nodes) ── -->
         <g fill="none" stroke="#F0A500">
-          <circle cx="220" cy="160" r="5"   stroke-width="1.5" opacity="0.55"/>
-          <circle cx="160" cy="280" r="4"   stroke-width="1.2" opacity="0.45"/>
-          <circle cx="280" cy="280" r="4"   stroke-width="1.2" opacity="0.45"/>
-          <circle cx="220" cy="400" r="5"   stroke-width="1.5" opacity="0.55"/>
-          <circle cx="100" cy="160" r="3"   stroke-width="1"   opacity="0.35"/>
-          <circle cx="340" cy="220" r="3"   stroke-width="1"   opacity="0.35"/>
-          <circle cx="40"  cy="400" r="3"   stroke-width="1"   opacity="0.35"/>
-          <circle cx="340" cy="460" r="3"   stroke-width="1"   opacity="0.35"/>
+          <circle cx="220" cy="160" r="5"   stroke-width="2"   opacity="0.90"/>
+          <circle cx="160" cy="280" r="4"   stroke-width="1.8" opacity="0.80"/>
+          <circle cx="280" cy="280" r="4"   stroke-width="1.8" opacity="0.80"/>
+          <circle cx="220" cy="400" r="5"   stroke-width="2"   opacity="0.90"/>
+          <circle cx="100" cy="160" r="3"   stroke-width="1.5" opacity="0.70"/>
+          <circle cx="340" cy="220" r="3"   stroke-width="1.5" opacity="0.70"/>
+          <circle cx="40"  cy="400" r="3"   stroke-width="1.5" opacity="0.70"/>
+          <circle cx="340" cy="460" r="3"   stroke-width="1.5" opacity="0.70"/>
         </g>
         <!-- Filled nodes at key junctions -->
         <g fill="#F0A500">
-          <circle cx="160" cy="160" r="3" opacity="0.5"/>
-          <circle cx="280" cy="400" r="3" opacity="0.5"/>
-          <circle cx="220" cy="280" r="3" opacity="0.5"/>
-          <circle cx="100" cy="280" r="2.5" opacity="0.4"/>
-          <circle cx="340" cy="340" r="2.5" opacity="0.4"/>
+          <circle cx="160" cy="160" r="3.5" opacity="0.90"/>
+          <circle cx="280" cy="400" r="3.5" opacity="0.90"/>
+          <circle cx="220" cy="280" r="3.5" opacity="0.90"/>
+          <circle cx="100" cy="280" r="3" opacity="0.82"/>
+          <circle cx="340" cy="340" r="3" opacity="0.82"/>
         </g>
 
         <!-- ── RESISTOR symbols ── -->
-        <g fill="none" stroke="#F0A500" stroke-width="1.2" opacity="0.5">
+        <g fill="none" stroke="#F0A500" stroke-width="1.6" opacity="0.85">
           <!-- R1 on left branch near (40,340) -->
           <rect x="24" y="310" width="32" height="12" rx="2"/>
           <!-- R2 on right branch near (340,160) -->
@@ -189,7 +189,7 @@
         </g>
 
         <!-- ── CAPACITOR symbols ── -->
-        <g stroke="#F0A500" stroke-width="1.5" opacity="0.5">
+        <g stroke="#F0A500" stroke-width="1.8" opacity="0.85">
           <!-- C1 near (220, 460) -->
           <line x1="210" y1="445" x2="210" y2="455"/>
           <line x1="230" y1="445" x2="230" y2="455"/>
@@ -203,7 +203,7 @@
         </g>
 
         <!-- ── IC CHIP ── (center) -->
-        <g opacity="0.45">
+        <g opacity="0.88">
           <rect x="176" y="236" width="88" height="48" rx="4" fill="none" stroke="#F0A500" stroke-width="1.5"/>
           <!-- pin lines left -->
           <line x1="160" y1="248" x2="176" y2="248" stroke="#F0A500" stroke-width="1"/>
@@ -246,13 +246,13 @@
         <!-- ── SPARK GLOWS (the actual moving lights) ── -->
 
         <!-- Spark A glow -->
-        <circle r="4" fill="#F0A500" opacity="0.9" filter="url(#sparkGlow)">
+        <circle r="5.5" fill="#FFB800" opacity="1" filter="url(#sparkGlow)">
           <animateMotion dur="3.2s" repeatCount="indefinite" begin="0s">
             <mpath href="#sparkPathA"/>
           </animateMotion>
           <animate attributeName="opacity" values="0;0.95;0.95;0" dur="3.2s" repeatCount="indefinite" begin="0s"/>
         </circle>
-        <circle r="2" fill="#fff" opacity="0.85">
+        <circle r="2.5" fill="#ffffff" opacity="1">
           <animateMotion dur="3.2s" repeatCount="indefinite" begin="0s">
             <mpath href="#sparkPathA"/>
           </animateMotion>
@@ -260,7 +260,7 @@
         </circle>
 
         <!-- Spark A echo (offset) -->
-        <circle r="3" fill="#F0A500" opacity="0.6" filter="url(#sparkGlow)">
+        <circle r="4" fill="#FFB800" opacity="0.85" filter="url(#sparkGlow)">
           <animateMotion dur="3.2s" repeatCount="indefinite" begin="1.6s">
             <mpath href="#sparkPathA"/>
           </animateMotion>
@@ -268,39 +268,39 @@
         </circle>
 
         <!-- Spark B -->
-        <circle r="3.5" fill="#fbbf24" opacity="0.9" filter="url(#sparkGlow)">
+        <circle r="5" fill="#FFD700" opacity="1" filter="url(#sparkGlow)">
           <animateMotion dur="2.6s" repeatCount="indefinite" begin="0.4s">
             <mpath href="#sparkPathB"/>
           </animateMotion>
           <animate attributeName="opacity" values="0;0.9;0.9;0" dur="2.6s" repeatCount="indefinite" begin="0.4s"/>
         </circle>
-        <circle r="1.8" fill="#fff" opacity="0.9">
+        <circle r="2.5" fill="#ffffff" opacity="1">
           <animateMotion dur="2.6s" repeatCount="indefinite" begin="0.4s">
             <mpath href="#sparkPathB"/>
           </animateMotion>
         </circle>
 
         <!-- Spark C -->
-        <circle r="3" fill="#4ade80" opacity="0.85" filter="url(#sparkGlowGreen)">
+        <circle r="4.5" fill="#00ff88" opacity="1" filter="url(#sparkGlowGreen)">
           <animateMotion dur="3.8s" repeatCount="indefinite" begin="0.9s">
             <mpath href="#sparkPathC"/>
           </animateMotion>
           <animate attributeName="opacity" values="0;0.85;0.85;0" dur="3.8s" repeatCount="indefinite" begin="0.9s"/>
         </circle>
-        <circle r="1.5" fill="#fff" opacity="0.85">
+        <circle r="2.2" fill="#ffffff" opacity="1">
           <animateMotion dur="3.8s" repeatCount="indefinite" begin="0.9s">
             <mpath href="#sparkPathC"/>
           </animateMotion>
         </circle>
 
         <!-- Spark D: bus sweep -->
-        <circle r="3" fill="#60a5fa" opacity="0.8" filter="url(#sparkGlowBlue)">
+        <circle r="4.5" fill="#38bdf8" opacity="1" filter="url(#sparkGlowBlue)">
           <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.2s">
             <mpath href="#sparkPathD"/>
           </animateMotion>
           <animate attributeName="opacity" values="0;0.8;0.8;0" dur="1.8s" repeatCount="indefinite" begin="1.2s"/>
         </circle>
-        <circle r="1.5" fill="#fff" opacity="0.8">
+        <circle r="2.2" fill="#ffffff" opacity="1">
           <animateMotion dur="1.8s" repeatCount="indefinite" begin="1.2s">
             <mpath href="#sparkPathD"/>
           </animateMotion>
@@ -309,15 +309,15 @@
         <!-- ── FILTERS ── -->
         <defs>
           <filter id="sparkGlow" x="-200%" y="-200%" width="500%" height="500%">
-            <feGaussianBlur stdDeviation="3.5" result="blur"/>
+            <feGaussianBlur stdDeviation="5" result="blur"/>
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
           <filter id="sparkGlowGreen" x="-200%" y="-200%" width="500%" height="500%">
-            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feGaussianBlur stdDeviation="4.5" result="blur"/>
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
           <filter id="sparkGlowBlue" x="-200%" y="-200%" width="500%" height="500%">
-            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feGaussianBlur stdDeviation="4" result="blur"/>
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
         </defs>
