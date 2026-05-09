@@ -51,70 +51,450 @@
     .articles-section-count { font-family:var(--font-mono); font-size:9px; color:var(--text-muted); letter-spacing:0.1em; }
 
     /* Reader overlay */
-    .reader-overlay { position:fixed; inset:0; z-index:600; background:rgba(3,6,14,0.97); backdrop-filter:blur(24px); opacity:0; pointer-events:none; transition:opacity 0.22s; display:flex; flex-direction:column; }
-    .reader-overlay.open { opacity:1; pointer-events:all; }
-    .reader-topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; border-bottom:1px solid rgba(240,165,0,0.16); background:rgba(14,20,44,0.99); flex-shrink:0; gap:16px; }
-    .reader-topbar__left { display:flex; align-items:center; gap:14px; overflow:hidden; }
-    .reader-topbar__label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.18em; color:var(--amber); white-space:nowrap; }
-    .reader-topbar__title { font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .reader-close { font-family:var(--font-mono); font-size:9px; letter-spacing:0.14em; padding:8px 16px; border-radius:8px; border:1px solid rgba(248,113,113,0.3); background:transparent; color:#f87171; cursor:pointer; transition:all 0.15s; flex-shrink:0; }
-    .reader-close:hover { background:rgba(248,113,113,0.12); border-color:#f87171; }
-    .reader-body { flex:1; overflow-y:auto; padding:48px 0 80px; }
-    .reader-content { max-width:720px; margin:0 auto; padding:0 28px; }
+    /* ═══════════════════════════════════════════
+       READER OVERLAY — always white paper,
+       regardless of page contrast setting.
+       Styled like a premium editorial / journal.
+    ═══════════════════════════════════════════ */
+    .reader-overlay {
+      position: fixed; inset: 0; z-index: 600;
+      background: #f4f1eb; /* warm off-white — like quality paper */
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+      display: flex; flex-direction: column;
+    }
+    .reader-overlay.open { opacity: 1; pointer-events: all; }
 
-    .reader-content .art-label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.22em; color:var(--amber); margin-bottom:14px; }
-    .reader-content .art-title { font-family:var(--font-heading); font-size:clamp(24px,4vw,38px); font-weight:900; color:var(--text-primary); line-height:1.2; margin-bottom:20px; }
-    .reader-content .art-meta { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:36px; padding-bottom:28px; border-bottom:1px solid rgba(240,165,0,0.14); }
-    .reader-content .art-meta-item { font-family:var(--font-mono); font-size:9px; letter-spacing:0.12em; color:var(--text-muted); }
-    .reader-content .art-meta-dot { width:3px; height:3px; border-radius:50%; background:rgba(240,165,0,0.35); flex-shrink:0; }
-    .reader-content h2 { font-family:var(--font-heading); font-size:18px; font-weight:800; color:var(--text-primary); margin:36px 0 14px; padding-left:14px; border-left:3px solid var(--amber); }
-    .reader-content h3 { font-family:var(--font-heading); font-size:15px; font-weight:700; color:var(--text-primary); margin:28px 0 10px; }
-    .reader-content p { font-size:15px; color:var(--text-secondary); line-height:1.8; margin-bottom:18px; }
-    .reader-content ul,.reader-content ol { padding-left:20px; margin-bottom:18px; }
-    .reader-content li { font-size:15px; color:var(--text-secondary); line-height:1.75; margin-bottom:6px; }
-    .reader-content li::marker { color:var(--amber); }
-    .reader-content strong { color:var(--text-primary); font-weight:700; }
-    .reader-content em { color:var(--amber); font-style:normal; font-weight:600; }
-    .reader-content code { font-family:var(--font-mono); font-size:12px; background:rgba(240,165,0,0.08); border:1px solid rgba(240,165,0,0.18); border-radius:5px; padding:2px 7px; color:var(--amber); }
-    .reader-content pre { background:rgba(5,9,22,0.96); border:1px solid rgba(240,165,0,0.18); border-radius:10px; padding:18px 20px; overflow-x:auto; margin-bottom:20px; }
-    .reader-content pre code { background:none; border:none; padding:0; font-size:12px; }
-    .reader-content table { width:100%; border-collapse:collapse; margin-bottom:24px; font-size:13px; }
-    .reader-content th { font-family:var(--font-mono); font-size:8px; letter-spacing:0.14em; color:var(--amber); text-align:left; padding:10px 14px; border-bottom:1px solid rgba(240,165,0,0.25); background:rgba(240,165,0,0.05); }
-    .reader-content td { padding:10px 14px; border-bottom:1px solid rgba(240,165,0,0.08); color:var(--text-secondary); vertical-align:top; line-height:1.55; }
-    .reader-content tr:hover td { background:rgba(240,165,0,0.03); }
-    .reader-callout { border-left:3px solid var(--amber); background:rgba(240,165,0,0.06); border-radius:0 10px 10px 0; padding:14px 18px; margin:20px 0; }
-    .reader-callout p { margin-bottom:0; font-size:13px; }
-    .reader-callout--info { border-color:#60a5fa; background:rgba(96,165,250,0.06); }
-    .reader-callout--warn { border-color:#fb923c; background:rgba(251,146,60,0.06); }
-    .reader-callout--check { border-color:#4ade80; background:rgba(74,222,128,0.06); }
+    /* Top bar — dark ink strip */
+    .reader-topbar {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 12px 40px;
+      border-bottom: 2px solid #1a1a2e;
+      background: #1a1a2e;
+      flex-shrink: 0; gap: 16px;
+    }
+    .reader-topbar__left { display:flex; align-items:center; gap:14px; overflow:hidden; }
+    .reader-topbar__label {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.22em; color: #F0A500; white-space: nowrap;
+    }
+    .reader-topbar__title {
+      font-family: var(--font-mono); font-size: 10px;
+      color: rgba(255,255,255,0.55);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .reader-close {
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
+      padding: 7px 16px; border-radius: 6px;
+      border: 1px solid rgba(248,113,113,0.4);
+      background: transparent; color: #f87171;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    .reader-close:hover { background: rgba(248,113,113,0.15); border-color: #f87171; }
+
+    /* Scrollable paper body */
+    .reader-body {
+      flex: 1; overflow-y: auto;
+      background: #f4f1eb;
+      padding: 0;
+    }
+
+    /* Paper page — centred column like a printed journal */
+    .reader-content {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 56px 40px 96px;
+      background: #ffffff;
+      min-height: 100%;
+      box-shadow: 0 0 60px rgba(0,0,0,0.10);
+      position: relative;
+    }
+
+    /* Thin amber rule at top of paper */
+    .reader-content::before {
+      content: '';
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, #F0A500, #c8940e);
+      margin: -56px -40px 48px;
+    }
+
+    /* ── Article header ── */
+    .reader-content .art-category-line {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .reader-content .art-category-pill {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.2em; font-weight: 700;
+      padding: 4px 12px; border-radius: 20px;
+      background: #1a1a2e; color: #F0A500;
+    }
+    .reader-content .art-label {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.22em; color: #888; margin-bottom: 0;
+    }
+
+    .reader-content .art-title {
+      font-family: 'Syne', var(--font-heading), Georgia, serif;
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 900;
+      color: #0e0e1a;
+      line-height: 1.18;
+      margin-bottom: 22px;
+      letter-spacing: -0.02em;
+    }
+
+    /* Meta row — author, date, read time */
+    .reader-content .art-meta {
+      display: flex; align-items: center; gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 0;
+      padding: 16px 0;
+      border-top: 1px solid #e0ddd6;
+      border-bottom: 1px solid #e0ddd6;
+    }
+    .reader-content .art-meta-item {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.12em; color: #666;
+    }
+    .reader-content .art-meta-dot {
+      width: 3px; height: 3px; border-radius: 50%;
+      background: #ccc; flex-shrink: 0;
+    }
+    .reader-content .art-meta-author {
+      font-weight: 700; color: #1a1a2e;
+    }
+
+    /* Reading progress bar under topbar */
+    .reader-progress {
+      height: 3px;
+      background: #e8e5de;
+      flex-shrink: 0;
+    }
+    .reader-progress__fill {
+      height: 100%;
+      background: linear-gradient(90deg, #F0A500, #c8940e);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* ── Body typography — editorial quality ── */
+    .reader-content .art-body { margin-top: 36px; }
+
+    .reader-content h2 {
+      font-family: 'Syne', Georgia, serif;
+      font-size: 20px; font-weight: 800;
+      color: #0e0e1a;
+      margin: 44px 0 14px;
+      padding: 0;
+      border: none;
+      border-bottom: 2px solid #F0A500;
+      padding-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+    .reader-content h3 {
+      font-family: 'Syne', Georgia, serif;
+      font-size: 16px; font-weight: 700;
+      color: #1a1a2e;
+      margin: 32px 0 10px;
+    }
+    .reader-content p {
+      font-size: 16px;
+      color: #2c2c3a;
+      line-height: 1.85;
+      margin-bottom: 20px;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    /* First paragraph drop-cap feel */
+    .reader-content .art-body > p:first-child {
+      font-size: 17px;
+      color: #1a1a2e;
+      line-height: 1.8;
+    }
+    .reader-content ul, .reader-content ol {
+      padding-left: 22px; margin-bottom: 20px;
+    }
+    .reader-content li {
+      font-size: 15px; color: #2c2c3a;
+      line-height: 1.8; margin-bottom: 7px;
+      font-family: Georgia, serif;
+    }
+    .reader-content li::marker { color: #F0A500; }
+    .reader-content strong { color: #0e0e1a; font-weight: 700; }
+    .reader-content em { color: #b87800; font-style: italic; font-weight: 600; }
+
+    /* Inline code */
+    .reader-content code {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 12px;
+      background: #f0ede6;
+      border: 1px solid #ddd9d0;
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: #1a1a2e;
+    }
+    /* Code block */
+    .reader-content pre {
+      background: #1a1a2e;
+      border: none;
+      border-radius: 10px;
+      padding: 20px 22px;
+      overflow-x: auto;
+      margin: 24px 0;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .reader-content pre code {
+      background: none; border: none; padding: 0;
+      font-size: 12px; color: #e8d5a3; line-height: 1.7;
+    }
+
+    /* Table — clean editorial */
+    .reader-content table {
+      width: 100%; border-collapse: collapse;
+      margin: 24px 0; font-size: 14px;
+      border: 1px solid #e0ddd6;
+      border-radius: 8px; overflow: hidden;
+    }
+    .reader-content th {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.16em; color: #f4f1eb;
+      text-align: left; padding: 11px 16px;
+      background: #1a1a2e; border: none;
+      font-weight: 600;
+    }
+    .reader-content td {
+      padding: 11px 16px;
+      border-bottom: 1px solid #e8e5de;
+      color: #2c2c3a; vertical-align: top;
+      line-height: 1.6; font-family: Georgia, serif;
+    }
+    .reader-content tr:last-child td { border-bottom: none; }
+    .reader-content tr:nth-child(even) td { background: #faf8f4; }
+    .reader-content tr:hover td { background: #f5f2eb; }
+
+    /* Callout boxes */
+    .reader-callout {
+      border-left: 4px solid #F0A500;
+      background: #fdf8ec;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px; margin: 24px 0;
+    }
+    .reader-callout p {
+      margin-bottom: 0; font-size: 14px;
+      color: #3a3020; font-family: Georgia, serif;
+    }
+    .reader-callout--info  { border-color: #3b82f6; background: #eff6ff; }
+    .reader-callout--info p { color: #1e3a5f; }
+    .reader-callout--warn  { border-color: #f97316; background: #fff7ed; }
+    .reader-callout--warn p { color: #3a1f08; }
+    .reader-callout--check { border-color: #22c55e; background: #f0fdf4; }
+    .reader-callout--check p { color: #14401f; }
+
+    /* Article end rule */
+    .reader-content .art-end-rule {
+      margin: 56px 0 32px;
+      border: none; border-top: 1px solid #e0ddd6;
+    }
+    .reader-content .art-end-footer {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.14em; color: #999;
+      text-align: center;
+    }
+
+    /* ═══════════════════════════════════════════
+       ARTICLE LIST — editorial / publication style
+       More human, less data-table.
+    ═══════════════════════════════════════════ */
+    .article-list { display: flex; flex-direction: column; gap: 0; }
+
+    .article-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 0 24px;
+      align-items: start;
+      padding: 32px 20px 28px;
+      border-bottom: 1px solid rgba(240,165,0,0.10);
+      position: relative;
+      transition: background 0.2s, border-color 0.2s;
+      cursor: pointer;
+      border-radius: 12px;
+      margin-bottom: 4px;
+      text-decoration: none;
+    }
+    .article-row:hover {
+      background: rgba(240,165,0,0.04);
+      border-bottom-color: rgba(240,165,0,0.22);
+    }
+
+    /* Left date column — bold number, subtle month */
+    .article-row__date {
+      text-align: center;
+      padding-top: 2px;
+    }
+    .article-row__date-day {
+      font-family: var(--font-heading);
+      font-size: 38px; font-weight: 900;
+      color: var(--amber); line-height: 1;
+      display: block;
+    }
+    .article-row__date-month {
+      font-family: var(--font-mono);
+      font-size: 8px; letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      display: block; margin-top: 3px;
+    }
+
+    /* Right main column */
+    .article-row__body { min-width: 0; }
+
+    .article-row__meta {
+      display: flex; align-items: center;
+      gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .article-badge {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.16em; padding: 3px 10px;
+      border-radius: 20px; border: 1px solid; white-space: nowrap;
+    }
+    .badge--buildlog  { color:#f0a500; border-color:rgba(240,165,0,0.35);   background:rgba(240,165,0,0.08); }
+    .badge--technical { color:#60a5fa; border-color:rgba(96,165,250,0.35);  background:rgba(96,165,250,0.08); }
+    .badge--field     { color:#fb923c; border-color:rgba(251,146,60,0.35);  background:rgba(251,146,60,0.08); }
+    .badge--proposal  { color:#a78bfa; border-color:rgba(167,139,250,0.35); background:rgba(167,139,250,0.08); }
+
+    .article-row__read-time {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.1em; color: var(--text-muted);
+    }
+
+    .article-row__title {
+      font-family: var(--font-heading);
+      font-size: clamp(17px, 2.2vw, 22px);
+      font-weight: 800; color: var(--text-primary);
+      line-height: 1.3; margin-bottom: 10px;
+      transition: color 0.18s;
+    }
+    .article-row:hover .article-row__title { color: var(--amber); }
+
+    .article-row__preview {
+      font-size: 13.5px; color: var(--text-secondary);
+      line-height: 1.75; margin-bottom: 14px;
+      max-width: 640px;
+    }
+
+    .article-row__footer {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .article-row__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .article-tag {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.1em; padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(240,165,0,0.07);
+      border: 1px solid rgba(240,165,0,0.16);
+      color: var(--amber);
+    }
+    .article-row__cta {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.14em; color: var(--amber);
+      display: flex; align-items: center; gap: 6px;
+      opacity: 0; transform: translateX(-6px);
+      transition: opacity 0.18s, transform 0.18s;
+      white-space: nowrap;
+    }
+    .article-row:hover .article-row__cta { opacity: 1; transform: translateX(0); }
+
+    /* Featured row — full-width highlight card */
+    .article-row--featured {
+      background: rgba(240,165,0,0.04);
+      border: 1px solid rgba(240,165,0,0.20);
+      border-radius: 18px;
+      padding: 32px 28px;
+      margin-bottom: 16px;
+      grid-template-columns: 80px 1fr;
+    }
+    .article-row--featured .article-row__date-day { font-size: 44px; }
+    .article-row--featured .article-row__title { font-size: clamp(20px, 2.6vw, 26px); }
+    .article-row--featured .article-row__cta { opacity: 0.5; transform: none; }
+    .article-row--featured:hover .article-row__cta { opacity: 1; }
+
+    /* Section dividers */
+    .articles-section { margin-bottom: 52px; }
+    .articles-section-header {
+      display: flex; align-items: center;
+      gap: 16px; margin-bottom: 8px; padding-top: 8px;
+    }
+    .articles-section-label {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.22em; color: var(--amber); white-space: nowrap;
+    }
+    .articles-section-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(240,165,0,0.3), transparent);
+    }
+    .articles-section-count {
+      font-family: var(--font-mono); font-size: 9px;
+      color: var(--text-muted); letter-spacing: 0.1em;
+    }
 
     /* Add row */
-    .article-add-row { display:flex; align-items:center; gap:14px; padding:20px 0; border-bottom:1px dashed rgba(240,165,0,0.18); cursor:pointer; transition:background 0.18s; border-radius:8px; background:transparent; width:100%; font-family:inherit; }
-    .article-add-row:hover { background:rgba(240,165,0,0.04); }
-    .article-add-row__icon { width:36px; height:36px; border-radius:50%; border:1.5px dashed rgba(240,165,0,0.35); display:flex; align-items:center; justify-content:center; font-size:18px; color:rgba(240,165,0,0.45); flex-shrink:0; transition:border-color 0.18s,color 0.18s; }
-    .article-add-row:hover .article-add-row__icon { border-color:var(--amber); color:var(--amber); }
-    .article-add-row__label { font-family:var(--font-mono); font-size:9px; letter-spacing:0.18em; color:var(--text-muted); transition:color 0.18s; }
-    .article-add-row:hover .article-add-row__label { color:var(--amber); }
+    .article-add-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 18px 20px;
+      border: 1.5px dashed rgba(240,165,0,0.2);
+      border-radius: 12px;
+      cursor: pointer; transition: background 0.18s, border-color 0.18s;
+      background: transparent; width: 100%;
+      font-family: inherit; margin-top: 8px;
+    }
+    .article-add-row:hover { background: rgba(240,165,0,0.04); border-color: var(--amber); }
+    .article-add-row__icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1.5px dashed rgba(240,165,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: rgba(240,165,0,0.45); flex-shrink: 0;
+      transition: border-color 0.18s, color 0.18s;
+    }
+    .article-add-row:hover .article-add-row__icon { border-color: var(--amber); color: var(--amber); }
+    .article-add-row__label {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.18em; color: var(--text-muted);
+      transition: color 0.18s;
+    }
+    .article-add-row:hover .article-add-row__label { color: var(--amber); }
 
-    /* Light theme */
+    /* Filter bar */
+    .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin:28px 0 44px; }
+    .filter-btn { font-family:var(--font-mono); font-size:9px; letter-spacing:0.16em; padding:8px 18px; border-radius:30px; border:1px solid rgba(240,165,0,0.22); background:rgba(16,26,52,0.85); color:var(--text-muted); cursor:pointer; transition:all 0.18s; backdrop-filter:blur(10px); }
+    .filter-btn:hover { border-color:var(--amber); color:var(--amber); }
+    .filter-btn.active { background:var(--amber); color:var(--navy); border-color:var(--amber); font-weight:600; }
+
+    /* Light theme overrides */
     body.contrast-light .article-row:hover { background:rgba(13,110,110,0.04); }
-    body.contrast-light .article-row--featured { background:rgba(13,110,110,0.04); border-color:rgba(13,110,110,0.18); }
-    body.contrast-light .article-row__date-day,.contrast-light .article-row__arrow { color:#0d6e6e; }
+    body.contrast-light .article-row--featured { background:rgba(13,110,110,0.03); border-color:rgba(13,110,110,0.18); }
+    body.contrast-light .article-row__date-day { color:#0d6e6e; }
     body.contrast-light .article-row:hover .article-row__title { color:#0d6e6e !important; }
+    body.contrast-light .article-row__cta { color:#0d6e6e; }
     body.contrast-light .filter-btn { background:rgba(255,255,255,0.75) !important; border-color:rgba(14,20,32,0.18) !important; color:#4a556e !important; }
     body.contrast-light .filter-btn.active { background:#0d6e6e !important; border-color:#0d6e6e !important; color:#fff !important; }
     body.contrast-light .article-tag { background:rgba(13,110,110,0.08) !important; border-color:rgba(13,110,110,0.22) !important; color:#0d6e6e !important; }
     body.contrast-light .articles-section-label { color:#0d6e6e !important; }
     body.contrast-light .articles-section-line { background:linear-gradient(90deg,rgba(13,110,110,0.35),transparent) !important; }
-    body.contrast-light .badge--buildlog  { color:#8a5a00 !important; border-color:rgba(138,90,0,0.3) !important;   background:rgba(138,90,0,0.08) !important; }
-    body.contrast-light .badge--technical { color:#1a4fa0 !important; border-color:rgba(26,79,160,0.3) !important;  background:rgba(26,79,160,0.08) !important; }
-    body.contrast-light .badge--field     { color:#a03010 !important; border-color:rgba(160,48,16,0.3) !important;  background:rgba(160,48,16,0.08) !important; }
-    body.contrast-light .badge--proposal  { color:#5c3a9e !important; border-color:rgba(92,58,158,0.3) !important;  background:rgba(92,58,158,0.08) !important; }
+    body.contrast-light .badge--buildlog  { color:#8a5a00 !important; border-color:rgba(138,90,0,0.3) !important; background:rgba(138,90,0,0.08) !important; }
+    body.contrast-light .badge--technical { color:#1a4fa0 !important; border-color:rgba(26,79,160,0.3) !important; background:rgba(26,79,160,0.08) !important; }
+    body.contrast-light .badge--field { color:#a03010 !important; border-color:rgba(160,48,16,0.3) !important; background:rgba(160,48,16,0.08) !important; }
+    body.contrast-light .badge--proposal { color:#5c3a9e !important; border-color:rgba(92,58,158,0.3) !important; background:rgba(92,58,158,0.08) !important; }
 
     @media(max-width:640px) {
-      .article-row { grid-template-columns:70px 1fr 20px; gap:0 14px; }
-      .article-row--featured { padding:20px 16px; }
+      .article-row { grid-template-columns:70px 1fr; gap:0 14px; padding:24px 12px; }
+      .article-row--featured { padding:22px 16px; }
+      .article-row__date-day { font-size:28px; }
       .article-row__preview { display:none; }
+      .reader-content { padding:40px 20px 80px; }
+      .reader-content::before { margin: -40px -20px 40px; }
     }
   </style>
 </head>
@@ -171,14 +551,13 @@
         </div>
         <div class="article-list">
           <div class="article-row article-row--featured fade-in" data-category="buildlog" data-article-id="bl1" role="button" tabindex="0">
-            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="bl1-day">01</div><div data-edit-id="bl1-month">MAY 2025</div></div>
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="bl1-day">01</div><span class="article-row__date-month" data-edit-id="bl1-month">MAY 2025</span></div>
             <div class="article-row__body">
               <div class="article-row__meta"><span class="article-badge badge--buildlog">BUILD LOG</span><span class="article-row__read-time" data-edit-id="bl1-read">8 MIN READ</span></div>
               <div class="article-row__title" data-edit-id="bl1-title">Build Log #1 — Project Setup, Homepage &amp; Design System</div>
               <div class="article-row__preview" data-edit-id="bl1-preview">Phase 1 complete. Defined the full site architecture (6 pages), chose the tech stack — pure HTML/CSS/JS hosted on GitHub Pages — and established the Technical Blueprint design language: dark navy, amber grid, monospaced labels. Built index.html, style.css and main.js from scratch.</div>
-              <div class="article-row__tags"><span class="article-tag">HTML/CSS/JS</span><span class="article-tag">GitHub Pages</span><span class="article-tag">Design System</span><span class="article-tag">Phase 1</span></div>
+              <div class="article-row__footer"><div class="article-row__tags"><span class="article-tag">HTML/CSS/JS</span><span class="article-tag">GitHub Pages</span><span class="article-tag">Design System</span><span class="article-tag">Phase 1</span></div><span class="article-row__cta">READ ARTICLE →</span></div>
             </div>
-            <div class="article-row__arrow">→</div>
           </div>
           <button class="article-add-row owner-only" data-add-category="buildlog"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD BUILD LOG ENTRY</span></button>
         </div>
@@ -193,14 +572,13 @@
         </div>
         <div class="article-list">
           <div class="article-row fade-in" data-category="technical" data-article-id="tw1" role="button" tabindex="0">
-            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="tw1-day">15</div><div data-edit-id="tw1-month">DEC 2024</div></div>
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="tw1-day">15</div><span class="article-row__date-month" data-edit-id="tw1-month">DEC 2024</span></div>
             <div class="article-row__body">
               <div class="article-row__meta"><span class="article-badge badge--technical">TECHNICAL</span><span class="article-row__read-time" data-edit-id="tw1-read">12 MIN READ</span></div>
               <div class="article-row__title" data-edit-id="tw1-title">IoT Fault Detection — System Architecture &amp; Design Decisions</div>
               <div class="article-row__preview" data-edit-id="tw1-preview">A detailed breakdown of the hardware-to-cloud architecture behind my final year project. Covers sensor selection, ESP32 firmware design, Firebase Realtime Database schema, and the web dashboard data pipeline. Includes key tradeoffs and how I resolved them.</div>
-              <div class="article-row__tags"><span class="article-tag">IoT</span><span class="article-tag">ESP32</span><span class="article-tag">Firebase</span><span class="article-tag">Architecture</span></div>
+              <div class="article-row__footer"><div class="article-row__tags"><span class="article-tag">IoT</span><span class="article-tag">ESP32</span><span class="article-tag">Firebase</span><span class="article-tag">Architecture</span></div><span class="article-row__cta">READ ARTICLE →</span></div>
             </div>
-            <div class="article-row__arrow">→</div>
           </div>
           <button class="article-add-row owner-only" data-add-category="technical"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD TECHNICAL ARTICLE</span></button>
         </div>
@@ -215,24 +593,22 @@
         </div>
         <div class="article-list">
           <div class="article-row fade-in" data-category="field" data-article-id="fr1" role="button" tabindex="0">
-            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="fr1-day">31</div><div data-edit-id="fr1-month">JUL 2024</div></div>
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="fr1-day">31</div><span class="article-row__date-month" data-edit-id="fr1-month">JUL 2024</span></div>
             <div class="article-row__body">
               <div class="article-row__meta"><span class="article-badge badge--field">FIELD REPORT</span><span class="article-row__read-time" data-edit-id="fr1-read">10 MIN READ</span></div>
               <div class="article-row__title" data-edit-id="fr1-title">Kenya Power Attachment 2024 — 11kV Operations &amp; Maintenance, Gatundu</div>
               <div class="article-row__preview" data-edit-id="fr1-preview">Three months working with Kenya Power's operations team in Gatundu, Kiambu County. Covers field repairs on 11kV distribution lines, substation commissioning, protection DC circuit testing, safety protocols (LOTO, earthing, isolation), and lessons learned from live network infrastructure.</div>
-              <div class="article-row__tags"><span class="article-tag">Kenya Power</span><span class="article-tag">11kV</span><span class="article-tag">Operations</span><span class="article-tag">2024</span></div>
+              <div class="article-row__footer"><div class="article-row__tags"><span class="article-tag">Kenya Power</span><span class="article-tag">11kV</span><span class="article-tag">Operations</span><span class="article-tag">2024</span></div><span class="article-row__cta">READ ARTICLE →</span></div>
             </div>
-            <div class="article-row__arrow">→</div>
           </div>
           <div class="article-row fade-in" data-category="field" data-article-id="fr2" role="button" tabindex="0">
-            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="fr2-day">31</div><div data-edit-id="fr2-month">JUL 2023</div></div>
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="fr2-day">31</div><span class="article-row__date-month" data-edit-id="fr2-month">JUL 2023</span></div>
             <div class="article-row__body">
               <div class="article-row__meta"><span class="article-badge badge--field">FIELD REPORT</span><span class="article-row__read-time" data-edit-id="fr2-read">9 MIN READ</span></div>
               <div class="article-row__title" data-edit-id="fr2-title">Ministry of Lands Attachment 2023 — Electrical Design, Hill Plaza Nairobi</div>
               <div class="article-row__preview" data-edit-id="fr2-preview">Three months in the Electrical Department at Hill Plaza, Nairobi. Documents the AutoCAD electrical layout and single-line diagram work for government buildings, load calculations, cable sizing, illumination design, fire detection system design, and BOQ preparation.</div>
-              <div class="article-row__tags"><span class="article-tag">Ministry of Lands</span><span class="article-tag">AutoCAD</span><span class="article-tag">Design</span><span class="article-tag">2023</span></div>
+              <div class="article-row__footer"><div class="article-row__tags"><span class="article-tag">Ministry of Lands</span><span class="article-tag">AutoCAD</span><span class="article-tag">Design</span><span class="article-tag">2023</span></div><span class="article-row__cta">READ ARTICLE →</span></div>
             </div>
-            <div class="article-row__arrow">→</div>
           </div>
           <button class="article-add-row owner-only" data-add-category="field"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD FIELD REPORT</span></button>
         </div>
@@ -247,14 +623,13 @@
         </div>
         <div class="article-list">
           <div class="article-row fade-in" data-category="proposal" data-article-id="pr1" role="button" tabindex="0">
-            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="pr1-day">01</div><div data-edit-id="pr1-month">DEC 2024</div></div>
+            <div class="article-row__date"><div class="article-row__date-day" data-edit-id="pr1-day">01</div><span class="article-row__date-month" data-edit-id="pr1-month">DEC 2024</span></div>
             <div class="article-row__body">
               <div class="article-row__meta"><span class="article-badge badge--proposal">PROPOSAL</span><span class="article-row__read-time" data-edit-id="pr1-read">15 MIN READ</span></div>
               <div class="article-row__title" data-edit-id="pr1-title">FYP Proposal — Power Line Fault Detection &amp; Alert System</div>
               <div class="article-row__preview" data-edit-id="pr1-preview">The original project proposal submitted to JKUAT. Covers the problem statement, proposed IoT architecture, expected outcomes, timeline, component list and budget estimate. Forms the foundation of the 52-page project report.</div>
-              <div class="article-row__tags"><span class="article-tag">FYP</span><span class="article-tag">JKUAT</span><span class="article-tag">IoT</span><span class="article-tag">Proposal</span></div>
+              <div class="article-row__footer"><div class="article-row__tags"><span class="article-tag">FYP</span><span class="article-tag">JKUAT</span><span class="article-tag">IoT</span><span class="article-tag">Proposal</span></div><span class="article-row__cta">READ ARTICLE →</span></div>
             </div>
-            <div class="article-row__arrow">→</div>
           </div>
           <button class="article-add-row owner-only" data-add-category="proposal"><div class="article-add-row__icon">+</div><span class="article-add-row__label">ADD PROPOSAL / DOCUMENT</span></button>
         </div>
@@ -280,7 +655,8 @@
       </div>
       <button class="reader-close" id="reader-close">✕ CLOSE</button>
     </div>
-    <div class="reader-body"><div class="reader-content" id="reader-content"></div></div>
+    <div class="reader-progress"><div class="reader-progress__fill" id="reader-progress-fill"></div></div>
+    <div class="reader-body" id="reader-body"><div class="reader-content" id="reader-content"></div></div>
   </div>
 
   <!-- OWNER LOCK OVERLAY -->
@@ -313,18 +689,41 @@
     var readerTitle  = document.getElementById('reader-topbar-title');
     var readerContent= document.getElementById('reader-content');
     var readerClose  = document.getElementById('reader-close');
+    var readerBody   = document.getElementById('reader-body');
+    var progressFill = document.getElementById('reader-progress-fill');
 
     function openReader(id) {
       var a = articles[id]; if (!a) return;
       readerTitle.textContent = a.title;
-      readerContent.innerHTML = '<div class="art-label">'+a.label+'</div><div class="art-title">'+a.title+'</div><div class="art-meta"><span class="art-meta-item">'+a.date+'</span><span class="art-meta-dot"></span><span class="art-meta-item">'+a.readTime+'</span></div>'+a.content;
+      readerContent.innerHTML =
+        '<div class="art-label">' + a.label + '</div>' +
+        '<div class="art-title">' + a.title + '</div>' +
+        '<div class="art-meta">' +
+          '<span class="art-meta-item art-meta-author">Rubui Mwangi</span>' +
+          '<span class="art-meta-dot"></span>' +
+          '<span class="art-meta-item">' + a.date + '</span>' +
+          '<span class="art-meta-dot"></span>' +
+          '<span class="art-meta-item">' + a.readTime + '</span>' +
+        '</div>' +
+        '<div class="art-body">' + a.content + '</div>' +
+        '<hr class="art-end-rule" />' +
+        '<div class="art-end-footer">— Rubui Mwangi · portfolio.ee —</div>';
       overlay.classList.add('open');
-      overlay.querySelector('.reader-body').scrollTop = 0;
+      readerBody.scrollTop = 0;
+      progressFill.style.width = '0%';
       document.body.style.overflow = 'hidden';
     }
     function closeReader() { overlay.classList.remove('open'); document.body.style.overflow = ''; }
     readerClose.addEventListener('click', closeReader);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) closeReader(); });
+
+    // Reading progress bar
+    readerBody.addEventListener('scroll', function() {
+      var scrollable = readerBody.scrollHeight - readerBody.clientHeight;
+      if (scrollable <= 0) return;
+      var pct = Math.min(100, Math.round((readerBody.scrollTop / scrollable) * 100));
+      progressFill.style.width = pct + '%';
+    });
 
     function wireRows() {
       document.querySelectorAll('.article-row[data-article-id]').forEach(function(row) {
@@ -356,7 +755,7 @@
           var label = cat==='buildlog'?'BUILD LOG':cat==='technical'?'TECHNICAL':cat==='field'?'FIELD REPORT':'PROPOSAL';
           var badgeCls = 'badge--'+cat;
           var id = 'art-new-'+counter;
-          var html = '<div class="article-row new-card fade-in visible" data-category="'+cat+'" data-new-id="'+id+'" data-article-id="" role="button" tabindex="0"><div class="article-row__date"><div class="article-row__date-day" contenteditable="false">01</div><div contenteditable="false">MON YEAR</div></div><div class="article-row__body"><div class="article-row__meta"><span class="article-badge '+badgeCls+'">'+label+'</span><span class="article-row__read-time" contenteditable="false">X MIN READ</span></div><div class="article-row__title" contenteditable="false">Article Title</div><div class="article-row__preview" contenteditable="false">Write a short preview of this article.</div><div class="article-row__tags"><span class="article-tag" contenteditable="false">Tag</span></div></div><div class="article-row__arrow">→</div></div>';
+          var html = '<div class="article-row new-card fade-in visible" data-category="'+cat+'" data-new-id="'+id+'" data-article-id="" role="button" tabindex="0"><div class="article-row__date"><div class="article-row__date-day" contenteditable="false">01</div><span class="article-row__date-month" contenteditable="false">MON YEAR</span></div><div class="article-row__body"><div class="article-row__meta"><span class="article-badge '+badgeCls+'">'+label+'</span><span class="article-row__read-time" contenteditable="false">X MIN READ</span></div><div class="article-row__title" contenteditable="false">Article Title</div><div class="article-row__preview" contenteditable="false">Write a short preview of this article.</div><div class="article-row__tags"><span class="article-tag" contenteditable="false">Tag</span></div></div><div class="article-row__arrow">→</div></div>';
           var tmp = document.createElement('div'); tmp.innerHTML = html;
           var row = tmp.firstElementChild;
           btn.parentNode.insertBefore(row, btn);
