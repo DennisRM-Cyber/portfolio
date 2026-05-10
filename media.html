@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Media — Rubui Mwangi</title>
+  <meta name="description" content="Creative work by Rubui Mwangi — video edits, social media content, photography and graphic design." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+
+    /* ═══════════════════════════════════════════════
+       MEDIA PAGE
+    ═══════════════════════════════════════════════ */
+
+    .media-hero { padding: 56px 0 36px; }
+
+    /* ── STATS ─────────────────────────────────── */
+    .media-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    /* ── FILTER BAR ────────────────────────────── */
+    .filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .filter-btn {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.16em; padding: 8px 18px;
+      border-radius: 30px;
+      border: 1px solid rgba(240,165,0,0.22);
+      background: rgba(16,26,52,0.85);
+      color: var(--text-muted); cursor: pointer;
+      transition: all 0.18s; backdrop-filter: blur(10px);
+    }
+    .filter-btn:hover { border-color: var(--amber); color: var(--amber); }
+    .filter-btn.active {
+      background: var(--amber); color: var(--navy);
+      border-color: var(--amber); font-weight: 600;
+    }
+
+    /* ── MASONRY GRID ──────────────────────────── */
+    .media-grid {
+      columns: 3;
+      column-gap: 16px;
+    }
+    @media (max-width: 900px) { .media-grid { columns: 2; } }
+    @media (max-width: 520px) { .media-grid { columns: 1; } }
+
+    /* ── MEDIA CARD ────────────────────────────── */
+    .media-card {
+      break-inside: avoid;
+      margin-bottom: 16px;
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.15);
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+      display: block;
+    }
+    .media-card:hover {
+      border-color: rgba(240,165,0,0.45);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+    }
+    /* Category colour accent on top edge */
+    .media-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; opacity: 0;
+      transition: opacity 0.22s;
+    }
+    .media-card:hover::before { opacity: 1; }
+    .media-card[data-type="video"]::before       { background: linear-gradient(90deg,transparent,rgba(240,165,0,0.7),transparent); }
+    .media-card[data-type="social"]::before      { background: linear-gradient(90deg,transparent,rgba(167,139,250,0.7),transparent); }
+    .media-card[data-type="photo"]::before       { background: linear-gradient(90deg,transparent,rgba(96,165,250,0.7),transparent); }
+    .media-card[data-type="design"]::before      { background: linear-gradient(90deg,transparent,rgba(74,222,128,0.7),transparent); }
+
+    /* ── THUMBNAIL ─────────────────────────────── */
+    .media-card__thumb {
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      background: rgba(8,14,30,0.95);
+    }
+    /* Aspect ratios by content type */
+    .media-card__thumb--16x9  { aspect-ratio: 16/9; }
+    .media-card__thumb--9x16  { aspect-ratio: 9/16; }  /* TikTok/Reels portrait */
+    .media-card__thumb--1x1   { aspect-ratio: 1/1; }   /* Instagram square */
+    .media-card__thumb--4x3   { aspect-ratio: 4/3; }   /* Photo */
+    .media-card__thumb--photo { aspect-ratio: 4/3; }
+
+    .media-card__thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform 0.4s, opacity 0.3s;
+      opacity: 0.88;
+    }
+    .media-card:hover .media-card__thumb img {
+      transform: scale(1.04); opacity: 1;
+    }
+
+    /* Blueprint grid placeholder when no image */
+    .media-card__placeholder {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px;
+      position: relative;
+    }
+    .media-card__placeholder::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(240,165,0,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240,165,0,0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .media-card__placeholder-icon {
+      font-size: 28px; opacity: 0.25; position: relative; z-index: 1;
+    }
+    .media-card__placeholder-label {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.16em; color: rgba(240,165,0,0.3);
+      position: relative; z-index: 1;
+    }
+
+    /* Play button overlay — only on video/social */
+    .media-card__play {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(5,9,22,0.35);
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .media-card:hover .media-card__play { opacity: 1; }
+    .media-card__play-btn {
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.9);
+      background: rgba(5,9,22,0.6);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 16px;
+      transition: background 0.18s, transform 0.18s, border-color 0.18s;
+    }
+    .media-card:hover .media-card__play-btn {
+      background: var(--amber); border-color: var(--amber);
+      color: var(--navy); transform: scale(1.1);
+    }
+
+    /* Platform badge (TikTok / Instagram / YouTube) */
+    .media-card__platform {
+      position: absolute; top: 10px; left: 10px;
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.12em; padding: 3px 9px;
+      border-radius: 20px; font-weight: 700;
+      backdrop-filter: blur(8px); z-index: 2;
+    }
+    .platform--tiktok   { background: rgba(0,0,0,0.65); color: #fff; }
+    .platform--instagram{ background: rgba(131,58,180,0.75); color: #fff; }
+    .platform--youtube  { background: rgba(255,0,0,0.72); color: #fff; }
+    .platform--local    { background: rgba(240,165,0,0.75); color: #0d1526; }
+    .platform--behance  { background: rgba(23,105,255,0.75); color: #fff; }
+
+    /* Duration badge */
+    .media-card__duration {
+      position: absolute; bottom: 10px; right: 10px;
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.08em; padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.75); color: #fff;
+      z-index: 2;
+    }
+
+    /* Type badge (top-right) */
+    .media-card__type {
+      position: absolute; top: 10px; right: 10px;
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.12em; padding: 3px 8px;
+      border-radius: 6px; z-index: 2;
+    }
+    .type--video  { background: rgba(240,165,0,0.85); color: #0d1526; }
+    .type--social { background: rgba(167,139,250,0.85); color: #fff; }
+    .type--photo  { background: rgba(96,165,250,0.85); color: #fff; }
+    .type--design { background: rgba(74,222,128,0.85); color: #0d1526; }
+
+    /* ── CARD BODY ─────────────────────────────── */
+    .media-card__body {
+      padding: 14px 16px 16px;
+    }
+    .media-card__title {
+      font-family: var(--font-heading);
+      font-size: 14px; font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.3; margin-bottom: 6px;
+      transition: color 0.18s;
+    }
+    .media-card:hover .media-card__title { color: var(--amber); }
+    .media-card__desc {
+      font-size: 12px; color: var(--text-secondary);
+      line-height: 1.6; margin-bottom: 10px;
+    }
+    .media-card__footer {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 6px;
+    }
+    .media-card__tags { display: flex; gap: 5px; flex-wrap: wrap; }
+    .media-card__tag {
+      font-family: var(--font-mono); font-size: 7px;
+      letter-spacing: 0.1em; padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(240,165,0,0.07);
+      border: 1px solid rgba(240,165,0,0.15);
+      color: var(--amber);
+    }
+    .media-card__link {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.12em; color: var(--amber);
+      opacity: 0.6; transition: opacity 0.18s;
+      white-space: nowrap;
+    }
+    .media-card:hover .media-card__link { opacity: 1; }
+
+    /* ── ADD MEDIA CARD ────────────────────────── */
+    .media-add-card {
+      break-inside: avoid;
+      margin-bottom: 16px;
+      background: transparent;
+      border: 1.5px dashed rgba(240,165,0,0.22);
+      border-radius: 14px;
+      aspect-ratio: 4/3;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: inherit; width: 100%;
+    }
+    .media-add-card:hover {
+      border-color: var(--amber);
+      background: rgba(240,165,0,0.04);
+    }
+    .media-add-card__icon {
+      font-size: 24px; color: rgba(240,165,0,0.3);
+      transition: color 0.2s;
+    }
+    .media-add-card:hover .media-add-card__icon { color: var(--amber); }
+    .media-add-card__label {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.18em; color: var(--text-muted);
+      transition: color 0.2s;
+    }
+    .media-add-card:hover .media-add-card__label { color: var(--amber); }
+
+    /* ── VIDEO / LIGHTBOX OVERLAY ──────────────── */
+    .media-overlay {
+      position: fixed; inset: 0; z-index: 700;
+      background: rgba(3,6,14,0.96);
+      backdrop-filter: blur(24px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s;
+    }
+    .media-overlay.open { opacity: 1; pointer-events: all; }
+
+    .media-overlay__topbar {
+      position: absolute; top: 0; left: 0; right: 0;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: rgba(14,20,44,0.98);
+      border-bottom: 1px solid rgba(240,165,0,0.15);
+    }
+    .media-overlay__title {
+      font-family: var(--font-mono); font-size: 11px;
+      color: var(--text-secondary); letter-spacing: 0.1em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 60vw;
+    }
+    .media-overlay__close {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.14em; padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(248,113,113,0.35);
+      background: transparent; color: #f87171;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .media-overlay__close:hover { background: rgba(248,113,113,0.12); border-color: #f87171; }
+
+    .media-overlay__inner {
+      width: min(960px, 92vw);
+      margin-top: 56px;
+    }
+
+    /* Video container */
+    .media-overlay__video-wrap {
+      position: relative; padding-bottom: 56.25%;
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid rgba(240,165,0,0.2);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+    }
+    .media-overlay__video-wrap.portrait {
+      padding-bottom: 0;
+      width: min(360px, 80vw);
+      margin: 0 auto;
+    }
+    .media-overlay__video-wrap iframe,
+    .media-overlay__video-wrap video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; border: none;
+    }
+    .media-overlay__video-wrap.portrait iframe,
+    .media-overlay__video-wrap.portrait video {
+      position: static; width: 100%;
+      height: min(640px, 80vh);
+    }
+
+    /* Photo lightbox */
+    .media-overlay__photo {
+      max-width: 90vw; max-height: 80vh;
+      border-radius: 12px; display: block;
+      object-fit: contain;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+      margin-top: 56px;
+    }
+
+    /* Caption below overlay content */
+    .media-overlay__caption {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.12em; color: var(--text-muted);
+      text-align: center; margin-top: 12px;
+    }
+
+    /* ── LIGHT THEME ───────────────────────────── */
+    body.contrast-light .media-card {
+      background: rgba(255,255,255,0.92) !important;
+      border-color: rgba(14,20,32,0.14) !important;
+      box-shadow: 0 4px 20px rgba(14,20,32,0.10) !important;
+    }
+    body.contrast-light .media-card:hover { border-color: #0d6e6e !important; box-shadow: 0 8px 28px rgba(14,20,32,0.15) !important; }
+    body.contrast-light .media-card__title { color: #0e1420 !important; }
+    body.contrast-light .media-card:hover .media-card__title { color: #0d6e6e !important; }
+    body.contrast-light .media-card__desc  { color: #2a3248 !important; }
+    body.contrast-light .media-card__link  { color: #0d6e6e !important; }
+    body.contrast-light .media-card__tag   { background: rgba(13,110,110,0.08) !important; border-color: rgba(13,110,110,0.2) !important; color: #0d6e6e !important; }
+    body.contrast-light .media-card__placeholder { background: rgba(200,205,216,0.5); }
+    body.contrast-light .media-card__placeholder-label { color: rgba(14,20,32,0.3) !important; }
+    body.contrast-light .media-add-card { border-color: rgba(13,110,110,0.28) !important; }
+    body.contrast-light .media-add-card:hover { background: rgba(13,110,110,0.04) !important; border-color: #0d6e6e !important; }
+    body.contrast-light .media-add-card__icon  { color: rgba(13,110,110,0.4) !important; }
+    body.contrast-light .media-add-card__label { color: #4a556e !important; }
+    body.contrast-light .media-add-card:hover .media-add-card__icon,
+    body.contrast-light .media-add-card:hover .media-add-card__label { color: #0d6e6e !important; }
+    body.contrast-light .filter-btn { background: rgba(255,255,255,0.75) !important; border-color: rgba(14,20,32,0.18) !important; color: #4a556e !important; }
+    body.contrast-light .filter-btn.active { background: #0d6e6e !important; border-color: #0d6e6e !important; color: #fff !important; }
+    body.contrast-light .filter-btn:hover:not(.active) { border-color: #0d6e6e !important; color: #0d6e6e !important; }
+    /* Stats on light */
+    body.contrast-light .stats__number { color: #0d6e6e !important; }
+    body.contrast-light .stats__item   { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
+    body.contrast-light .stats__label  { color: #4a556e !important; }
+    /* Media overlay always dark — intentional for video/photo viewing */
+
+  </style>
+</head>
+<body class="page-frame">
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
+        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
+        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
+        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
+        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
+        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
+        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="scroll-surface">
+    <div class="container">
+
+      <!-- HERO -->
+      <div class="media-hero fade-in">
+        <p class="hero__label">// media &amp; creative</p>
+        <h1 class="hero__title" style="font-size:clamp(28px,4vw,52px);margin-bottom:14px;" data-edit-id="media-hero-title">
+          Creative Work
+        </h1>
+        <p style="font-size:15px;color:var(--text-secondary);max-width:580px;line-height:1.7;" data-edit-id="media-hero-desc">
+          Video editing, social media content, photography and graphic design —
+          the creative side alongside the engineering. Filter by type or browse everything.
+        </p>
+      </div>
+
+      <!-- STATS -->
+      <div class="media-stats">
+        <div class="stats__item fade-in">
+          <div class="stats__number" data-edit-id="m-s1">2</div>
+          <div class="stats__label">Video edits</div>
+        </div>
+        <div class="stats__item fade-in">
+          <div class="stats__number" data-edit-id="m-s2">2</div>
+          <div class="stats__label">Social media</div>
+        </div>
+        <div class="stats__item fade-in">
+          <div class="stats__number" data-edit-id="m-s3">2</div>
+          <div class="stats__label">Photos</div>
+        </div>
+        <div class="stats__item fade-in">
+          <div class="stats__number" data-edit-id="m-s4">1</div>
+          <div class="stats__label">Design works</div>
+        </div>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div class="filter-bar" role="tablist">
+        <button class="filter-btn active" data-filter="all">ALL MEDIA</button>
+        <button class="filter-btn" data-filter="video">VIDEO EDITS</button>
+        <button class="filter-btn" data-filter="social">SOCIAL MEDIA</button>
+        <button class="filter-btn" data-filter="photo">PHOTOGRAPHY</button>
+        <button class="filter-btn" data-filter="design">GRAPHIC DESIGN</button>
+      </div>
+
+      <!-- MASONRY GRID -->
+      <div class="media-grid" id="media-grid">
+
+        <!-- ═══ VIDEO EDITS ═══ -->
+
+        <!-- Video 1 — featured production (landscape) -->
+        <div class="media-card fade-in" data-type="video" data-filter="video"
+             data-media-type="youtube"
+             data-media-src="https://www.youtube.com/embed/YOUR_VIDEO_ID_1"
+             data-media-title="Highlight Reel — Video Edit #1"
+             data-media-portrait="false">
+          <div class="media-card__thumb media-card__thumb--16x9">
+            <!--
+              Replace with thumbnail:
+              <img src="assets/images/video-thumb-1.jpg" alt="Video Edit #1" />
+            -->
+            <div class="media-card__placeholder">
+              <div class="media-card__placeholder-icon">🎬</div>
+              <div class="media-card__placeholder-label">ADD THUMBNAIL</div>
+            </div>
+            <div class="media-card__play"><div class="media-card__play-btn">▶</div></div>
+            <span class="media-card__platform platform--local">VIDEO</span>
+            <span class="media-card__duration">2:34</span>
+            <span class="media-card__type type--video">EDIT</span>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="v1-title">Highlight Reel — Production #1</div>
+            <div class="media-card__desc" data-edit-id="v1-desc">Short description of this edit — style, purpose, tools used. Unlock to edit.</div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="v1-t1">Premiere Pro</span>
+                <span class="media-card__tag" data-edit-id="v1-t2">Colour Grade</span>
+              </div>
+              <span class="media-card__link">WATCH →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video 2 — short edit -->
+        <div class="media-card fade-in" data-type="video" data-filter="video"
+             data-media-type="local"
+             data-media-src="assets/videos/edit-2.mp4"
+             data-media-title="Edit #2"
+             data-media-portrait="false">
+          <div class="media-card__thumb media-card__thumb--16x9">
+            <div class="media-card__placeholder">
+              <div class="media-card__placeholder-icon">🎞</div>
+              <div class="media-card__placeholder-label">ADD THUMBNAIL</div>
+            </div>
+            <div class="media-card__play"><div class="media-card__play-btn">▶</div></div>
+            <span class="media-card__platform platform--local">LOCAL</span>
+            <span class="media-card__duration">1:12</span>
+            <span class="media-card__type type--video">EDIT</span>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="v2-title">Short Edit — Production #2</div>
+            <div class="media-card__desc" data-edit-id="v2-desc">Describe the edit — subject, mood, software. Unlock to edit.</div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="v2-t1">After Effects</span>
+                <span class="media-card__tag" data-edit-id="v2-t2">Motion</span>
+              </div>
+              <span class="media-card__link">WATCH →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ SOCIAL MEDIA ═══ -->
+
+        <!-- TikTok / Reels — portrait -->
+        <div class="media-card fade-in" data-type="social" data-filter="social"
+             data-media-type="youtube"
+             data-media-src="https://www.youtube.com/embed/YOUR_SHORT_ID_1"
+             data-media-title="TikTok / Reel #1"
+             data-media-portrait="true">
+          <div class="media-card__thumb media-card__thumb--9x16">
+            <div class="media-card__placeholder">
+              <div class="media-card__placeholder-icon">📱</div>
+              <div class="media-card__placeholder-label">TIKTOK / REEL</div>
+            </div>
+            <div class="media-card__play"><div class="media-card__play-btn">▶</div></div>
+            <span class="media-card__platform platform--tiktok">TIKTOK</span>
+            <span class="media-card__type type--social">SOCIAL</span>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="s1-title">TikTok / Reel — Content #1</div>
+            <div class="media-card__desc" data-edit-id="s1-desc">Short-form content — what's it about? Paste your TikTok/Reel link and add a thumbnail.</div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="s1-t1">TikTok</span>
+                <span class="media-card__tag" data-edit-id="s1-t2">Reels</span>
+              </div>
+              <span class="media-card__link">WATCH →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instagram square post -->
+        <div class="media-card fade-in" data-type="social" data-filter="social"
+             data-media-type="photo"
+             data-media-src="assets/images/social-post-1.jpg"
+             data-media-title="Instagram Post #1">
+          <div class="media-card__thumb media-card__thumb--1x1">
+            <div class="media-card__placeholder">
+              <div class="media-card__placeholder-icon">📸</div>
+              <div class="media-card__placeholder-label">INSTAGRAM POST</div>
+            </div>
+            <span class="media-card__platform platform--instagram">INSTAGRAM</span>
+            <span class="media-card__type type--social">SOCIAL</span>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="s2-title">Instagram Post — #1</div>
+            <div class="media-card__desc" data-edit-id="s2-desc">Caption or context for this Instagram post. What was the story behind it?</div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="s2-t1">Instagram</span>
+                <span class="media-card__tag" data-edit-id="s2-t2">Content</span>
+              </div>
+              <span class="media-card__link">VIEW →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PHOTOGRAPHY ═══ -->
+
+        <!-- Photo 1 -->
+        <div class="media-card fade-in" data-type="photo" data-filter="photo"
+             data-media-type="photo"
+             data-media-src="assets/images/photo-1.jpg"
+             data-media-title="Photography #1">
+          <div class="media-card__thumb media-card__thumb--4x3">
+            <div class="media-card__placeholder">
+              <div class="media-card__placeholder-icon">🌅</div>
+              <div class="media-card__placeholder-label">ADD PHOTO</div>
+            </div>
+            <span class="media-card__type type--photo">PHOTO</span>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="p1-title">Photography — Shot #1</div>
+            <div class="media-card__desc" data-edit-id="p1-desc">Where was this taken? What drew you to the shot? Camera / settings if you want to share.</div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="p1-t1">Photography</span>
+                <span class="media-card__tag" data-edit-id="p1-t2">Nairobi</span>
+              </div>
+              <span class="media-card__link">VIEW →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo 2 — portrait crop -->
+        <div class="media-card fade-in" data-type="photo" data-filter="photo"
+             data-media-type="photo"
+             data-media-src="assets/images/photo-2.jpg"
+             data-media-title="Photography #2">
+          <div class="media-card__thumb media-card__thumb--4x3">
+            <div class="media-card__placeholder">
+              <div class="media-card__placeholder-icon">📷</div>
+              <div class="media-card__placeholder-label">ADD PHOTO</div>
+            </div>
+            <span class="media-card__type type--photo">PHOTO</span>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="p2-title">Photography — Shot #2</div>
+            <div class="media-card__desc" data-edit-id="p2-desc">Context for this shot. Unlock to edit.</div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="p2-t1">Photography</span>
+              </div>
+              <span class="media-card__link">VIEW →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ GRAPHIC DESIGN ═══ -->
+
+        <!-- Design 1 -->
+        <div class="media-card fade-in" data-type="design" data-filter="design"
+             data-media-type="photo"
+             data-media-src="assets/images/design-1.jpg"
+             data-media-title="Graphic Design #1">
+          <div class="media-card__thumb media-card__thumb--1x1">
+            <div class="media-card__placeholder">
+              <div class="media-card__placeholder-icon">🎨</div>
+              <div class="media-card__placeholder-label">ADD DESIGN</div>
+            </div>
+            <span class="media-card__type type--design">DESIGN</span>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="d1-title">Graphic Design — Work #1</div>
+            <div class="media-card__desc" data-edit-id="d1-desc">What was this designed for? Brief, tools used, outcome. Unlock to edit.</div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="d1-t1">Canva</span>
+                <span class="media-card__tag" data-edit-id="d1-t2">Design</span>
+              </div>
+              <span class="media-card__link">VIEW →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADD MEDIA BUTTON — always last -->
+        <button class="media-add-card owner-only" id="btn-add-media" title="Add media item">
+          <div class="media-add-card__icon">+</div>
+          <div class="media-add-card__label">ADD MEDIA</div>
+        </button>
+
+      </div><!-- end media-grid -->
+
+      <div style="padding-bottom:64px;"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
+      <span class="footer__right">
+        <span class="footer__pulse" aria-hidden="true"></span>
+        <span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span>
+      </span>
+    </div>
+  </footer>
+
+  <!-- MEDIA LIGHTBOX / VIDEO OVERLAY -->
+  <div class="media-overlay" id="media-overlay" role="dialog" aria-modal="true" aria-label="Media viewer">
+    <div class="media-overlay__topbar">
+      <span class="media-overlay__title" id="media-overlay-title"></span>
+      <button class="media-overlay__close" id="media-overlay-close">✕ CLOSE</button>
+    </div>
+    <div class="media-overlay__inner" id="media-overlay-inner"></div>
+    <div class="media-overlay__caption" id="media-overlay-caption"></div>
+  </div>
+
+  <!-- OWNER LOCK OVERLAY -->
+  <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
+    <div class="lock-modal">
+      <div class="lock-modal__label">// owner access</div>
+      <div class="lock-modal__title">Unlock editing</div>
+      <div class="lock-modal__hint">Enter your passphrase to reveal add/edit controls and enable content editing.</div>
+      <input class="lock-modal__input" id="lock-input" type="password" placeholder="passphrase" autocomplete="off" />
+      <div class="lock-modal__actions">
+        <button class="lock-modal__submit" id="lock-submit">UNLOCK</button>
+        <button class="lock-modal__cancel" id="lock-cancel">CANCEL</button>
+      </div>
+      <div class="lock-modal__error" id="lock-error">Incorrect passphrase</div>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>
+  (function() {
+
+    /* ── FILTER BAR ─────────────────────────────── */
+    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        var f = btn.getAttribute('data-filter');
+        document.querySelectorAll('.media-card').forEach(function(card) {
+          var show = f === 'all' || card.getAttribute('data-filter') === f;
+          card.style.display = show ? '' : 'none';
+        });
+      });
+    });
+
+    /* ── LIGHTBOX / VIDEO OVERLAY ───────────────── */
+    var overlay     = document.getElementById('media-overlay');
+    var overlayInner= document.getElementById('media-overlay-inner');
+    var overlayTitle= document.getElementById('media-overlay-title');
+    var overlayCap  = document.getElementById('media-overlay-caption');
+    var overlayClose= document.getElementById('media-overlay-close');
+
+    function openMedia(type, src, title, portrait) {
+      overlayTitle.textContent = title || '';
+      overlayInner.innerHTML = '';
+
+      if (type === 'photo') {
+        var img = document.createElement('img');
+        img.src = src; img.alt = title;
+        img.className = 'media-overlay__photo';
+        overlayInner.style.marginTop = '0';
+        overlayInner.appendChild(img);
+        overlayCap.textContent = title;
+      } else {
+        // video — youtube or local
+        var wrap = document.createElement('div');
+        wrap.className = 'media-overlay__video-wrap' + (portrait ? ' portrait' : '');
+        var el;
+        if (type === 'youtube') {
+          el = document.createElement('iframe');
+          el.src = src + '?autoplay=1&rel=0';
+          el.setAttribute('allow', 'autoplay; fullscreen');
+          el.setAttribute('allowfullscreen', '');
+          el.title = title;
+        } else {
+          el = document.createElement('video');
+          el.src = src; el.controls = true; el.autoplay = true;
+        }
+        wrap.appendChild(el);
+        overlayInner.style.marginTop = '56px';
+        overlayInner.appendChild(wrap);
+        overlayCap.textContent = '';
+      }
+
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMedia() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      setTimeout(function(){ overlayInner.innerHTML = ''; }, 280);
+    }
+
+    overlayClose.addEventListener('click', closeMedia);
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) closeMedia(); });
+
+    /* Wire all media cards */
+    function wireMediaCards() {
+      document.querySelectorAll('.media-card[data-media-type]').forEach(function(card) {
+        if (card._wired) return; card._wired = true;
+        card.addEventListener('click', function(e) {
+          if (e.target.closest('.card-delete-btn')) return;
+          openMedia(
+            card.getAttribute('data-media-type'),
+            card.getAttribute('data-media-src'),
+            card.getAttribute('data-media-title'),
+            card.getAttribute('data-media-portrait') === 'true'
+          );
+        });
+      });
+    }
+    wireMediaCards();
+
+    /* ── ADD MEDIA CARD ─────────────────────────── */
+    var addBtn = document.getElementById('btn-add-media');
+    var addCounter = 0;
+
+    function makeMediaCardHTML(uid) {
+      return [
+        '<div class="media-card new-card fade-in visible" data-type="video" data-filter="video"',
+        '     data-media-type="youtube" data-media-src="" data-media-title="New Media" data-media-portrait="false"',
+        '     data-new-id="' + uid + '">',
+        '  <div class="media-card__thumb media-card__thumb--16x9">',
+        '    <div class="media-card__placeholder">',
+        '      <div class="media-card__placeholder-icon">+</div>',
+        '      <div class="media-card__placeholder-label">ADD THUMBNAIL</div>',
+        '    </div>',
+        '    <div class="media-card__play"><div class="media-card__play-btn">▶</div></div>',
+        '    <span class="media-card__type type--video">EDIT</span>',
+        '  </div>',
+        '  <div class="media-card__body">',
+        '    <div class="media-card__title" contenteditable="false">Media Title</div>',
+        '    <div class="media-card__desc" contenteditable="false">Description of this media item.</div>',
+        '    <div class="media-card__footer">',
+        '      <div class="media-card__tags"><span class="media-card__tag" contenteditable="false">Tag</span></div>',
+        '      <span class="media-card__link">VIEW →</span>',
+        '    </div>',
+        '  </div>',
+        '</div>'
+      ].join('\n');
+    }
+
+    if (addBtn) {
+      addBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!document.body.classList.contains('owner-unlocked')) return;
+        addCounter++;
+        var id = 'media-new-' + addCounter;
+        var tmp = document.createElement('div');
+        tmp.innerHTML = makeMediaCardHTML(id);
+        var card = tmp.firstElementChild;
+        addBtn.parentNode.insertBefore(card, addBtn);
+        wireMediaCards();
+
+        var titleEl = card.querySelector('.media-card__title');
+        if (titleEl) {
+          titleEl.setAttribute('contenteditable', 'true');
+          setTimeout(function() {
+            titleEl.focus();
+            var r = document.createRange();
+            r.selectNodeContents(titleEl);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(r);
+          }, 60);
+        }
+      });
+    }
+
+    /* ── KEYBOARD ESC ───────────────────────────── */
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) closeMedia();
+    });
+
+  })();
+  </script>
+
+  <script src="js/editor.js"></script>
+</body>
+</html>
