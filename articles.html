@@ -93,6 +93,28 @@
     }
     .reader-close:hover { background: rgba(248,113,113,0.15); border-color: #f87171; }
 
+    /* Edit / Save buttons */
+    .reader-edit-btn, .reader-save-btn {
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
+      padding: 7px 14px; border-radius: 8px; cursor: pointer;
+      transition: all 0.15s; flex-shrink: 0; white-space: nowrap;
+    }
+    .reader-edit-btn { border: 1px solid rgba(240,165,0,0.4); background: transparent; color: #b87800; }
+    .reader-edit-btn:hover, .reader-edit-btn.active { background: rgba(240,165,0,0.15); border-color: #F0A500; color: #c8940e; }
+    .reader-save-btn { border: 1px solid rgba(74,222,128,0.4); background: transparent; color: #16a34a; }
+    .reader-save-btn:hover { background: rgba(74,222,128,0.12); border-color: #4ade80; }
+    .reader-save-btn.saved { background: #16a34a; color: #fff; border-color: #16a34a; }
+    .reader-overlay.edit-mode .art-body { outline: 2px dashed rgba(240,165,0,0.4); outline-offset: 10px; border-radius: 4px; }
+    .reader-overlay.edit-mode .art-title { cursor: text; }
+    .reader-edit-hint { display:none; font-family:var(--font-mono); font-size:8px; letter-spacing:0.14em; color:#b87800; background:rgba(240,165,0,0.07); border-bottom:1px solid rgba(240,165,0,0.18); padding:7px 40px; text-align:center; }
+    .reader-overlay.edit-mode .reader-edit-hint { display:block; }
+    .reader-format-bar { display:none; align-items:center; gap:3px; padding:7px 40px; background:#fff; border-bottom:2px solid #e8e5de; flex-shrink:0; flex-wrap:wrap; }
+    .reader-overlay.edit-mode .reader-format-bar { display:flex; }
+    .reader-format-bar button { width:30px; height:28px; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid transparent; border-radius:5px; color:#2c2c3a; font-size:12px; cursor:pointer; transition:all 0.14s; font-family:Georgia,serif; }
+    .reader-format-bar button:hover { background:#f0ede6; border-color:#d0cdc6; color:#0e0e1a; }
+    .rfb-divider { width:1px; height:18px; background:#e0ddd6; margin:0 4px; }
+    .reader-format-bar select { background:#faf8f4; border:1px solid #d8d5ce; border-radius:5px; color:#2c2c3a; font-family:var(--font-mono); font-size:9px; padding:3px 6px; height:28px; cursor:pointer; }
+
     /* Scrollable paper body */
     .reader-body {
       flex: 1; overflow-y: auto;
@@ -653,9 +675,39 @@
         <span class="reader-topbar__label">// READING</span>
         <span class="reader-topbar__title" id="reader-topbar-title"></span>
       </div>
-      <button class="reader-close" id="reader-close">✕ CLOSE</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <!-- Edit controls — only shown when owner-unlocked -->
+        <button class="reader-edit-btn owner-only" id="reader-edit-toggle" style="display:none;">✏ EDIT</button>
+        <button class="reader-save-btn owner-only" id="reader-save-btn" style="display:none;">💾 SAVE</button>
+        <button class="reader-close" id="reader-close">✕ CLOSE</button>
+      </div>
     </div>
     <div class="reader-progress"><div class="reader-progress__fill" id="reader-progress-fill"></div></div>
+    <!-- Reader format bar — shown inside reader when editing -->
+    <div class="reader-format-bar" id="reader-format-bar">
+      <button data-cmd="bold"          title="Bold"><b>B</b></button>
+      <button data-cmd="italic"        title="Italic"><i>I</i></button>
+      <button data-cmd="underline"     title="Underline"><u>U</u></button>
+      <div class="rfb-divider"></div>
+      <button data-cmd="insertUnorderedList" title="Bullet list">☰</button>
+      <button data-cmd="insertOrderedList"   title="Numbered list">①</button>
+      <div class="rfb-divider"></div>
+      <button data-cmd="justifyLeft"   title="Left">⬡</button>
+      <button data-cmd="justifyCenter" title="Centre">≡</button>
+      <div class="rfb-divider"></div>
+      <select id="rfb-size" title="Font size">
+        <option value="">Size</option>
+        <option value="13px">13</option>
+        <option value="15px">15</option>
+        <option value="17px">17</option>
+        <option value="20px">20</option>
+        <option value="24px">24</option>
+        <option value="28px">28</option>
+      </select>
+      <div class="rfb-divider"></div>
+      <button data-cmd="removeFormat"  title="Clear formatting" style="color:#c0392b;">✕</button>
+    </div>
+    <div class="reader-edit-hint" id="reader-edit-hint">✏ EDIT MODE ON — Click anywhere in the article to start typing. Press Ctrl+S or click SAVE when done.</div>
     <div class="reader-body" id="reader-body"><div class="reader-content" id="reader-content"></div></div>
   </div>
 
@@ -691,13 +743,29 @@
     var readerClose  = document.getElementById('reader-close');
     var readerBody   = document.getElementById('reader-body');
     var progressFill = document.getElementById('reader-progress-fill');
+    var editToggle   = document.getElementById('reader-edit-toggle');
+    var saveBtn      = document.getElementById('reader-save-btn');
+    var currentArticleId = null;
+    var readerEditMode   = false;
+
+    function artKey(id) { return 'portfolio__article__' + id; }
+
+    function getArticleContent(id) {
+      var saved = null;
+      try { saved = localStorage.getItem(artKey(id)); } catch(e) {}
+      return saved !== null ? saved : (articles[id] ? articles[id].content : '');
+    }
 
     function openReader(id) {
       var a = articles[id]; if (!a) return;
+      currentArticleId = id;
+      readerEditMode = false;
+      overlay.classList.remove('edit-mode');
       readerTitle.textContent = a.title;
+      var content = getArticleContent(id);
       readerContent.innerHTML =
         '<div class="art-label">' + a.label + '</div>' +
-        '<div class="art-title">' + a.title + '</div>' +
+        '<div class="art-title" id="art-editable-title">' + a.title + '</div>' +
         '<div class="art-meta">' +
           '<span class="art-meta-item art-meta-author">Rubui Mwangi</span>' +
           '<span class="art-meta-dot"></span>' +
@@ -705,24 +773,101 @@
           '<span class="art-meta-dot"></span>' +
           '<span class="art-meta-item">' + a.readTime + '</span>' +
         '</div>' +
-        '<div class="art-body">' + a.content + '</div>' +
+        '<div class="art-body" id="art-editable-body">' + content + '</div>' +
         '<hr class="art-end-rule" />' +
-        '<div class="art-end-footer">— Rubui Mwangi · portfolio.ee —</div>';
+        '<div class="art-end-footer">\u2014 Rubui Mwangi \u00b7 portfolio.ee \u2014</div>';
       overlay.classList.add('open');
       readerBody.scrollTop = 0;
       progressFill.style.width = '0%';
       document.body.style.overflow = 'hidden';
+      if (document.body.classList.contains('owner-unlocked')) {
+        editToggle.style.display = ''; saveBtn.style.display = '';
+      } else {
+        editToggle.style.display = 'none'; saveBtn.style.display = 'none';
+      }
+      updateEditBtn();
     }
-    function closeReader() { overlay.classList.remove('open'); document.body.style.overflow = ''; }
+
+    function closeReader() {
+      if (readerEditMode) disableReaderEdit();
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      currentArticleId = null;
+    }
+
+    function enableReaderEdit() {
+      readerEditMode = true;
+      overlay.classList.add('edit-mode');
+      var titleEl = document.getElementById('art-editable-title');
+      var bodyEl  = document.getElementById('art-editable-body');
+      if (titleEl) titleEl.setAttribute('contenteditable', 'true');
+      if (bodyEl)  { bodyEl.setAttribute('contenteditable', 'true'); bodyEl.focus(); }
+      updateEditBtn();
+    }
+
+    function disableReaderEdit() {
+      readerEditMode = false;
+      overlay.classList.remove('edit-mode');
+      var titleEl = document.getElementById('art-editable-title');
+      var bodyEl  = document.getElementById('art-editable-body');
+      if (titleEl) titleEl.setAttribute('contenteditable', 'false');
+      if (bodyEl)  bodyEl.setAttribute('contenteditable', 'false');
+      updateEditBtn();
+    }
+
+    function updateEditBtn() {
+      if (!editToggle) return;
+      editToggle.textContent = readerEditMode ? '\u2711 EDITING' : '\u270f EDIT';
+      editToggle.classList.toggle('active', readerEditMode);
+    }
+
+    function saveArticle() {
+      if (!currentArticleId) return;
+      var titleEl = document.getElementById('art-editable-title');
+      var bodyEl  = document.getElementById('art-editable-body');
+      if (!bodyEl) return;
+      var newContent = bodyEl.innerHTML;
+      var newTitle   = titleEl ? titleEl.textContent : articles[currentArticleId].title;
+      try { localStorage.setItem(artKey(currentArticleId), newContent); } catch(e) {}
+      if (articles[currentArticleId]) {
+        articles[currentArticleId].content = newContent;
+        articles[currentArticleId].title   = newTitle;
+        readerTitle.textContent = newTitle;
+        var row = document.querySelector('[data-article-id="' + currentArticleId + '"] .article-row__title');
+        if (row) row.textContent = newTitle;
+      }
+      saveBtn.textContent = '\u2713 SAVED';
+      saveBtn.classList.add('saved');
+      setTimeout(function() { saveBtn.textContent = '\U0001F4BE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
+    }
+
     readerClose.addEventListener('click', closeReader);
     overlay.addEventListener('click', function(e) { if (e.target === overlay) closeReader(); });
+    if (editToggle) editToggle.addEventListener('click', function() { readerEditMode ? disableReaderEdit() : enableReaderEdit(); });
+    if (saveBtn)    saveBtn.addEventListener('click', saveArticle);
 
-    // Reading progress bar
+    document.querySelectorAll('.reader-format-bar [data-cmd]').forEach(function(btn) {
+      btn.addEventListener('mousedown', function(e) { e.preventDefault(); document.execCommand(btn.getAttribute('data-cmd'), false, null); });
+    });
+    var rfbSize = document.getElementById('rfb-size');
+    if (rfbSize) {
+      rfbSize.addEventListener('change', function() {
+        var sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
+        var span = document.createElement('span'); span.style.fontSize = rfbSize.value;
+        try { sel.getRangeAt(0).surroundContents(span); } catch(e) {}
+        rfbSize.value = '';
+      });
+    }
+
     readerBody.addEventListener('scroll', function() {
       var scrollable = readerBody.scrollHeight - readerBody.clientHeight;
       if (scrollable <= 0) return;
-      var pct = Math.min(100, Math.round((readerBody.scrollTop / scrollable) * 100));
-      progressFill.style.width = pct + '%';
+      progressFill.style.width = Math.min(100, Math.round((readerBody.scrollTop / scrollable) * 100)) + '%';
+    });
+
+    // Ctrl+S saves while editing in reader
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey||e.metaKey) && e.key==='s' && readerEditMode) { e.preventDefault(); saveArticle(); }
     });
 
     function wireRows() {
