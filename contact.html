@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact — Rubui Mwangi</title>
+  <meta name="description" content="Get in touch with Rubui Mwangi — Electrical & Electronics Engineer. Open to internship opportunities."/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    /* ═══════════════════════════════════════════════
+       CONTACT PAGE
+    ═══════════════════════════════════════════════ */
+    .contact-hero { padding: 56px 0 44px; }
+
+    /* ── TWO-COLUMN LAYOUT ─────────────────────── */
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 40px;
+      align-items: start;
+      margin-bottom: 64px;
+    }
+    @media(max-width:860px){ .contact-layout { grid-template-columns:1fr; } }
+
+    /* ── CONTACT FORM CARD ─────────────────────── */
+    .contact-card {
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.18);
+      border-radius: 20px;
+      padding: 36px 36px 32px;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.5);
+      backdrop-filter: blur(14px);
+    }
+    .contact-card__label {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.22em; color: var(--amber);
+      margin-bottom: 8px;
+    }
+    .contact-card__title {
+      font-family: var(--font-heading); font-size: 22px;
+      font-weight: 800; color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .contact-card__sub {
+      font-size: 13px; color: var(--text-secondary);
+      line-height: 1.65; margin-bottom: 28px;
+    }
+
+    /* Form fields */
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block; font-family: var(--font-mono);
+      font-size: 9px; letter-spacing: 0.16em;
+      color: var(--text-muted); margin-bottom: 7px;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(240,165,0,0.2);
+      border-radius: 10px; padding: 11px 14px;
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--text-primary); outline: none;
+      transition: border-color 0.18s, background 0.18s;
+      box-sizing: border-box;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--amber); background: rgba(240,165,0,0.04);
+    }
+    .form-select {
+      appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23F0A500' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+    }
+    .form-select option { background: #0d1526; color: var(--text-primary); }
+    .form-textarea { resize: vertical; min-height: 130px; line-height: 1.6; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media(max-width:540px){ .form-row { grid-template-columns: 1fr; } }
+
+    /* Honeypot — hidden from humans, traps bots */
+    .hp-field { position: absolute; left: -9999px; opacity: 0; height: 0; }
+
+    /* Submit button */
+    .form-submit {
+      width: 100%; padding: 13px;
+      background: var(--amber); color: var(--navy);
+      border: none; border-radius: 10px;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.18em; font-weight: 700;
+      cursor: pointer; transition: background 0.18s, transform 0.12s;
+      margin-top: 8px;
+    }
+    .form-submit:hover { background: #c8940e; transform: translateY(-1px); }
+    .form-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Status messages */
+    .form-status {
+      margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.12em; display: none;
+    }
+    .form-status.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
+    .form-status.error   { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+
+    /* ── RIGHT COLUMN ──────────────────────────── */
+    .contact-sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Availability card */
+    .avail-card {
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.18);
+      border-radius: 16px; padding: 22px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .avail-card__dot {
+      display: inline-block; width: 8px; height: 8px;
+      border-radius: 50%; background: #4ade80;
+      margin-right: 8px; animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100%{ box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+      50%    { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+    }
+    .avail-card__status {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.18em; color: #4ade80;
+    }
+    .avail-card__title {
+      font-family: var(--font-heading); font-size: 16px;
+      font-weight: 800; color: var(--text-primary);
+      margin: 8px 0 4px;
+    }
+    .avail-card__desc {
+      font-size: 12px; color: var(--text-secondary); line-height: 1.6;
+    }
+
+    /* ── SOCIAL LINKS GRID ─────────────────────── */
+    .social-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .social-card {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.14);
+      border-radius: 12px; padding: 14px 16px;
+      text-decoration: none; transition: all 0.18s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      position: relative; overflow: hidden;
+    }
+    .social-card::before {
+      content: ''; position: absolute; inset: 0;
+      opacity: 0; transition: opacity 0.18s;
+    }
+    .social-card:hover { transform: translateY(-2px); }
+    .social-card:hover::before { opacity: 1; }
+
+    /* Platform colours */
+    .social-linkedin::before  { background: linear-gradient(135deg,rgba(0,119,181,0.12),transparent); }
+    .social-linkedin:hover    { border-color: rgba(0,119,181,0.45); }
+    .social-github::before    { background: linear-gradient(135deg,rgba(255,255,255,0.08),transparent); }
+    .social-github:hover      { border-color: rgba(255,255,255,0.35); }
+    .social-twitter::before   { background: linear-gradient(135deg,rgba(29,161,242,0.12),transparent); }
+    .social-twitter:hover     { border-color: rgba(29,161,242,0.45); }
+    .social-instagram::before { background: linear-gradient(135deg,rgba(225,48,108,0.12),transparent); }
+    .social-instagram:hover   { border-color: rgba(225,48,108,0.45); }
+    .social-tiktok::before    { background: linear-gradient(135deg,rgba(105,201,208,0.12),transparent); }
+    .social-tiktok:hover      { border-color: rgba(105,201,208,0.45); }
+    .social-youtube::before   { background: linear-gradient(135deg,rgba(255,0,0,0.12),transparent); }
+    .social-youtube:hover     { border-color: rgba(255,0,0,0.45); }
+    .social-whatsapp::before  { background: linear-gradient(135deg,rgba(37,211,102,0.12),transparent); }
+    .social-whatsapp:hover    { border-color: rgba(37,211,102,0.45); }
+
+    .social-card__icon {
+      font-size: 18px; flex-shrink: 0;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; position: relative; z-index: 1;
+    }
+    .social-card__info { position: relative; z-index: 1; min-width: 0; }
+    .social-card__name {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.14em; color: var(--text-muted);
+      margin-bottom: 1px;
+    }
+    .social-card__handle {
+      font-size: 12px; font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* ── COMMENT / RECOMMENDATION SECTION ─────── */
+    .comments-section { margin-bottom: 64px; }
+    .comments-header {
+      display: flex; align-items: center; gap: 18px; margin-bottom: 32px;
+    }
+    .comments-header__label {
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.22em; color: var(--amber); white-space: nowrap;
+    }
+    .comments-header__line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg,rgba(240,165,0,0.3),transparent);
+    }
+
+    .comment-form-card {
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.18);
+      border-radius: 20px; padding: 32px 36px 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.45);
+      margin-bottom: 28px;
+    }
+    .comment-form-card__title {
+      font-family: var(--font-heading); font-size: 17px;
+      font-weight: 800; color: var(--text-primary); margin-bottom: 6px;
+    }
+    .comment-form-card__sub {
+      font-size: 13px; color: var(--text-secondary);
+      line-height: 1.6; margin-bottom: 24px;
+    }
+    .comment-type-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 8px;
+      margin-bottom: 18px;
+    }
+    @media(max-width:600px){ .comment-type-grid { grid-template-columns: repeat(2,1fr); } }
+    .comment-type-btn {
+      padding: 8px 6px; border-radius: 8px;
+      border: 1px solid rgba(240,165,0,0.18);
+      background: transparent; color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.12em; cursor: pointer;
+      transition: all 0.15s; text-align: center;
+    }
+    .comment-type-btn:hover, .comment-type-btn.active {
+      background: rgba(240,165,0,0.12); border-color: var(--amber); color: var(--amber);
+    }
+    .comment-type-btn.active { font-weight: 700; }
+
+    /* Published comments display */
+    .comments-list { display: flex; flex-direction: column; gap: 14px; }
+    .comment-item {
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.12);
+      border-radius: 14px; padding: 20px 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .comment-item__header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+    }
+    .comment-item__avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg,rgba(240,165,0,0.3),rgba(240,165,0,0.1));
+      border: 1px solid rgba(240,165,0,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading); font-size: 14px;
+      font-weight: 800; color: var(--amber); flex-shrink: 0;
+    }
+    .comment-item__meta { flex: 1; min-width: 0; }
+    .comment-item__name {
+      font-size: 13px; font-weight: 700; color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .comment-item__date {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.1em; color: var(--text-muted);
+    }
+    .comment-item__type {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.12em; padding: 3px 9px; border-radius: 20px; border: 1px solid;
+    }
+    .type-recommendation { color:#4ade80; border-color:rgba(74,222,128,0.3); background:rgba(74,222,128,0.07); }
+    .type-suggestion     { color:#60a5fa; border-color:rgba(96,165,250,0.3); background:rgba(96,165,250,0.07); }
+    .type-review         { color:#f0a500; border-color:rgba(240,165,0,0.3);  background:rgba(240,165,0,0.07); }
+    .type-compliment     { color:#a78bfa; border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.07); }
+    .comment-item__text {
+      font-size: 14px; color: var(--text-secondary); line-height: 1.7;
+    }
+    /* Owner delete button on comments */
+    .comment-item__delete {
+      position: absolute; top: 12px; right: 12px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25);
+      color: #f87171; font-size: 9px; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    body.owner-unlocked .comment-item__delete { display: flex; }
+    .comment-item__delete:hover { background: rgba(248,113,113,0.25); }
+
+    .comments-empty {
+      text-align: center; padding: 40px 20px;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.14em; color: var(--text-muted);
+      border: 1px dashed rgba(240,165,0,0.15); border-radius: 14px;
+    }
+
+    /* ── EMAILJS SETUP NOTICE (owner only) ────── */
+    .emailjs-notice {
+      background: rgba(240,165,0,0.06);
+      border: 1px solid rgba(240,165,0,0.22);
+      border-radius: 12px; padding: 16px 20px;
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.1em; color: var(--amber);
+      line-height: 1.7; margin-bottom: 20px;
+      display: none;
+    }
+    body.owner-unlocked .emailjs-notice { display: block; }
+
+    /* ── LIGHT THEME ───────────────────────────── */
+    body.contrast-light .contact-card,
+    body.contrast-light .avail-card,
+    body.contrast-light .social-card,
+    body.contrast-light .comment-form-card,
+    body.contrast-light .comment-item {
+      background: rgba(255,255,255,0.92) !important;
+      border-color: rgba(14,20,32,0.14) !important;
+      box-shadow: 0 4px 20px rgba(14,20,32,0.10) !important;
+    }
+    body.contrast-light .contact-card__title,
+    body.contrast-light .avail-card__title,
+    body.contrast-light .comment-form-card__title,
+    body.contrast-light .comment-item__name { color: #0e1420 !important; }
+    body.contrast-light .contact-card__sub,
+    body.contrast-light .avail-card__desc,
+    body.contrast-light .comment-form-card__sub,
+    body.contrast-light .comment-item__text { color: #2a3248 !important; }
+    body.contrast-light .form-input,
+    body.contrast-light .form-select,
+    body.contrast-light .form-textarea {
+      background: rgba(14,20,32,0.04) !important;
+      border-color: rgba(14,20,32,0.18) !important;
+      color: #0e1420 !important;
+    }
+    body.contrast-light .form-input:focus,
+    body.contrast-light .form-textarea:focus { border-color: #0d6e6e !important; background: rgba(13,110,110,0.04) !important; }
+    body.contrast-light .form-submit { background: #0d6e6e !important; color: #fff !important; }
+    body.contrast-light .form-submit:hover { background: #0a5858 !important; }
+    body.contrast-light .social-card__handle { color: #0e1420 !important; }
+    body.contrast-light .social-card__name { color: #4a556e !important; }
+    body.contrast-light .comment-type-btn { border-color: rgba(14,20,32,0.16) !important; color: #4a556e !important; }
+    body.contrast-light .comment-type-btn.active,
+    body.contrast-light .comment-type-btn:hover { background: rgba(13,110,110,0.08) !important; border-color: #0d6e6e !important; color: #0d6e6e !important; }
+    body.contrast-light .comments-header__label { color: #0d6e6e !important; }
+    body.contrast-light .comments-header__line { background: linear-gradient(90deg,rgba(13,110,110,0.35),transparent) !important; }
+    body.contrast-light .emailjs-notice { color: #8a5a00 !important; background: rgba(138,90,0,0.06) !important; border-color: rgba(138,90,0,0.22) !important; }
+
+    @media(max-width:540px){
+      .contact-card { padding: 24px 18px; }
+      .comment-form-card { padding: 22px 18px; }
+      .social-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="page-frame">
+
+  <nav class="nav">
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
+        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
+        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
+        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
+        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
+        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
+        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="scroll-surface">
+    <div class="container">
+
+      <!-- HERO -->
+      <div class="contact-hero fade-in">
+        <p class="hero__label">// contact</p>
+        <h1 class="hero__title" style="font-size:clamp(28px,4vw,52px);margin-bottom:14px;" data-edit-id="ct-title">
+          Get In Touch
+        </h1>
+        <p style="font-size:15px;color:var(--text-secondary);max-width:560px;line-height:1.7;" data-edit-id="ct-desc">
+          Open to internship opportunities, collaborations, and professional conversations.
+          Fill in the form and your message lands directly in my inbox.
+        </p>
+      </div>
+
+      <!-- TWO-COLUMN LAYOUT -->
+      <div class="contact-layout">
+
+        <!-- LEFT — CONTACT FORM -->
+        <div class="contact-card fade-in">
+          <div class="contact-card__label">// send a message</div>
+          <div class="contact-card__title" data-edit-id="ct-form-title">Send a message</div>
+          <div class="contact-card__sub" data-edit-id="ct-form-sub">
+            Your message goes directly to my inbox. I'll reply from my email — no bots, no auto-replies.
+          </div>
+
+          <!-- EmailJS setup notice — only visible when owner is unlocked -->
+          <div class="emailjs-notice">
+            ⚙ OWNER SETUP: Replace YOUR_SERVICE_ID, YOUR_TEMPLATE_ID and YOUR_PUBLIC_KEY
+            in the script below with your EmailJS credentials.
+            Sign up free at emailjs.com → Email Services → connect Gmail →
+            Email Templates → create template using {{from_name}}, {{from_email}},
+            {{subject}}, {{message}} variables.
+          </div>
+
+          <form id="contact-form" novalidate>
+            <!-- Honeypot — invisible to humans, bots fill it in -->
+            <input class="hp-field" type="text" name="hp_website" tabindex="-1" autocomplete="off"/>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ct-name">YOUR NAME *</label>
+                <input class="form-input" type="text" id="ct-name" name="from_name" placeholder="Full name" required/>
+              </div>
+              <div class="form-group">
+                <label for="ct-email">YOUR EMAIL *</label>
+                <input class="form-input" type="email" id="ct-email" name="from_email" placeholder="you@email.com" required/>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="ct-subject">SUBJECT *</label>
+              <select class="form-input form-select" id="ct-subject" name="subject" required>
+                <option value="">Select a subject…</option>
+                <option value="Internship Opportunity">Internship Opportunity</option>
+                <option value="Collaboration">Collaboration</option>
+                <option value="Project Inquiry">Project Inquiry</option>
+                <option value="Professional Introduction">Professional Introduction</option>
+                <option value="General Enquiry">General Enquiry</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="ct-message">MESSAGE *</label>
+              <textarea class="form-textarea" id="ct-message" name="message"
+                placeholder="Write your message here…" required></textarea>
+            </div>
+
+            <button class="form-submit" type="submit" id="ct-submit">
+              SEND MESSAGE →
+            </button>
+
+            <div class="form-status" id="form-status"></div>
+          </form>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="contact-sidebar">
+
+          <!-- Availability -->
+          <div class="avail-card fade-in">
+            <div><span class="avail-card__dot"></span><span class="avail-card__status">AVAILABLE</span></div>
+            <div class="avail-card__title" data-edit-id="ct-avail-title">Open to Internship Opportunities</div>
+            <div class="avail-card__desc" data-edit-id="ct-avail-desc">
+              Based in Nairobi, Kenya. Available immediately for electrical engineering
+              internships — field, design, or IoT/embedded roles. Open to remote collaboration.
+            </div>
+          </div>
+
+          <!-- Social Links -->
+          <div class="social-grid">
+
+            <a href="https://linkedin.com/in/YOUR_LINKEDIN" target="_blank" rel="noopener"
+               class="social-card social-linkedin fade-in" data-edit-id="ct-linkedin">
+              <div class="social-card__icon">💼</div>
+              <div class="social-card__info">
+                <div class="social-card__name">LINKEDIN</div>
+                <div class="social-card__handle">Rubui Mwangi</div>
+              </div>
+            </a>
+
+            <a href="https://github.com/YOUR_GITHUB" target="_blank" rel="noopener"
+               class="social-card social-github fade-in">
+              <div class="social-card__icon">⌥</div>
+              <div class="social-card__info">
+                <div class="social-card__name">GITHUB</div>
+                <div class="social-card__handle" data-edit-id="ct-github">@yourusername</div>
+              </div>
+            </a>
+
+            <a href="https://twitter.com/YOUR_TWITTER" target="_blank" rel="noopener"
+               class="social-card social-twitter fade-in">
+              <div class="social-card__icon">✕</div>
+              <div class="social-card__info">
+                <div class="social-card__name">TWITTER / X</div>
+                <div class="social-card__handle" data-edit-id="ct-twitter">@yourusername</div>
+              </div>
+            </a>
+
+            <a href="https://instagram.com/YOUR_INSTAGRAM" target="_blank" rel="noopener"
+               class="social-card social-instagram fade-in">
+              <div class="social-card__icon">📸</div>
+              <div class="social-card__info">
+                <div class="social-card__name">INSTAGRAM</div>
+                <div class="social-card__handle" data-edit-id="ct-instagram">@yourusername</div>
+              </div>
+            </a>
+
+            <a href="https://tiktok.com/@YOUR_TIKTOK" target="_blank" rel="noopener"
+               class="social-card social-tiktok fade-in">
+              <div class="social-card__icon">🎵</div>
+              <div class="social-card__info">
+                <div class="social-card__name">TIKTOK</div>
+                <div class="social-card__handle" data-edit-id="ct-tiktok">@yourusername</div>
+              </div>
+            </a>
+
+            <a href="https://youtube.com/@YOUR_YOUTUBE" target="_blank" rel="noopener"
+               class="social-card social-youtube fade-in">
+              <div class="social-card__icon">▶</div>
+              <div class="social-card__info">
+                <div class="social-card__name">YOUTUBE</div>
+                <div class="social-card__handle" data-edit-id="ct-youtube">@yourusername</div>
+              </div>
+            </a>
+
+            <!-- WhatsApp — number only, no account link exposed -->
+            <a href="https://wa.me/254700000000" target="_blank" rel="noopener"
+               class="social-card social-whatsapp fade-in" style="grid-column:span 2;">
+              <div class="social-card__icon">💬</div>
+              <div class="social-card__info">
+                <div class="social-card__name">WHATSAPP</div>
+                <div class="social-card__handle" data-edit-id="ct-whatsapp">+254 700 000 000</div>
+              </div>
+            </a>
+
+          </div><!-- end social-grid -->
+        </div><!-- end sidebar -->
+      </div><!-- end contact-layout -->
+
+
+      <!-- ═══════════════════════════════════════
+           RECOMMENDATIONS & COMMENTS
+      ═══════════════════════════════════════ -->
+      <div class="comments-section">
+        <div class="comments-header fade-in">
+          <span class="comments-header__label">// recommendations &amp; comments</span>
+          <div class="comments-header__line"></div>
+        </div>
+
+        <!-- Comment submission form -->
+        <div class="comment-form-card fade-in">
+          <div class="comment-form-card__title">Leave a recommendation</div>
+          <div class="comment-form-card__sub">
+            Have we worked together, or do you have a suggestion or kind word?
+            Your submission goes to my inbox first — I approve and publish what I choose.
+            Include your email so I can verify and acknowledge you.
+          </div>
+
+          <div class="comment-type-grid">
+            <button class="comment-type-btn active" data-type="Recommendation">👍 Recommendation</button>
+            <button class="comment-type-btn" data-type="Suggestion">💡 Suggestion</button>
+            <button class="comment-type-btn" data-type="Review">⭐ Review</button>
+            <button class="comment-type-btn" data-type="Compliment">🎉 Compliment</button>
+          </div>
+
+          <form id="comment-form" novalidate>
+            <input class="hp-field" type="text" name="hp_website" tabindex="-1" autocomplete="off"/>
+            <div class="form-row" style="margin-bottom:14px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label>YOUR NAME *</label>
+                <input class="form-input" type="text" name="commenter_name" placeholder="Your name" required/>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label>YOUR EMAIL *</label>
+                <input class="form-input" type="email" name="commenter_email" placeholder="your@email.com" required/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>YOUR MESSAGE *</label>
+              <textarea class="form-textarea" name="commenter_message" style="min-height:100px;"
+                placeholder="Write your recommendation, suggestion or kind word…" required></textarea>
+            </div>
+            <input type="hidden" name="comment_type" id="comment-type-hidden" value="Recommendation"/>
+            <button class="form-submit" type="submit" id="comment-submit">SUBMIT FOR REVIEW →</button>
+            <div class="form-status" id="comment-status"></div>
+          </form>
+        </div>
+
+        <!-- Published comments — owner adds these after approving -->
+        <div class="comments-list" id="comments-list">
+          <!-- Approved comments appear here. Owner: unlock → click + to add one -->
+        </div>
+
+        <!-- Add comment button (owner only — after approving via email) -->
+        <button class="article-add-row owner-only" id="btn-add-comment"
+                style="margin-top:14px;" title="Publish an approved comment">
+          <div class="article-add-row__icon">+</div>
+          <span class="article-add-row__label">PUBLISH APPROVED COMMENT</span>
+        </button>
+
+        <div class="comments-empty" id="comments-empty">
+          No published recommendations yet — be the first to leave one above.
+        </div>
+      </div>
+
+      <div style="padding-bottom:64px;"></div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
+      <span class="footer__right">
+        <span class="footer__pulse" aria-hidden="true"></span>
+        <span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span>
+      </span>
+    </div>
+  </footer>
+
+  <!-- OWNER LOCK OVERLAY -->
+  <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
+    <div class="lock-modal">
+      <div class="lock-modal__label">// owner access</div>
+      <div class="lock-modal__title">Unlock editing</div>
+      <div class="lock-modal__hint">Enter your passphrase to reveal add/edit controls and enable content editing.</div>
+      <input class="lock-modal__input" id="lock-input" type="password" placeholder="passphrase" autocomplete="off"/>
+      <div class="lock-modal__actions">
+        <button class="lock-modal__submit" id="lock-submit">UNLOCK</button>
+        <button class="lock-modal__cancel" id="lock-cancel">CANCEL</button>
+      </div>
+      <div class="lock-modal__error" id="lock-error">Incorrect passphrase</div>
+    </div>
+  </div>
+
+  <!--
+    EmailJS — free email sending, no backend needed.
+    SETUP STEPS:
+    1. Go to https://emailjs.com and create a free account
+    2. Add Email Service → connect your Gmail
+    3. Create Email Template — use these variables in your template:
+       {{from_name}}  {{from_email}}  {{subject}}  {{message}}
+    4. Replace the three YOUR_* values below with your real IDs
+    5. Never share your private key — the public key below is safe to expose
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+  (function() {
+
+    /* ═══════════════════════════════════════════════
+       EMAILJS CONFIG — replace these with your IDs
+       from https://emailjs.com/account
+    ═══════════════════════════════════════════════ */
+    var EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
+    var EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
+    var EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';      // for contact form
+    var EMAILJS_COMMENT_TPL = 'YOUR_COMMENT_TEMPLATE'; // for comment submissions
+
+    // Initialise EmailJS
+    if (typeof emailjs !== 'undefined') emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+
+    /* ── CONTACT FORM ───────────────────────────── */
+    var contactForm = document.getElementById('contact-form');
+    var ctSubmit    = document.getElementById('ct-submit');
+    var formStatus  = document.getElementById('form-status');
+
+    contactForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Honeypot check — if filled, silently reject (bot)
+      if (contactForm.querySelector('[name="hp_website"]').value) return;
+
+      var name    = document.getElementById('ct-name').value.trim();
+      var email   = document.getElementById('ct-email').value.trim();
+      var subject = document.getElementById('ct-subject').value;
+      var message = document.getElementById('ct-message').value.trim();
+
+      if (!name || !email || !subject || !message) {
+        showStatus(formStatus, 'error', 'Please fill in all required fields.');
+        return;
+      }
+      if (!isValidEmail(email)) {
+        showStatus(formStatus, 'error', 'Please enter a valid email address.');
+        return;
+      }
+
+      ctSubmit.disabled = true;
+      ctSubmit.textContent = 'SENDING…';
+
+      if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+        // Demo mode — EmailJS not configured yet
+        setTimeout(function() {
+          showStatus(formStatus, 'success', 'Message sent! (Demo mode — configure EmailJS to receive real emails.)');
+          contactForm.reset();
+          ctSubmit.disabled = false;
+          ctSubmit.textContent = 'SEND MESSAGE →';
+        }, 900);
+        return;
+      }
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        from_name:  name,
+        from_email: email,
+        subject:    subject,
+        message:    message
+      }).then(function() {
+        showStatus(formStatus, 'success', '✓ Message sent! I\'ll reply to ' + email + ' shortly.');
+        contactForm.reset();
+        ctSubmit.disabled = false;
+        ctSubmit.textContent = 'SEND MESSAGE →';
+      }, function(err) {
+        showStatus(formStatus, 'error', 'Something went wrong. Please email me directly or try again.');
+        console.error('EmailJS error:', err);
+        ctSubmit.disabled = false;
+        ctSubmit.textContent = 'SEND MESSAGE →';
+      });
+    });
+
+
+    /* ── COMMENT TYPE SELECTOR ──────────────────── */
+    var selectedType = 'Recommendation';
+    document.querySelectorAll('.comment-type-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.comment-type-btn').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        selectedType = btn.getAttribute('data-type');
+        document.getElementById('comment-type-hidden').value = selectedType;
+      });
+    });
+
+
+    /* ── COMMENT SUBMISSION FORM ────────────────── */
+    var commentForm   = document.getElementById('comment-form');
+    var commentSubmit = document.getElementById('comment-submit');
+    var commentStatus = document.getElementById('comment-status');
+
+    commentForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (commentForm.querySelector('[name="hp_website"]').value) return;
+
+      var name    = commentForm.querySelector('[name="commenter_name"]').value.trim();
+      var email   = commentForm.querySelector('[name="commenter_email"]').value.trim();
+      var message = commentForm.querySelector('[name="commenter_message"]').value.trim();
+
+      if (!name || !email || !message) {
+        showStatus(commentStatus, 'error', 'Please fill in all fields.');
+        return;
+      }
+      if (!isValidEmail(email)) {
+        showStatus(commentStatus, 'error', 'Please enter a valid email address.');
+        return;
+      }
+
+      commentSubmit.disabled = true;
+      commentSubmit.textContent = 'SUBMITTING…';
+
+      if (EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
+        setTimeout(function() {
+          showStatus(commentStatus, 'success', 'Thank you! Your ' + selectedType.toLowerCase() + ' has been submitted for review.');
+          commentForm.reset();
+          commentSubmit.disabled = false;
+          commentSubmit.textContent = 'SUBMIT FOR REVIEW →';
+        }, 900);
+        return;
+      }
+
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_COMMENT_TPL, {
+        commenter_name:    name,
+        commenter_email:   email,
+        comment_type:      selectedType,
+        commenter_message: message
+      }).then(function() {
+        showStatus(commentStatus, 'success', '✓ Submitted for review. Thank you, ' + name + '!');
+        commentForm.reset();
+        commentSubmit.disabled = false;
+        commentSubmit.textContent = 'SUBMIT FOR REVIEW →';
+      }, function(err) {
+        showStatus(commentStatus, 'error', 'Submission failed. Please try again.');
+        console.error('EmailJS error:', err);
+        commentSubmit.disabled = false;
+        commentSubmit.textContent = 'SUBMIT FOR REVIEW →';
+      });
+    });
+
+
+    /* ── PUBLISH APPROVED COMMENTS (owner) ──────── */
+    var COMMENTS_KEY = 'portfolio__published_comments';
+
+    function loadComments() {
+      var stored = [];
+      try { stored = JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]'); } catch(e) {}
+      var list  = document.getElementById('comments-list');
+      var empty = document.getElementById('comments-empty');
+      list.innerHTML = '';
+      if (stored.length === 0) {
+        empty.style.display = ''; return;
+      }
+      empty.style.display = 'none';
+      stored.forEach(function(c, idx) {
+        list.appendChild(makeCommentEl(c, idx));
+      });
+    }
+
+    function saveComments(arr) {
+      try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(arr)); } catch(e) {}
+    }
+
+    function getComments() {
+      try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]'); } catch(e) { return []; }
+    }
+
+    function makeCommentEl(c, idx) {
+      var div = document.createElement('div');
+      div.className = 'comment-item fade-in visible';
+      var typeClass = 'type-' + (c.type || 'recommendation').toLowerCase();
+      var initial = (c.name || '?')[0].toUpperCase();
+      div.innerHTML =
+        '<button class="comment-item__delete" data-idx="' + idx + '" title="Remove comment">✕</button>' +
+        '<div class="comment-item__header">' +
+          '<div class="comment-item__avatar">' + initial + '</div>' +
+          '<div class="comment-item__meta">' +
+            '<div class="comment-item__name">' + escHtml(c.name) + '</div>' +
+            '<div class="comment-item__date">' + escHtml(c.date || '') + '</div>' +
+          '</div>' +
+          '<span class="comment-item__type ' + typeClass + '">' + escHtml(c.type || 'Recommendation') + '</span>' +
+        '</div>' +
+        '<div class="comment-item__text">' + escHtml(c.text) + '</div>';
+
+      div.querySelector('.comment-item__delete').addEventListener('click', function() {
+        if (!confirm('Remove this comment?')) return;
+        var arr = getComments();
+        arr.splice(idx, 1);
+        saveComments(arr);
+        loadComments();
+      });
+      return div;
+    }
+
+    document.getElementById('btn-add-comment').addEventListener('click', function() {
+      if (!document.body.classList.contains('owner-unlocked')) return;
+      var name = prompt('Commenter name (as approved):');
+      if (!name) return;
+      var text = prompt('Comment text:');
+      if (!text) return;
+      var type = prompt('Type (Recommendation / Suggestion / Review / Compliment):', 'Recommendation');
+      var arr = getComments();
+      var now = new Date();
+      arr.push({
+        name: name.trim(),
+        text: text.trim(),
+        type: type || 'Recommendation',
+        date: now.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})
+      });
+      saveComments(arr);
+      loadComments();
+    });
+
+    loadComments();
+
+
+    /* ── HELPERS ────────────────────────────────── */
+    function showStatus(el, type, msg) {
+      el.className = 'form-status ' + type;
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(function() { el.style.display = 'none'; }, 6000);
+    }
+    function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+  })();
+  </script>
+  <script src="js/editor.js"></script>
+</body>
+</html>

@@ -759,6 +759,7 @@
                         data-video-title="Fault Detection System — Demo">
                   <span class="card-btn__icon">▶</span> WATCH DEMO
                 </button>
+                <button class="like-btn" data-like-id="proj-fyp" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
               </div>
             </div>
           </div><!-- end featured card -->
@@ -823,6 +824,7 @@
                 <a href="assets/docs/electrical-layout-gov.dwg" download class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DWG
                 </a>
+                <button class="like-btn" data-like-id="proj-ac1" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
               </div>
             </div>
           </div>
@@ -864,6 +866,7 @@
                 <a href="assets/docs/lighting-design.dwg" download class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DWG
                 </a>
+                <button class="like-btn" data-like-id="proj-ac2" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
               </div>
             </div>
           </div>
@@ -905,6 +908,7 @@
                 <a href="assets/docs/fire-detection.dwg" download class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DWG
                 </a>
+                <button class="like-btn" data-like-id="proj-ac3" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
               </div>
             </div>
           </div>
@@ -961,6 +965,7 @@
                 <a href="#" class="card-btn">
                   <span class="card-btn__icon">⌥</span> GITHUB
                 </a>
+                <button class="like-btn" data-like-id="proj-h1" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
               </div>
             </div>
           </div>
@@ -1030,6 +1035,7 @@
                 <a href="assets/docs/fault-detection-paper.docx" download class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DOCX
                 </a>
+                <button class="like-btn" data-like-id="proj-rp1" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
               </div>
             </div>
           </div>
@@ -1388,6 +1394,35 @@
         if (videoOverlay.classList.contains('open')) closeVideo();
       }
     });
+
+
+    /* ── LIKE BUTTONS ─────────────────── */
+    function getProjLikeKey(id) { return 'portfolio__like__project__' + id; }
+    function getProjLikeCount(id) { try { return parseInt(localStorage.getItem(getProjLikeKey(id)) || '0'); } catch(e){ return 0; } }
+    function isProjLiked(id) { try { return localStorage.getItem(getProjLikeKey(id)+'__liked')==='1'; } catch(e){ return false; } }
+
+    function wireProjLikeBtns() {
+      document.querySelectorAll('.like-btn[data-like-id]').forEach(function(btn) {
+        if (btn._likeWired) return; btn._likeWired = true;
+        var id = btn.getAttribute('data-like-id');
+        var countEl = btn.querySelector('.like-count');
+        var c = getProjLikeCount(id);
+        var liked = isProjLiked(id);
+        countEl.textContent = c > 0 ? c : '';
+        btn.classList.toggle('liked', liked);
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation(); e.preventDefault();
+          var cur = getProjLikeCount(id);
+          var wasLiked = isProjLiked(id);
+          cur = wasLiked ? Math.max(0, cur-1) : cur+1;
+          localStorage.setItem(getProjLikeKey(id)+'__liked', wasLiked?'0':'1');
+          localStorage.setItem(getProjLikeKey(id), cur);
+          countEl.textContent = cur > 0 ? cur : '';
+          btn.classList.toggle('liked', !wasLiked);
+        });
+      });
+    }
+    wireProjLikeBtns();
 
   })();
   </script>
