@@ -115,31 +115,63 @@
     .rfb-divider { width:1px; height:18px; background:#e0ddd6; margin:0 4px; }
     .reader-format-bar select { background:#faf8f4; border:1px solid #d8d5ce; border-radius:5px; color:#2c2c3a; font-family:var(--font-mono); font-size:9px; padding:3px 6px; height:28px; cursor:pointer; }
 
-    /* Scrollable paper body */
+    /* Scrollable paper body — parchment background between A4 pages */
     .reader-body {
       flex: 1; overflow-y: auto;
-      background: #f4f1eb;
-      padding: 0;
+      background: #d8d4cc;
+      padding: 32px 0 64px;
     }
 
-    /* Paper page — centred column like a printed journal */
+    /* A4 page — each article is one continuous A4-proportioned sheet.
+       A4 = 210mm × 297mm. At 96dpi screen: ~794px × ~1123px.
+       We use max-width 794px and let height be natural (no forced page breaks). */
     .reader-content {
-      max-width: 680px;
+      width: 794px;
+      max-width: calc(100vw - 32px);
       margin: 0 auto;
-      padding: 56px 40px 96px;
+      padding: 72px 80px 96px;
       background: #ffffff;
-      min-height: 100%;
-      box-shadow: 0 0 60px rgba(0,0,0,0.10);
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.12),
+        0 8px 32px rgba(0,0,0,0.18),
+        0 0 0 1px rgba(0,0,0,0.06);
       position: relative;
+      border-radius: 2px;
+    }
+    @media(max-width:860px) {
+      .reader-content { padding: 48px 36px 72px; }
+    }
+    @media(max-width:540px) {
+      .reader-content { padding: 32px 20px 56px; }
     }
 
-    /* Thin amber rule at top of paper */
+    /* Amber top rule — like a document header stripe */
     .reader-content::before {
       content: '';
       display: block;
-      height: 4px;
-      background: linear-gradient(90deg, #F0A500, #c8940e);
-      margin: -56px -40px 48px;
+      height: 5px;
+      background: linear-gradient(90deg, #F0A500, #c8940e, #F0A500);
+      margin: -72px -80px 56px;
+    }
+    @media(max-width:860px) {
+      .reader-content::before { margin: -48px -36px 44px; }
+    }
+    @media(max-width:540px) {
+      .reader-content::before { margin: -32px -20px 36px; }
+    }
+
+    /* Page number footer */
+    .reader-content::after {
+      content: 'portfolio.ee — Rubui Mwangi';
+      display: block;
+      margin-top: 56px;
+      padding-top: 16px;
+      border-top: 1px solid #e8e5de;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: #aaa;
+      text-align: center;
     }
 
     /* ── Article header ── */

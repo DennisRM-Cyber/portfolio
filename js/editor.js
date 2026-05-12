@@ -589,51 +589,93 @@
      PART 7 — FLOATING FORMAT TOOLBAR
   ══════════════════════════════════════════════════════════ */
 
+  /* ── FORMAT BAR: MS Word-style two-row ribbon ── */
   var formatBar = document.createElement('div');
   formatBar.className = 'format-bar';
-  formatBar.setAttribute('role','toolbar');
+  formatBar.setAttribute('role', 'toolbar');
+  formatBar.setAttribute('aria-label', 'Text formatting');
   formatBar.innerHTML = [
-    '<select class="format-bar__select" id="fmt-font"><option value="">Font</option>',
-    '<option value="\'Syne\',sans-serif">Syne</option>',
-    '<option value="\'JetBrains Mono\',monospace">Mono</option>',
-    '<option value="Georgia,serif">Serif</option>',
-    '<option value="Arial,sans-serif">Arial</option></select>',
-    '<select class="format-bar__select" id="fmt-size"><option value="">Size</option>',
-    '<option value="11px">11</option><option value="13px">13</option>',
-    '<option value="16px">16</option><option value="18px">18</option>',
-    '<option value="20px">20</option><option value="24px">24</option>',
-    '<option value="28px">28</option><option value="32px">32</option></select>',
-    '<div class="format-bar__divider"></div>',
-    '<button class="format-bar__btn" data-cmd="bold"          title="Bold"><b>B</b></button>',
-    '<button class="format-bar__btn" data-cmd="italic"        title="Italic"><i>I</i></button>',
-    '<button class="format-bar__btn" data-cmd="underline"     title="Underline"><u>U</u></button>',
-    '<button class="format-bar__btn" data-cmd="strikeThrough" title="Strike"><s>S</s></button>',
-    '<div class="format-bar__divider"></div>',
-    '<label class="format-bar__color-wrap" title="Text colour">',
-    '<span class="format-bar__color-icon">A</span>',
-    '<input type="color" id="fmt-color" value="#DAA520"/></label>',
-    '<label class="format-bar__color-wrap" title="Highlight">',
-    '<span class="format-bar__color-icon fmt-hl">\u2590</span>',
-    '<input type="color" id="fmt-highlight" value="#F0A500"/></label>',
-    '<div class="format-bar__divider"></div>',
-    '<button class="format-bar__btn" data-cmd="insertUnorderedList" title="Bullets">\u2630</button>',
-    '<button class="format-bar__btn" data-cmd="insertOrderedList"   title="Numbered">\u2460</button>',
-    '<div class="format-bar__divider"></div>',
-    '<button class="format-bar__btn" data-cmd="justifyLeft"   title="Left">\u2261</button>',
-    '<button class="format-bar__btn" data-cmd="justifyCenter" title="Centre">\u2261</button>',
-    '<button class="format-bar__btn" data-cmd="justifyRight"  title="Right">\u2261</button>',
-    '<div class="format-bar__divider"></div>',
-    '<button class="format-bar__btn format-bar__btn--clear" data-cmd="removeFormat" title="Clear">\u2715</button>',
+    // ROW 1: paragraph style, font, size, colour
+    '<div class="format-bar__row">',
+      '<select class="format-bar__heading-select" id="fmt-heading" title="Paragraph style">',
+        '<option value="">\u00b6 Normal</option>',
+        '<option value="h1">Heading 1</option>',
+        '<option value="h2">Heading 2</option>',
+        '<option value="h3">Heading 3</option>',
+        '<option value="blockquote">Quote</option>',
+        '<option value="pre">Code block</option>',
+      '</select>',
+      '<div class="format-bar__divider"></div>',
+      '<select class="format-bar__font-select" id="fmt-font" title="Font family">',
+        '<option value="">Font</option>',
+        "<option value="'Syne',sans-serif">Syne</option>",
+        "<option value="'JetBrains Mono',monospace">Mono</option>",
+        '<option value="Georgia,serif">Georgia</option>',
+        '<option value="Arial,sans-serif">Arial</option>',
+        "<option value="'Times New Roman',serif">Times New Roman</option>",
+        "<option value="'Courier New',monospace">Courier New</option>",
+      '</select>',
+      '<div class="format-bar__divider"></div>',
+      '<div class="format-bar__size-wrap" title="Font size (type or use arrows)">',
+        '<input class="format-bar__size-input" type="number" id="fmt-size-input" min="8" max="96" value="16" />',
+        '<div style="display:flex;flex-direction:column;">',
+          '<button class="format-bar__size-step" id="fmt-size-up">\u25b2</button>',
+          '<button class="format-bar__size-step" id="fmt-size-down">\u25bc</button>',
+        '</div>',
+      '</div>',
+      '<div class="format-bar__divider"></div>',
+      '<label class="format-bar__color-wrap" title="Text colour">',
+        '<span class="format-bar__color-letter">A</span>',
+        '<div class="format-bar__color-bar" id="fmt-color-bar"></div>',
+        '<input type="color" id="fmt-color" value="#F0A500" />',
+      '</label>',
+      '<label class="format-bar__color-wrap" title="Highlight colour">',
+        '<span class="format-bar__color-letter" style="color:#fbbf24">H</span>',
+        '<div class="format-bar__color-bar" id="fmt-hl-bar" style="background:#fbbf24"></div>',
+        '<input type="color" id="fmt-highlight" value="#fbbf24" />',
+      '</label>',
+    '</div>',
+    // ROW 2: character + paragraph formatting
+    '<div class="format-bar__row">',
+      '<button class="format-bar__btn" data-cmd="bold"          title="Bold (Ctrl+B)"><b>B</b></button>',
+      '<button class="format-bar__btn" data-cmd="italic"        title="Italic (Ctrl+I)"><i>I</i></button>',
+      '<button class="format-bar__btn" data-cmd="underline"     title="Underline (Ctrl+U)"><u>U</u></button>',
+      '<button class="format-bar__btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>',
+      '<button class="format-bar__btn" data-cmd="superscript"   title="Superscript">x<sup>2</sup></button>',
+      '<button class="format-bar__btn" data-cmd="subscript"     title="Subscript">x<sub>2</sub></button>',
+      '<div class="format-bar__divider"></div>',
+      '<button class="format-bar__btn" data-cmd="justifyLeft"   title="Align left">\u21a4\u2005\u2261</button>',
+      '<button class="format-bar__btn" data-cmd="justifyCenter" title="Centre">\u2261</button>',
+      '<button class="format-bar__btn" data-cmd="justifyRight"  title="Align right">\u2261\u2005\u21a6</button>',
+      '<button class="format-bar__btn" data-cmd="justifyFull"   title="Justify">\u2261\u2261</button>',
+      '<div class="format-bar__divider"></div>',
+      '<button class="format-bar__btn" data-cmd="insertUnorderedList" title="Bullet list">\u2022\u2261</button>',
+      '<button class="format-bar__btn" data-cmd="insertOrderedList"   title="Numbered list">1.</button>',
+      '<button class="format-bar__btn" data-cmd="indent"              title="Indent \u2192">\u21e5</button>',
+      '<button class="format-bar__btn" data-cmd="outdent"             title="Outdent \u2190">\u21e4</button>',
+      '<div class="format-bar__divider"></div>',
+      '<button class="format-bar__btn" data-cmd="insertHorizontalRule" title="Horizontal rule">\u2014</button>',
+      '<div class="format-bar__divider"></div>',
+      '<button class="format-bar__btn format-bar__btn--clear" data-cmd="removeFormat" title="Clear formatting">\u2715 Clear</button>',
+    '</div>',
   ].join('');
   document.body.appendChild(formatBar);
 
   var savedRange = null;
+
+  function saveRange() {
+    var sel = window.getSelection();
+    if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
+  }
   function hideFormatBar() { formatBar.classList.remove('visible'); }
   function showFormatBar(x, y) {
-    var left = Math.min(x, window.innerWidth - 570);
+    // Position above selection, clamped to viewport
+    var barW = Math.min(620, window.innerWidth - 16);
+    var left = Math.min(x - barW/2, window.innerWidth - barW - 8);
     if (left < 8) left = 8;
-    formatBar.style.left = left + 'px';
-    formatBar.style.top  = (y - 52) + 'px';
+    formatBar.style.left  = left + 'px';
+    formatBar.style.top   = (y - 20) + 'px'; // shows above cursor
+    formatBar.style.minWidth = barW + 'px';
     formatBar.classList.add('visible');
   }
   function restoreSelection() {
@@ -642,42 +684,92 @@
   }
   function execFmt(cmd, val) { restoreSelection(); document.execCommand(cmd, false, val || null); }
 
-  formatBar.querySelectorAll('[data-cmd]').forEach(function(btn) {
-    btn.addEventListener('mousedown', function(e) { e.preventDefault(); execFmt(btn.getAttribute('data-cmd')); });
-  });
-
-  var fmtFont = document.getElementById('fmt-font');
-  fmtFont.addEventListener('mousedown', function() {
-    var sel = window.getSelection(); if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
-  });
-  fmtFont.addEventListener('change', function() { execFmt('fontName', this.value); this.value = ''; });
-
-  var fmtSize = document.getElementById('fmt-size');
-  fmtSize.addEventListener('mousedown', function() {
-    var sel = window.getSelection(); if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
-  });
-  fmtSize.addEventListener('change', function() {
+  function applyFontSize(px) {
     restoreSelection();
     var sel = window.getSelection();
-    if (!sel || !sel.rangeCount) return;
+    if (!sel || !sel.rangeCount || sel.isCollapsed) return;
     var span = document.createElement('span');
-    span.style.fontSize = this.value;
-    try { sel.getRangeAt(0).surroundContents(span); } catch(e) {}
+    span.style.fontSize = px + 'px';
+    try { sel.getRangeAt(0).surroundContents(span); } catch(e) {
+      // Partial selection across elements — use execCommand fallback
+      document.execCommand('fontSize', false, '4');
+      document.querySelectorAll('font[size="4"]').forEach(function(f) {
+        f.removeAttribute('size');
+        f.style.fontSize = px + 'px';
+        f.outerHTML = '<span style="font-size:' + px + 'px">' + f.innerHTML + '</span>';
+      });
+    }
+  }
+
+  // Command buttons
+  formatBar.querySelectorAll('[data-cmd]').forEach(function(btn) {
+    btn.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      saveRange();
+      execFmt(btn.getAttribute('data-cmd'));
+    });
+  });
+
+  // Heading / paragraph style
+  var fmtHeading = document.getElementById('fmt-heading');
+  fmtHeading.addEventListener('mousedown', saveRange);
+  fmtHeading.addEventListener('change', function() {
+    var val = this.value;
+    if (!val) { execFmt('formatBlock', '<p>'); this.value = ''; return; }
+    execFmt('formatBlock', '<' + val + '>');
     this.value = '';
   });
 
-  var fmtColor = document.getElementById('fmt-color');
-  fmtColor.addEventListener('mousedown', function() {
-    var sel = window.getSelection(); if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
-  });
-  fmtColor.addEventListener('input', function() { execFmt('foreColor', this.value); });
+  // Font family
+  var fmtFont = document.getElementById('fmt-font');
+  fmtFont.addEventListener('mousedown', saveRange);
+  fmtFont.addEventListener('change', function() { execFmt('fontName', this.value); this.value = ''; });
 
-  var fmtHL = document.getElementById('fmt-highlight');
-  fmtHL.addEventListener('mousedown', function() {
-    var sel = window.getSelection(); if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
-  });
-  fmtHL.addEventListener('input', function() { execFmt('hiliteColor', this.value); });
+  // Font size input + steppers
+  var fmtSizeInput = document.getElementById('fmt-size-input');
+  var fmtSizeUp    = document.getElementById('fmt-size-up');
+  var fmtSizeDown  = document.getElementById('fmt-size-down');
+  var currentFontSize = 16;
 
+  fmtSizeInput.addEventListener('mousedown', saveRange);
+  fmtSizeInput.addEventListener('change', function() {
+    var px = Math.max(8, Math.min(96, parseInt(this.value) || 16));
+    this.value = px; currentFontSize = px;
+    applyFontSize(px);
+  });
+  fmtSizeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); this.dispatchEvent(new Event('change')); }
+  });
+  fmtSizeUp.addEventListener('mousedown', function(e) {
+    e.preventDefault(); saveRange();
+    currentFontSize = Math.min(96, currentFontSize + 1);
+    fmtSizeInput.value = currentFontSize;
+    applyFontSize(currentFontSize);
+  });
+  fmtSizeDown.addEventListener('mousedown', function(e) {
+    e.preventDefault(); saveRange();
+    currentFontSize = Math.max(8, currentFontSize - 1);
+    fmtSizeInput.value = currentFontSize;
+    applyFontSize(currentFontSize);
+  });
+
+  // Text colour
+  var fmtColor    = document.getElementById('fmt-color');
+  var fmtColorBar = document.getElementById('fmt-color-bar');
+  fmtColor.addEventListener('mousedown', saveRange);
+  fmtColor.addEventListener('input', function() {
+    if (fmtColorBar) fmtColorBar.style.background = this.value;
+    execFmt('foreColor', this.value);
+  });
+
+  // Highlight
+  var fmtHL    = document.getElementById('fmt-highlight');
+  var fmtHLBar = document.getElementById('fmt-hl-bar');
+  fmtHL.addEventListener('mousedown', saveRange);
+  fmtHL.addEventListener('input', function() {
+    if (fmtHLBar) fmtHLBar.style.background = this.value;
+    execFmt('hiliteColor', this.value);
+  });
   document.addEventListener('selectionchange', function() {
     if (!editMode) return;
     var sel = window.getSelection();
