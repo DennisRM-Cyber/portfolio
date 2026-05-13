@@ -684,14 +684,13 @@
   }
   function execFmt(cmd, val) { restoreSelection(); document.execCommand(cmd, false, val || null); }
 
-  function applyFontSize(px) {
+  function applySelectionFontSize(px) {
     restoreSelection();
     var sel = window.getSelection();
     if (!sel || !sel.rangeCount || sel.isCollapsed) return;
     var span = document.createElement('span');
     span.style.fontSize = px + 'px';
     try { sel.getRangeAt(0).surroundContents(span); } catch(e) {
-      // Partial selection across elements — use execCommand fallback
       document.execCommand('fontSize', false, '4');
       document.querySelectorAll('font[size="4"]').forEach(function(f) {
         f.removeAttribute('size');
@@ -735,7 +734,7 @@
   fmtSizeInput.addEventListener('change', function() {
     var px = Math.max(8, Math.min(96, parseInt(this.value) || 16));
     this.value = px; currentFontSize = px;
-    applyFontSize(px);
+    applySelectionFontSize(px);
   });
   fmtSizeInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { e.preventDefault(); this.dispatchEvent(new Event('change')); }
@@ -744,13 +743,13 @@
     e.preventDefault(); saveRange();
     currentFontSize = Math.min(96, currentFontSize + 1);
     fmtSizeInput.value = currentFontSize;
-    applyFontSize(currentFontSize);
+    applySelectionFontSize(currentFontSize);
   });
   fmtSizeDown.addEventListener('mousedown', function(e) {
     e.preventDefault(); saveRange();
     currentFontSize = Math.max(8, currentFontSize - 1);
     fmtSizeInput.value = currentFontSize;
-    applyFontSize(currentFontSize);
+    applySelectionFontSize(currentFontSize);
   });
 
   // Text colour
@@ -840,5 +839,683 @@
       else hideFormatBar();
     }
   });
+
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   FILE UPLOAD SYSTEM — appended to editor.js
+   Opens OS file explorer, reads file locally, stores base64
+   in localStorage, replaces placeholder immediately.
+   Shows instruction toast with correct assets/ path to push.
+═══════════════════════════════════════════════════════════ */
+
+(function initUploadSystem() {
+
+  /* ── TOAST ──────────────────────────────────────────────── */
+  var toast = document.createElement('div');
+  toast.className = 'upload-toast';
+  toast.innerHTML =
+    '<button class="upload-toast__close" id="upload-toast-close">✕</button>' +
+    '<div class="upload-toast__title" id="upload-toast-title"></div>' +
+    '<div id="upload-toast-body"></div>' +
+    '<div class="upload-toast__progress"><div class="upload-toast__progress-fill" id="upload-toast-bar"></div></div>';
+  document.body.appendChild(toast);
+
+  var toastTitle = document.getElementById('upload-toast-title');
+  var toastBody  = document.getElementById('upload-toast-body');
+  var toastBar   = document.getElementById('upload-toast-bar');
+  var toastClose = document.getElementById('upload-toast-close');
+  var toastTimer = null;
+
+  toastClose.addEventListener('click', function() { hideToast(); });
+
+  function showToast(title, bodyHtml, autoDismiss) {
+    toastTitle.textContent = title;
+    toastBody.innerHTML = bodyHtml;
+    toastBar.style.width = '0';
+    toast.classList.add('visible');
+    clearTimeout(toastTimer);
+    if (autoDismiss) {
+      setTimeout(function() { toastBar.style.width = '100%'; }, 50);
+      toastTimer = setTimeout(hideToast, autoDismiss);
+    }
+  }
+  function hideToast() {
+    toast.classList.remove('visible');
+    clearTimeout(toastTimer);
+  }
+
+  /* ── FILE STORAGE HELPERS ───────────────────────────────── */
+  var UPLOAD_PREFIX = 'portfolio__upload__';
+  var SIZE_LIMIT_MB = 2.5; // localStorage safe limit per file
+
+  function uploadKey(assetPath) {
+    return UPLOAD_PREFIX + assetPath.replace(/\//g, '__');
+  }
+
+  function loadStoredUploads() {
+    // On page load, restore any previously uploaded files
+    document.querySelectorAll('[data-asset-path]').forEach(function(el) {
+      var assetPath = el.getAttribute('data-asset-path');
+      var assetType = el.getAttribute('data-asset-type') || 'image';
+      var stored = null;
+      try { stored = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
+      if (stored) applyStoredFile(el, stored, assetType, assetPath);
+    });
+  }
+
+  function applyStoredFile(targetEl, dataUrl, assetType, assetPath) {
+    if (assetType === 'image') {
+      // Replace placeholder with the actual image
+      var container = targetEl.closest('.card-media, .about-hero__img-wrap, .media-card__thumb');
+      if (!container) container = targetEl.parentElement;
+
+      // Remove existing placeholder content
+      var placeholder = container.querySelector('.card-media__placeholder, .about-hero__placeholder, .media-card__placeholder');
+      if (placeholder) placeholder.style.display = 'none';
+
+      // Find or create the img element
+      var img = container.querySelector('img[data-uploaded]');
+      if (!img) {
+        img = document.createElement('img');
+        img.setAttribute('data-uploaded', '1');
+        img.alt = assetPath.split('/').pop().replace(/\.[^.]+$/, '').replace(/-/g, ' ');
+        container.insertBefore(img, container.firstChild);
+      }
+      img.src = dataUrl;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+
+      // Show local badge
+      var badge = container.querySelector('.upload-local-badge');
+      if (badge) badge.style.display = '';
+
+    } else if (assetType === 'pdf' || assetType === 'docx') {
+      // Update the doc button src to use object URL (session only)
+      // Note: can't persist object URLs — only base64 which is too large for docs
+      // So for docs we just show "file selected" state
+      var btn = document.querySelector('[data-doc-src="' + assetPath + '"]');
+      if (btn) {
+        btn.style.opacity = '1';
+        btn.style.borderColor = 'rgba(74,222,128,0.4)';
+      }
+    }
+  }
+
+  /* ── FILE PICKER ────────────────────────────────────────── */
+  function openFilePicker(accept, onFile) {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    input.addEventListener('change', function() {
+      if (this.files && this.files[0]) onFile(this.files[0]);
+      document.body.removeChild(input);
+    });
+    input.click();
+  }
+
+  function readAsDataURL(file, callback) {
+    var reader = new FileReader();
+    reader.onload = function(e) { callback(e.target.result); };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── INJECT UPLOAD ZONES ────────────────────────────────── */
+  function injectUploadZones() {
+
+    // ── IMAGES: card-media__placeholder, media-card__placeholder, about-hero__placeholder ──
+    var imagePlaceholders = document.querySelectorAll(
+      '.card-media__placeholder, .media-card__placeholder, .about-hero__placeholder'
+    );
+    imagePlaceholders.forEach(function(ph) {
+      if (ph._uploadWired) return;
+      ph._uploadWired = true;
+
+      // Find the parent container and get the expected asset path
+      var container = ph.closest('[data-asset-path]');
+      var assetPath, assetType;
+
+      if (container) {
+        assetPath = container.getAttribute('data-asset-path');
+        assetType = container.getAttribute('data-asset-type') || 'image';
+      } else {
+        // Derive from context
+        var card = ph.closest('.project-card, .media-card, .about-hero__img-wrap');
+        if (card) {
+          var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
+          var slug = titleEl
+            ? titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0,30)
+            : 'image-' + Date.now();
+          assetPath = 'assets/images/' + slug + '.jpg';
+          assetType = 'image';
+          container = ph;
+        }
+      }
+      if (!assetPath) return;
+
+      // Add upload zone overlay
+      var zone = document.createElement('div');
+      zone.className = 'upload-zone';
+      zone.innerHTML =
+        '<div class="upload-zone__icon">📁</div>' +
+        '<div class="upload-zone__label">CLICK TO UPLOAD<br>IMAGE</div>' +
+        '<div class="upload-zone__hint">JPG · PNG · WEBP · GIF</div>';
+      ph.style.position = 'relative';
+      ph.appendChild(zone);
+
+      // Add local badge
+      var badge = document.createElement('div');
+      badge.className = 'upload-local-badge';
+      badge.textContent = '⚡ LOCAL ONLY';
+      badge.style.display = 'none';
+      ph.closest('.card-media, .media-card__thumb, .about-hero__img-wrap') &&
+        ph.closest('.card-media, .media-card__thumb, .about-hero__img-wrap').appendChild(badge);
+
+      var finalAssetPath = assetPath;
+      var finalAssetType = assetType;
+
+      zone.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!document.body.classList.contains('owner-unlocked')) return;
+
+        openFilePicker('image/jpeg,image/png,image/webp,image/gif', function(file) {
+          var sizeMB = file.size / (1024 * 1024);
+          if (sizeMB > SIZE_LIMIT_MB) {
+            showToast(
+              '⚠ File too large',
+              '<span class="upload-toast__warn">This image is ' + sizeMB.toFixed(1) + 'MB. ' +
+              'For localStorage preview, keep images under ' + SIZE_LIMIT_MB + 'MB. ' +
+              'Add the file directly to <code>' + finalAssetPath + '</code> and push to GitHub instead.</span>',
+              8000
+            );
+            return;
+          }
+
+          readAsDataURL(file, function(dataUrl) {
+            // Store in localStorage
+            try {
+              localStorage.setItem(uploadKey(finalAssetPath), dataUrl);
+            } catch(e) {
+              showToast('⚠ Storage full',
+                '<span class="upload-toast__warn">Browser storage is full. Add the image directly to your assets/ folder.</span>',
+                6000);
+              return;
+            }
+
+            // Apply immediately
+            applyStoredFile(ph, dataUrl, finalAssetType, finalAssetPath);
+
+            // Show success toast with instructions
+            var fname = file.name;
+            var ext   = fname.split('.').pop().toLowerCase();
+            var suggested = finalAssetPath.replace(/\.[^.]+$/, '.' + ext);
+            showToast(
+              '✓ Image uploaded locally',
+              '<div class="upload-toast__path">Save as: ' + suggested + '</div>' +
+              '<div class="upload-toast__warn">⚡ This image is stored in your browser only.<br>' +
+              'To make it permanent for all visitors:<br>' +
+              '1. Save the file as <strong>' + fname + '</strong><br>' +
+              '2. Copy it into <strong>assets/images/</strong><br>' +
+              '3. Commit and push to GitHub</div>',
+              10000
+            );
+          });
+        });
+      });
+    });
+
+    // ── PDF / DOCX UPLOAD (projects page doc buttons) ──
+    document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
+      if (btn._uploadDocWired || !btn.classList.contains('card-btn--primary')) return;
+      btn._uploadDocWired = true;
+
+      var assetPath = btn.getAttribute('data-doc-src');
+      var assetType = btn.getAttribute('data-doc-type') || 'pdf';
+      var docTitle  = btn.getAttribute('data-doc-title') || 'Document';
+
+      // Add a small upload icon button next to the read button
+      var uploadBtn = document.createElement('button');
+      uploadBtn.className = 'card-btn owner-only';
+      uploadBtn.title = 'Upload ' + assetType.toUpperCase() + ' file';
+      uploadBtn.innerHTML = '<span style="font-size:11px;">📂</span> UPLOAD ' + assetType.toUpperCase();
+      uploadBtn.style.display = 'none';
+
+      if (btn.parentNode) btn.parentNode.insertBefore(uploadBtn, btn.nextSibling);
+
+      // Show when owner unlocked
+      if (document.body.classList.contains('owner-unlocked')) uploadBtn.style.display = '';
+
+      uploadBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!document.body.classList.contains('owner-unlocked')) return;
+
+        var accept = assetType === 'pdf' ? 'application/pdf' : '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        openFilePicker(accept, function(file) {
+          // For docs: create object URL for this session and open in viewer
+          var objectUrl = URL.createObjectURL(file);
+
+          // Wire the read button to open this file
+          btn.setAttribute('data-doc-src-local', objectUrl);
+          btn._localObjectUrl = objectUrl;
+
+          // Update the download link too
+          var downloadBtn = btn.parentNode && btn.parentNode.querySelector('a[download][href*="' + assetPath + '"]');
+          if (downloadBtn) downloadBtn.href = objectUrl;
+
+          showToast(
+            '✓ ' + assetType.toUpperCase() + ' loaded for this session',
+            '<div class="upload-toast__path">File: ' + file.name + '</div>' +
+            '<div class="upload-toast__warn">⚡ Session only — link works until you close the tab.<br>' +
+            'To make it permanent:<br>' +
+            '1. Name the file exactly: <strong>' + assetPath.split('/').pop() + '</strong><br>' +
+            '2. Copy into <strong>' + assetPath.split('/').slice(0,-1).join('/') + '/</strong><br>' +
+            '3. Commit and push to GitHub</div>',
+            12000
+          );
+
+          // Update the doc viewer wiring on the read button
+          btn.removeAttribute('data-doc-src');
+          btn.setAttribute('data-doc-src', objectUrl);
+          btn._docWired = false;
+          if (typeof wireDocBtns === 'function') wireDocBtns();
+        });
+      });
+    });
+
+    // ── VIDEO UPLOAD (media page) ──
+    document.querySelectorAll('[data-media-type="local"][data-media-src*="assets/"]').forEach(function(card) {
+      if (card._uploadVideoWired) return;
+      card._uploadVideoWired = true;
+
+      var assetPath = card.getAttribute('data-media-src');
+      var thumb = card.querySelector('.card-media__thumb, .media-card__thumb');
+      if (!thumb) return;
+
+      var zone = document.createElement('div');
+      zone.className = 'upload-zone';
+      zone.style.zIndex = '6';
+      zone.innerHTML =
+        '<div class="upload-zone__icon">🎬</div>' +
+        '<div class="upload-zone__label">UPLOAD VIDEO</div>' +
+        '<div class="upload-zone__hint">MP4 · MOV · WEBM</div>';
+      thumb.style.position = 'relative';
+      thumb.appendChild(zone);
+
+      zone.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!document.body.classList.contains('owner-unlocked')) return;
+
+        openFilePicker('video/mp4,video/webm,video/quicktime', function(file) {
+          var objectUrl = URL.createObjectURL(file);
+          card.setAttribute('data-media-src', objectUrl);
+          card._wired = false;
+
+          // Also upload thumbnail option
+          showToast(
+            '✓ Video loaded for this session',
+            '<div class="upload-toast__path">File: ' + file.name + '</div>' +
+            '<div class="upload-toast__warn">⚡ Session only. To make permanent:<br>' +
+            '1. Name file: <strong>' + assetPath.split('/').pop() + '</strong><br>' +
+            '2. Place in <strong>assets/videos/</strong><br>' +
+            '3. Commit and push to GitHub</div>',
+            10000
+          );
+        });
+      });
+    });
+  }
+
+  /* ── SOCIAL LINK EDITOR ─────────────────────────────────── */
+  // Adds a 🔗 edit button to every social card when unlocked
+  function injectLinkEditors() {
+    document.querySelectorAll('.social-card').forEach(function(card) {
+      if (card._linkEditWired) return;
+      card._linkEditWired = true;
+      card.style.position = 'relative';
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'link-edit-btn';
+      editBtn.title = 'Edit link URL';
+      editBtn.textContent = '🔗';
+      card.appendChild(editBtn);
+
+      editBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var current = card.getAttribute('href') || '';
+        var newUrl = window.prompt('Enter the full URL for this social link:\n(e.g. https://linkedin.com/in/yourname)', current);
+        if (newUrl !== null && newUrl.trim()) {
+          card.setAttribute('href', newUrl.trim());
+          // Persist
+          var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
+          try { localStorage.setItem(key, newUrl.trim()); } catch(e) {}
+          showToast('✓ Link updated',
+            '<div class="upload-toast__path">' + newUrl.trim() + '</div>' +
+            '<div class="upload-toast__warn">Saved to browser. To make permanent, update the href in contact.html and push to GitHub.</div>',
+            6000);
+        }
+      });
+
+      // Restore saved link
+      var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
+      var saved = null;
+      try { saved = localStorage.getItem(key); } catch(e) {}
+      if (saved) card.setAttribute('href', saved);
+    });
+  }
+
+  /* ── WIRE ON UNLOCK ─────────────────────────────────────── */
+  // Observe body class changes to trigger wiring on unlock
+  var unlockObserver = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.type === 'attributes' && m.attributeName === 'class') {
+        if (document.body.classList.contains('owner-unlocked')) {
+          injectUploadZones();
+          injectLinkEditors();
+          // Show owner-only doc upload buttons
+          document.querySelectorAll('.card-btn[title^="Upload"]').forEach(function(b) {
+            b.style.display = '';
+          });
+        }
+      }
+    });
+  });
+  unlockObserver.observe(document.body, { attributes: true });
+
+  // Wire on load if already unlocked (session restore)
+  if (document.body.classList.contains('owner-unlocked')) {
+    injectUploadZones();
+    injectLinkEditors();
+  }
+
+  // Always restore previously uploaded images on page load
+  loadStoredUploads();
+
+  /* ── EXPOSE wireDocBtns for cross-reference ─────────────── */
+  // Projects page defines wireDocBtns in its own script block;
+  // we reference it above. If not found that's fine — it's optional.
+
+
+  /* ══════════════════════════════════════════════════════════
+     PART 10 — ASSET UPLOAD SYSTEM
+     ─────────────────────────────────────────────────────────
+     WHAT WORKS IN THE BROWSER (GitHub Pages):
+       • Images / photos → stored as base64 in localStorage ✅
+       • Thumbnail previews → rendered immediately ✅
+
+     WHAT REQUIRES GITHUB (cannot run client-side):
+       • PDFs / DOCX → drop into assets/docs/ in your repo
+       • Videos      → upload to YouTube or assets/videos/
+       • The asset-guide panel explains this to you when you click
+         a video or document placeholder while unlocked.
+
+     HOW IT WORKS:
+       On unlock, every .card-media__placeholder and
+       .about-hero__placeholder gets an upload button overlay.
+       Clicking it opens the OS file picker (images only for
+       in-browser storage, or shows the path guide for other types).
+  ══════════════════════════════════════════════════════════ */
+
+  /* ── Inject the asset-guide panel (once) ─────────────── */
+  var assetGuide = document.createElement('div');
+  assetGuide.className = 'asset-guide';
+  assetGuide.id = 'asset-guide';
+  assetGuide.innerHTML = [
+    '<div class="asset-guide__handle"></div>',
+    '<div class="asset-guide__label">// ASSET UPLOAD GUIDE</div>',
+    '<div class="asset-guide__title" id="asset-guide-title">Adding a file</div>',
+    '<div class="asset-guide__steps" id="asset-guide-steps"></div>',
+    '<button class="asset-guide__close" id="asset-guide-close">CLOSE</button>',
+  ].join('');
+  document.body.appendChild(assetGuide);
+  document.getElementById('asset-guide-close').addEventListener('click', function() {
+    assetGuide.classList.remove('open');
+  });
+
+  /* ── Inject the link/path modal (once) ──────────────── */
+  var linkModal = document.createElement('div');
+  linkModal.className = 'asset-link-modal';
+  linkModal.id = 'asset-link-modal';
+  linkModal.innerHTML = [
+    '<div class="asset-link-modal__inner">',
+      '<div class="asset-link-modal__title" id="alm-title">Set source link</div>',
+      '<div class="asset-link-modal__sub" id="alm-sub"></div>',
+      '<input class="asset-link-modal__input" id="alm-input" type="text" placeholder="Paste URL or file path…" />',
+      '<div class="asset-link-modal__actions">',
+        '<button class="asset-link-modal__confirm" id="alm-confirm">APPLY</button>',
+        '<button class="asset-link-modal__cancel" id="alm-cancel">CANCEL</button>',
+      '</div>',
+    '</div>',
+  ].join('');
+  document.body.appendChild(linkModal);
+  document.getElementById('alm-cancel').addEventListener('click', function() {
+    linkModal.classList.remove('open');
+  });
+  linkModal.addEventListener('click', function(e) {
+    if (e.target === linkModal) linkModal.classList.remove('open');
+  });
+
+  /* ── Storage helpers ─────────────────────────────────── */
+  var IMAGE_STORE_PREFIX = 'portfolio__img__';
+
+  function storeImage(key, dataUrl) {
+    try { localStorage.setItem(IMAGE_STORE_PREFIX + key, dataUrl); return true; }
+    catch(e) {
+      if (e.name === 'QuotaExceededError') {
+        alert('Image too large to store in browser (> ~4MB). Please resize the image first, or add it directly to assets/images/ in your GitHub repo.');
+      }
+      return false;
+    }
+  }
+
+  function loadStoredImages() {
+    // On page load, apply any stored images to their placeholders
+    document.querySelectorAll('[data-img-key]').forEach(function(placeholder) {
+      var key = placeholder.getAttribute('data-img-key');
+      var stored = localStorage.getItem(IMAGE_STORE_PREFIX + key);
+      if (stored) applyStoredImage(placeholder, stored);
+    });
+  }
+
+  function applyStoredImage(container, dataUrl) {
+    // Hide placeholder content, show the image
+    var existing = container.querySelector('.placeholder-uploaded');
+    if (existing) { existing.src = dataUrl; return; }
+    var img = document.createElement('img');
+    img.className = 'placeholder-uploaded';
+    img.src = dataUrl;
+    img.alt = 'Uploaded image';
+    // Insert before the upload trigger so trigger stays on top
+    var trigger = container.querySelector('.upload-trigger');
+    if (trigger) {
+      container.insertBefore(img, trigger);
+    } else {
+      container.appendChild(img);
+    }
+    // Hide the placeholder icon/label
+    var icon  = container.querySelector('.card-media__placeholder-icon, .about-hero__placeholder-icon');
+    var label = container.querySelector('.card-media__placeholder-label, .about-hero__placeholder-label');
+    if (icon)  icon.style.display  = 'none';
+    if (label) label.style.display = 'none';
+  }
+
+  /* ── Show the guide panel ────────────────────────────── */
+  function showAssetGuide(type) {
+    var title = document.getElementById('asset-guide-title');
+    var steps = document.getElementById('asset-guide-steps');
+
+    if (type === 'pdf') {
+      title.textContent = 'Adding a PDF or Word document';
+      steps.innerHTML = [
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">1</div>',
+        '<div class="asset-guide__step-text">Open your GitHub repo and navigate to <code>assets/docs/</code></div></div>',
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">2</div>',
+        '<div class="asset-guide__step-text">Drag and drop your PDF or DOCX file into that folder and commit.</div></div>',
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">3</div>',
+        '<div class="asset-guide__step-text">The file path will be <code>assets/docs/your-file.pdf</code> — this matches what's already set in <code>data-doc-src</code> on the project card.</div></div>',
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">4</div>',
+        '<div class="asset-guide__step-text">If the filename is different, unlock → enable editing → click the button text to update the <code>data-doc-src</code> value.</div></div>',
+      ].join('');
+    } else if (type === 'video') {
+      title.textContent = 'Adding a video';
+      steps.innerHTML = [
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">1</div>',
+        '<div class="asset-guide__step-text"><strong>YouTube (recommended):</strong> Upload to YouTube, copy the video ID from the URL (the part after <code>v=</code>).</div></div>',
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">2</div>',
+        '<div class="asset-guide__step-text">In the project or media card, set <code>data-media-src</code> to <code>https://www.youtube.com/embed/YOUR_ID</code>.</div></div>',
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">3</div>',
+        '<div class="asset-guide__step-text"><strong>Local video:</strong> Drop the file into <code>assets/videos/</code> in your GitHub repo and set <code>data-media-src</code> to <code>assets/videos/your-file.mp4</code>.</div></div>',
+      ].join('');
+    } else {
+      title.textContent = 'Replacing a thumbnail image';
+      steps.innerHTML = [
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">1</div>',
+        '<div class="asset-guide__step-text">Click the upload zone — your OS file explorer will open.</div></div>',
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">2</div>',
+        '<div class="asset-guide__step-text">Select any image file (JPG, PNG, WebP). Images under 2MB are stored directly in the browser.</div></div>',
+        '<div class="asset-guide__step"><div class="asset-guide__step-num">3</div>',
+        '<div class="asset-guide__step-text">To make the change permanent for all visitors, also copy the file to <code>assets/images/</code> in your GitHub repo and commit.</div></div>',
+      ].join('');
+    }
+    assetGuide.classList.add('open');
+  }
+
+  /* ── Inject upload triggers on all placeholders ──────── */
+  function injectUploadTriggers() {
+    // Image placeholders — media cards, about photo, project cards
+    var imagePlaceholders = [
+      { selector: '.card-media__placeholder',      type: 'image', keyFn: function(el) {
+          var card = el.closest('[data-edit-id]') || el.closest('.project-card') || el.closest('.media-card');
+          return card ? (card.id || card.getAttribute('data-new-id') || card.className.split(' ')[1] || 'img-' + Date.now()) : 'img-' + Date.now();
+      }},
+      { selector: '.media-card__placeholder',      type: 'image', keyFn: function(el) {
+          var card = el.closest('.media-card');
+          return card ? (card.getAttribute('data-new-id') || card.getAttribute('data-media-title') || 'media-' + Date.now()).replace(/\s+/g, '-') : 'media-' + Date.now();
+      }},
+      { selector: '.about-hero__placeholder',      type: 'image', keyFn: function() { return 'about-photo'; }},
+    ];
+
+    imagePlaceholders.forEach(function(spec) {
+      document.querySelectorAll(spec.selector).forEach(function(placeholder) {
+        if (placeholder.querySelector('.upload-trigger')) return; // already wired
+
+        var key = spec.keyFn(placeholder);
+        placeholder.setAttribute('data-img-key', key);
+        placeholder.style.position = 'relative';
+
+        var trigger = document.createElement('div');
+        trigger.className = 'upload-trigger';
+        trigger.setAttribute('title', 'Click to upload image');
+        trigger.innerHTML = [
+          '<div class="upload-trigger__icon">📁</div>',
+          '<div class="upload-trigger__label">CLICK TO UPLOAD<br>IMAGE</div>',
+        ].join('');
+
+        // Hidden file input
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/jpeg,image/png,image/webp,image/gif';
+        fileInput.style.display = 'none';
+        placeholder.appendChild(fileInput);
+        placeholder.appendChild(trigger);
+
+        trigger.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (!document.body.classList.contains('owner-unlocked')) return;
+          fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function() {
+          var file = fileInput.files[0];
+          if (!file) return;
+          if (file.size > 4 * 1024 * 1024) {
+            alert('Image is ' + (file.size / 1024 / 1024).toFixed(1) + 'MB. Please use an image under 4MB for browser storage.
+
+Alternatively, add the image to assets/images/ in your GitHub repo.');
+            return;
+          }
+          var reader = new FileReader();
+          reader.onload = function(ev) {
+            var dataUrl = ev.target.result;
+            var ok = storeImage(key, dataUrl);
+            if (ok) {
+              applyStoredImage(placeholder, dataUrl);
+              trigger.querySelector('.upload-trigger__label').textContent = '✓ UPLOADED';
+              setTimeout(function() {
+                trigger.querySelector('.upload-trigger__label').innerHTML = 'CLICK TO CHANGE<br>IMAGE';
+              }, 2000);
+            }
+          };
+          reader.readAsDataURL(file);
+          fileInput.value = ''; // reset so same file can be re-selected
+        });
+
+        // Also load any previously stored image
+        var stored = localStorage.getItem(IMAGE_STORE_PREFIX + key);
+        if (stored) applyStoredImage(placeholder, stored);
+      });
+    });
+
+    // PDF/doc placeholders — show guide
+    document.querySelectorAll('.card-media__placeholder-icon').forEach(function(icon) {
+      var text = icon.textContent.trim();
+      if (text === '📐' || text === '📄' || text === '📚' || text === '🔥') {
+        var placeholder = icon.closest('.card-media');
+        if (!placeholder || placeholder.querySelector('.upload-trigger')) return;
+        var trigger = document.createElement('div');
+        trigger.className = 'upload-trigger';
+        trigger.setAttribute('title', 'How to add this document');
+        trigger.innerHTML = [
+          '<div class="upload-trigger__icon">📋</div>',
+          '<div class="upload-trigger__label">HOW TO ADD<br>THIS FILE</div>',
+        ].join('');
+        placeholder.style.position = 'relative';
+        placeholder.appendChild(trigger);
+        trigger.addEventListener('click', function(e) {
+          e.stopPropagation();
+          showAssetGuide('pdf');
+        });
+      }
+    });
+
+    // Video placeholders — show guide
+    document.querySelectorAll('.card-media__play').forEach(function(playBtn) {
+      var placeholder = playBtn.closest('.card-media');
+      if (!placeholder) return;
+      var hasImage = placeholder.querySelector('img');
+      var hasTrigger = placeholder.querySelector('.upload-trigger[data-video-guide]');
+      if (hasImage || hasTrigger) return;
+      var triggerIcon = placeholder.querySelector('.card-media__placeholder-icon');
+      if (!triggerIcon || triggerIcon.textContent.trim() !== '🎬') return;
+
+      var trigger = document.createElement('div');
+      trigger.className = 'upload-trigger';
+      trigger.setAttribute('data-video-guide', '1');
+      trigger.setAttribute('title', 'How to add a video');
+      trigger.innerHTML = [
+        '<div class="upload-trigger__icon">🎬</div>',
+        '<div class="upload-trigger__label">HOW TO ADD<br>VIDEO</div>',
+      ].join('');
+      placeholder.style.position = 'relative';
+      placeholder.appendChild(trigger);
+      trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showAssetGuide('video');
+      });
+    });
+  }
+
+  /* ── Run on unlock and on load ───────────────────────── */
+  var _origUnlock = unlock;
+  function unlock() {
+    _origUnlock();
+    setTimeout(injectUploadTriggers, 100);
+  }
+
+  // Also load stored images immediately on page load (for visitors to see)
+  setTimeout(loadStoredImages, 50);
+
 
 })();
