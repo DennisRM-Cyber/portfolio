@@ -608,12 +608,12 @@
       '<div class="format-bar__divider"></div>',
       '<select class="format-bar__font-select" id="fmt-font" title="Font family">',
         '<option value="">Font</option>',
-        "<option value="'Syne',sans-serif">Syne</option>",
-        "<option value="'JetBrains Mono',monospace">Mono</option>",
+        '<option value="Syne,sans-serif">Syne</option>',
+        '<option value="JetBrains Mono,monospace">Mono</option>',
         '<option value="Georgia,serif">Georgia</option>',
         '<option value="Arial,sans-serif">Arial</option>',
-        "<option value="'Times New Roman',serif">Times New Roman</option>",
-        "<option value="'Courier New',monospace">Courier New</option>",
+        '<option value="Times New Roman,serif">Times New Roman</option>',
+        '<option value="Courier New,monospace">Courier New</option>',
       '</select>',
       '<div class="format-bar__divider"></div>',
       '<div class="format-bar__size-wrap" title="Font size (type or use arrows)">',
@@ -808,6 +808,7 @@
     injectAllDeleteBtns();
     initSlideableBars();
     wireAddCards();
+    setTimeout(injectUploadTriggers, 100);
   }
 
   function lock() {
@@ -931,7 +932,7 @@
 
     } else if (assetType === 'pdf' || assetType === 'docx') {
       // Update the doc button src to use object URL (session only)
-      // Note: can't persist object URLs — only base64 which is too large for docs
+      // Note: can\'t persist object URLs — only base64 which is too large for docs
       // So for docs we just show "file selected" state
       var btn = document.querySelector('[data-doc-src="' + assetPath + '"]');
       if (btn) {
@@ -1235,7 +1236,7 @@
 
   /* ── EXPOSE wireDocBtns for cross-reference ─────────────── */
   // Projects page defines wireDocBtns in its own script block;
-  // we reference it above. If not found that's fine — it's optional.
+  // we reference it above. If not found that's fine — it\'s optional.
 
 
   /* ══════════════════════════════════════════════════════════
@@ -1354,7 +1355,7 @@
         '<div class="asset-guide__step"><div class="asset-guide__step-num">2</div>',
         '<div class="asset-guide__step-text">Drag and drop your PDF or DOCX file into that folder and commit.</div></div>',
         '<div class="asset-guide__step"><div class="asset-guide__step-num">3</div>',
-        '<div class="asset-guide__step-text">The file path will be <code>assets/docs/your-file.pdf</code> — this matches what's already set in <code>data-doc-src</code> on the project card.</div></div>',
+        '<div class="asset-guide__step-text">The file path will be <code>assets/docs/your-file.pdf</code> — this matches what\'s already set in <code>data-doc-src</code> on the project card.</div></div>',
         '<div class="asset-guide__step"><div class="asset-guide__step-num">4</div>',
         '<div class="asset-guide__step-text">If the filename is different, unlock → enable editing → click the button text to update the <code>data-doc-src</code> value.</div></div>',
       ].join('');
@@ -1431,9 +1432,7 @@
           var file = fileInput.files[0];
           if (!file) return;
           if (file.size > 4 * 1024 * 1024) {
-            alert('Image is ' + (file.size / 1024 / 1024).toFixed(1) + 'MB. Please use an image under 4MB for browser storage.
-
-Alternatively, add the image to assets/images/ in your GitHub repo.');
+            alert('Image is ' + (file.size / 1024 / 1024).toFixed(1) + 'MB — too large for browser storage. Please resize to under 4MB, or add it directly to assets/images/ in your GitHub repo.');
             return;
           }
           var reader = new FileReader();
@@ -1508,12 +1507,7 @@ Alternatively, add the image to assets/images/ in your GitHub repo.');
   }
 
   /* ── Run on unlock and on load ───────────────────────── */
-  var _origUnlock = unlock;
-  function unlock() {
-    _origUnlock();
-    setTimeout(injectUploadTriggers, 100);
-  }
-
+  // NOTE: injectUploadTriggers is called from inside unlock() below (no duplicate function needed)
   // Also load stored images immediately on page load (for visitors to see)
   setTimeout(loadStoredImages, 50);
 
