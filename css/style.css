@@ -1618,6 +1618,36 @@ body.owner-unlocked .owner-only--block {
 }
 
 
+/* ── LOCK MODAL — always dark regardless of contrast theme ──
+   The passphrase modal is intentionally dark for focus/security.
+   We explicitly set colours to prevent light-theme variables bleeding in. */
+body.contrast-light .lock-overlay {
+  background: rgba(5, 8, 18, 0.92) !important;
+}
+body.contrast-light .lock-modal {
+  background: rgba(14, 20, 44, 0.99) !important;
+  border-color: rgba(240,165,0,0.3) !important;
+}
+body.contrast-light .lock-modal__label  { color: #F0A500 !important; }
+body.contrast-light .lock-modal__title  { color: #ffffff !important; }
+body.contrast-light .lock-modal__hint   { color: rgba(255,255,255,0.65) !important; }
+body.contrast-light .lock-modal__input  {
+  background: rgba(255,255,255,0.07) !important;
+  border-color: rgba(240,165,0,0.28) !important;
+  color: #ffffff !important;
+}
+body.contrast-light .lock-modal__input::placeholder { color: rgba(255,255,255,0.35) !important; }
+body.contrast-light .lock-modal__input:focus { border-color: #F0A500 !important; }
+body.contrast-light .lock-modal__cancel {
+  color: rgba(255,255,255,0.55) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+body.contrast-light .lock-modal__cancel:hover {
+  color: #ffffff !important;
+  border-color: rgba(255,255,255,0.35) !important;
+}
+
+
 /* ═══════════════════════════════════════════════════════════
    FLOATING FORMAT TOOLBAR — MS Word style
    Appears above selected text when in edit mode.
@@ -2563,36 +2593,67 @@ body.owner-unlocked .link-edit-btn { display: flex; }
    Upload triggers, guide panel, image preview, link modal.
 ═══════════════════════════════════════════════════════════ */
 
-/* Upload trigger — overlay on every placeholder when unlocked */
+/* Upload trigger — amber + button in corner of placeholder.
+   Hidden for visitors, shown when owner is unlocked. */
 .upload-trigger {
-  position: absolute;
-  inset: 0;
+  /* default hidden */
   display: none;
+}
+body.owner-unlocked .upload-trigger {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--amber);
+  border: 2px solid rgba(255,255,255,0.3);
+  display: flex;
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 8px;
-  background: rgba(5,9,22,0.68);
-  backdrop-filter: blur(3px);
   cursor: pointer;
-  z-index: 5;
-  border-radius: inherit;
-  transition: background 0.18s, border-color 0.18s;
-  border: 2px dashed rgba(240,165,0,0.4);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  flex-direction: column;
+  gap: 0;
 }
-.upload-trigger:hover {
-  background: rgba(5,9,22,0.82);
-  border-color: var(--amber);
+body.owner-unlocked .upload-trigger:hover {
+  transform: scale(1.18);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+  background: #c8940e;
 }
-body.owner-unlocked .upload-trigger { display: flex; }
 
-.upload-trigger__icon  { font-size: 22px; pointer-events: none; }
-.upload-trigger__label {
-  font-family: var(--font-mono); font-size: 8px;
-  letter-spacing: 0.16em; color: var(--amber);
-  pointer-events: none; text-align: center; padding: 0 10px;
-  line-height: 1.5;
+/* The + icon */
+.upload-trigger__icon {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--navy);
+  pointer-events: none;
+  font-weight: 900;
+  font-family: var(--font-mono);
 }
+/* Hide the text label — not needed with icon button */
+.upload-trigger__label { display: none; }
+
+/* Tooltip on hover */
+body.owner-unlocked .upload-trigger::after {
+  content: attr(title);
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: rgba(14,20,44,0.98);
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  border: 1px solid rgba(240,165,0,0.25);
+}
+body.owner-unlocked .upload-trigger:hover::after { opacity: 1; }
 
 /* Image once uploaded */
 .placeholder-uploaded {

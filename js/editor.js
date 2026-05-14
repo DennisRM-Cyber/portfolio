@@ -251,8 +251,8 @@
   }
   function tryUnlock() {
     if (lockInput.value === OWNER_PASSPHRASE) {
-      unlock();
-      closeLockOverlay();
+      closeLockOverlay();   // close first — always runs even if unlock() has an error
+      setTimeout(unlock, 80); // slight delay so closing animation plays cleanly
     } else {
       lockInput.classList.add('error');
       lockError.classList.add('visible');
@@ -1275,28 +1275,7 @@
     assetGuide.classList.remove('open');
   });
 
-  /* ── Inject the link/path modal (once) ──────────────── */
-  var linkModal = document.createElement('div');
-  linkModal.className = 'asset-link-modal';
-  linkModal.id = 'asset-link-modal';
-  linkModal.innerHTML = [
-    '<div class="asset-link-modal__inner">',
-      '<div class="asset-link-modal__title" id="alm-title">Set source link</div>',
-      '<div class="asset-link-modal__sub" id="alm-sub"></div>',
-      '<input class="asset-link-modal__input" id="alm-input" type="text" placeholder="Paste URL or file path…" />',
-      '<div class="asset-link-modal__actions">',
-        '<button class="asset-link-modal__confirm" id="alm-confirm">APPLY</button>',
-        '<button class="asset-link-modal__cancel" id="alm-cancel">CANCEL</button>',
-      '</div>',
-    '</div>',
-  ].join('');
-  document.body.appendChild(linkModal);
-  document.getElementById('alm-cancel').addEventListener('click', function() {
-    linkModal.classList.remove('open');
-  });
-  linkModal.addEventListener('click', function(e) {
-    if (e.target === linkModal) linkModal.classList.remove('open');
-  });
+  /* asset-link-modal removed — not needed for file-picker based uploads */
 
   /* ── Storage helpers ─────────────────────────────────── */
   var IMAGE_STORE_PREFIX = 'portfolio__img__';
@@ -1408,11 +1387,8 @@
 
         var trigger = document.createElement('div');
         trigger.className = 'upload-trigger';
-        trigger.setAttribute('title', 'Click to upload image');
-        trigger.innerHTML = [
-          '<div class="upload-trigger__icon">📁</div>',
-          '<div class="upload-trigger__label">CLICK TO UPLOAD<br>IMAGE</div>',
-        ].join('');
+        trigger.setAttribute('title', 'Upload image');
+        trigger.innerHTML = '<div class="upload-trigger__icon">+</div>';
 
         // Hidden file input
         var fileInput = document.createElement('input');
@@ -1441,9 +1417,12 @@
             var ok = storeImage(key, dataUrl);
             if (ok) {
               applyStoredImage(placeholder, dataUrl);
-              trigger.querySelector('.upload-trigger__label').textContent = '✓ UPLOADED';
+              // Flash the + button green briefly on success
+              trigger.style.background = '#4ade80';
+              trigger.querySelector('.upload-trigger__icon').textContent = '✓';
               setTimeout(function() {
-                trigger.querySelector('.upload-trigger__label').innerHTML = 'CLICK TO CHANGE<br>IMAGE';
+                trigger.style.background = '';
+                trigger.querySelector('.upload-trigger__icon').textContent = '+';
               }, 2000);
             }
           };
@@ -1466,10 +1445,8 @@
         var trigger = document.createElement('div');
         trigger.className = 'upload-trigger';
         trigger.setAttribute('title', 'How to add this document');
-        trigger.innerHTML = [
-          '<div class="upload-trigger__icon">📋</div>',
-          '<div class="upload-trigger__label">HOW TO ADD<br>THIS FILE</div>',
-        ].join('');
+        trigger.innerHTML = '<div class="upload-trigger__icon">?</div>';
+        trigger.setAttribute('title', 'How to add this document');
         placeholder.style.position = 'relative';
         placeholder.appendChild(trigger);
         trigger.addEventListener('click', function(e) {
