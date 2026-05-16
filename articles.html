@@ -108,12 +108,104 @@
     .reader-overlay.edit-mode .art-title { cursor: text; }
     .reader-edit-hint { display:none; font-family:var(--font-mono); font-size:8px; letter-spacing:0.14em; color:#b87800; background:rgba(240,165,0,0.07); border-bottom:1px solid rgba(240,165,0,0.18); padding:7px 40px; text-align:center; }
     .reader-overlay.edit-mode .reader-edit-hint { display:block; }
-    .reader-format-bar { display:none; align-items:center; gap:3px; padding:7px 40px; background:#fff; border-bottom:2px solid #e8e5de; flex-shrink:0; flex-wrap:wrap; }
-    .reader-overlay.edit-mode .reader-format-bar { display:flex; }
-    .reader-format-bar button { width:30px; height:28px; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid transparent; border-radius:5px; color:#2c2c3a; font-size:12px; cursor:pointer; transition:all 0.14s; font-family:Georgia,serif; }
-    .reader-format-bar button:hover { background:#f0ede6; border-color:#d0cdc6; color:#0e0e1a; }
-    .rfb-divider { width:1px; height:18px; background:#e0ddd6; margin:0 4px; }
-    .reader-format-bar select { background:#faf8f4; border:1px solid #d8d5ce; border-radius:5px; color:#2c2c3a; font-family:var(--font-mono); font-size:9px; padding:3px 6px; height:28px; cursor:pointer; }
+    /* ── READER FORMAT BAR — full Word-style two-row ribbon ── */
+    .reader-format-bar {
+      display: none;
+      flex-direction: column;
+      background: #fff;
+      border-bottom: 2px solid #e8e5de;
+      flex-shrink: 0;
+    }
+    .reader-overlay.edit-mode .reader-format-bar { display: flex; }
+
+    /* Two rows inside the bar */
+    .rfb-row {
+      display: flex; align-items: center;
+      gap: 2px; padding: 6px 40px;
+      flex-wrap: wrap;
+    }
+    .rfb-row + .rfb-row { border-top: 1px solid #ece9e2; padding-top: 5px; }
+
+    /* Buttons */
+    .reader-format-bar button {
+      height: 28px; min-width: 28px; padding: 0 6px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid transparent;
+      border-radius: 5px; color: #2c2c3a; font-size: 12px;
+      cursor: pointer; transition: all 0.14s;
+      font-family: Georgia, serif; white-space: nowrap;
+    }
+    .reader-format-bar button:hover {
+      background: #f0ede6; border-color: #c8c4bc; color: #0e0e1a;
+    }
+    .reader-format-bar button b   { font-weight: 900; font-size: 13px; }
+    .reader-format-bar button i   { font-style: italic; font-size: 13px; }
+    .reader-format-bar button u   { text-decoration: underline; font-size: 13px; }
+    .reader-format-bar button s   { text-decoration: line-through; font-size: 12px; }
+    .reader-format-bar button sup { font-size: 9px; vertical-align: super; }
+    .reader-format-bar button.rfb-clear { color: #c0392b; }
+    .reader-format-bar button.rfb-clear:hover { background: #fdf0ee; border-color: #e0a090; color: #a02010; }
+
+    /* Selects */
+    .reader-format-bar select {
+      background: #faf8f4; border: 1px solid #d8d5ce;
+      border-radius: 5px; color: #2c2c3a;
+      font-family: var(--font-mono); font-size: 9px;
+      padding: 3px 8px; height: 28px; cursor: pointer;
+      outline: none; transition: border-color 0.14s;
+    }
+    .reader-format-bar select:hover { border-color: #b87800; }
+
+    /* Size input + steppers */
+    .rfb-size-wrap {
+      display: flex; align-items: center;
+      border: 1px solid #d8d5ce; border-radius: 5px; overflow: hidden;
+    }
+    .rfb-size-input {
+      width: 36px; height: 26px; border: none;
+      background: #faf8f4; color: #2c2c3a;
+      font-family: var(--font-mono); font-size: 11px;
+      text-align: center; outline: none; padding: 0;
+      -moz-appearance: textfield;
+    }
+    .rfb-size-input::-webkit-outer-spin-button,
+    .rfb-size-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .rfb-size-step {
+      width: 18px; height: 13px; border: none;
+      background: #f0ede6; color: #666;
+      font-size: 8px; cursor: pointer; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, color 0.12s;
+    }
+    .rfb-size-step:hover { background: #e0dbd0; color: #0e0e1a; }
+
+    /* Colour pickers */
+    .rfb-color-wrap {
+      position: relative; width: 32px; height: 28px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      cursor: pointer; border-radius: 5px;
+      border: 1px solid transparent;
+      transition: background 0.14s, border-color 0.14s;
+      flex-shrink: 0; overflow: hidden; gap: 1px; padding: 3px 4px;
+    }
+    .rfb-color-wrap:hover { background: #f0ede6; border-color: #c8c4bc; }
+    .rfb-color-letter {
+      font-size: 12px; font-weight: 900;
+      font-family: Georgia, serif; pointer-events: none;
+      position: relative; z-index: 1; line-height: 1; color: #2c2c3a;
+    }
+    .rfb-color-bar {
+      width: 20px; height: 3px; border-radius: 2px;
+      pointer-events: none; position: relative; z-index: 1;
+      background: #b87800; transition: background 0.1s;
+    }
+    .rfb-color-wrap input[type="color"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%; padding: 0; border: none;
+    }
+
+    .rfb-divider { width: 1px; height: 20px; background: #dedad2; margin: 0 4px; flex-shrink: 0; }
 
     /* Scrollable paper body — parchment background between A4 pages */
     .reader-body {
@@ -717,27 +809,78 @@
     <div class="reader-progress"><div class="reader-progress__fill" id="reader-progress-fill"></div></div>
     <!-- Reader format bar — shown inside reader when editing -->
     <div class="reader-format-bar" id="reader-format-bar">
-      <button data-cmd="bold"          title="Bold"><b>B</b></button>
-      <button data-cmd="italic"        title="Italic"><i>I</i></button>
-      <button data-cmd="underline"     title="Underline"><u>U</u></button>
-      <div class="rfb-divider"></div>
-      <button data-cmd="insertUnorderedList" title="Bullet list">☰</button>
-      <button data-cmd="insertOrderedList"   title="Numbered list">①</button>
-      <div class="rfb-divider"></div>
-      <button data-cmd="justifyLeft"   title="Left">⬡</button>
-      <button data-cmd="justifyCenter" title="Centre">≡</button>
-      <div class="rfb-divider"></div>
-      <select id="rfb-size" title="Font size">
-        <option value="">Size</option>
-        <option value="13px">13</option>
-        <option value="15px">15</option>
-        <option value="17px">17</option>
-        <option value="20px">20</option>
-        <option value="24px">24</option>
-        <option value="28px">28</option>
-      </select>
-      <div class="rfb-divider"></div>
-      <button data-cmd="removeFormat"  title="Clear formatting" style="color:#c0392b;">✕</button>
+      <!-- ROW 1: Paragraph style · Font · Size · Colour -->
+      <div class="rfb-row">
+        <select id="rfb-heading" title="Paragraph style">
+          <option value="">¶ Normal</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+          <option value="blockquote">Quote</option>
+          <option value="pre">Code block</option>
+        </select>
+        <div class="rfb-divider"></div>
+        <select id="rfb-font" title="Font family">
+          <option value="">Font</option>
+          <option value="Syne,sans-serif">Syne (site font)</option>
+          <option value="Georgia,serif">Georgia</option>
+          <option value="Arial,sans-serif">Arial</option>
+          <option value="JetBrains Mono,monospace">Mono</option>
+          <option value="Times New Roman,serif">Times New Roman</option>
+          <option value="Courier New,monospace">Courier New</option>
+        </select>
+        <div class="rfb-divider"></div>
+        <div class="rfb-size-wrap" title="Font size">
+          <input class="rfb-size-input" type="number" id="rfb-size-input" min="8" max="96" value="16"/>
+          <div style="display:flex;flex-direction:column;">
+            <button class="rfb-size-step" id="rfb-size-up">▲</button>
+            <button class="rfb-size-step" id="rfb-size-down">▼</button>
+          </div>
+        </div>
+        <div class="rfb-divider"></div>
+        <label class="rfb-color-wrap" title="Text colour">
+          <span class="rfb-color-letter">A</span>
+          <div class="rfb-color-bar" id="rfb-color-bar"></div>
+          <input type="color" id="rfb-color" value="#0e0e1a"/>
+        </label>
+        <label class="rfb-color-wrap" title="Highlight colour">
+          <span class="rfb-color-letter" style="color:#b87800">H</span>
+          <div class="rfb-color-bar" id="rfb-hl-bar" style="background:#fbbf24"></div>
+          <input type="color" id="rfb-highlight" value="#fbbf24"/>
+        </label>
+        <div class="rfb-divider"></div>
+        <select id="rfb-line-spacing" title="Line spacing">
+          <option value="">≡↕ Spacing</option>
+          <option value="1.2">1.2 — Tight</option>
+          <option value="1.5">1.5 — Normal</option>
+          <option value="1.8">1.8 — Relaxed</option>
+          <option value="2.0">2.0 — Double</option>
+          <option value="2.5">2.5 — Wide</option>
+        </select>
+      </div>
+      <!-- ROW 2: Character + paragraph formatting -->
+      <div class="rfb-row">
+        <button data-cmd="bold"               title="Bold (Ctrl+B)"><b>B</b></button>
+        <button data-cmd="italic"             title="Italic (Ctrl+I)"><i>I</i></button>
+        <button data-cmd="underline"          title="Underline (Ctrl+U)"><u>U</u></button>
+        <button data-cmd="strikeThrough"      title="Strikethrough"><s>S</s></button>
+        <button data-cmd="superscript"        title="Superscript">x<sup>2</sup></button>
+        <button data-cmd="subscript"          title="Subscript">x<sub>2</sub></button>
+        <div class="rfb-divider"></div>
+        <button data-cmd="justifyLeft"        title="Align left">&#8676;&#8195;&#8801;</button>
+        <button data-cmd="justifyCenter"      title="Centre">&#8801;</button>
+        <button data-cmd="justifyRight"       title="Align right">&#8801;&#8195;&#8677;</button>
+        <button data-cmd="justifyFull"        title="Justify">&#8801;&#8801;</button>
+        <div class="rfb-divider"></div>
+        <button data-cmd="insertUnorderedList" title="Bullet list">• &#8801;</button>
+        <button data-cmd="insertOrderedList"   title="Numbered list">1.</button>
+        <button data-cmd="indent"              title="Indent &#8594;">&#8677;</button>
+        <button data-cmd="outdent"             title="Outdent &#8592;">&#8676;</button>
+        <div class="rfb-divider"></div>
+        <button data-cmd="insertHorizontalRule" title="Horizontal rule">&#8212;</button>
+        <div class="rfb-divider"></div>
+        <button data-cmd="removeFormat" class="rfb-clear" title="Clear all formatting">&#10005; Clear</button>
+      </div>
     </div>
     <div class="reader-edit-hint" id="reader-edit-hint">✏ EDIT MODE ON — Click anywhere in the article to start typing. Press Ctrl+S or click SAVE when done.</div>
     <div class="reader-body" id="reader-body"><div class="reader-content" id="reader-content"></div></div>
@@ -878,18 +1021,142 @@
     if (editToggle) editToggle.addEventListener('click', function() { readerEditMode ? disableReaderEdit() : enableReaderEdit(); });
     if (saveBtn)    saveBtn.addEventListener('click', saveArticle);
 
+    /* ── Reader format bar — full Word-style wiring ── */
+    var rfbSavedRange = null;
+
+    function rfbSaveRange() {
+      var sel = window.getSelection();
+      if (sel && sel.rangeCount) rfbSavedRange = sel.getRangeAt(0).cloneRange();
+    }
+    function rfbRestore() {
+      if (!rfbSavedRange) return;
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rfbSavedRange);
+    }
+    function rfbExec(cmd, val) { rfbRestore(); document.execCommand(cmd, false, val || null); }
+
+    function rfbApplySize(px) {
+      rfbRestore();
+      var sel = window.getSelection();
+      if (!sel || !sel.rangeCount || sel.isCollapsed) return;
+      var span = document.createElement('span');
+      span.style.fontSize = px + 'px';
+      try { sel.getRangeAt(0).surroundContents(span); } catch(e) {}
+    }
+
+    // Command buttons (Bold, Italic, lists, align, etc.)
     document.querySelectorAll('.reader-format-bar [data-cmd]').forEach(function(btn) {
-      btn.addEventListener('mousedown', function(e) { e.preventDefault(); document.execCommand(btn.getAttribute('data-cmd'), false, null); });
+      btn.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        rfbSaveRange();
+        rfbExec(btn.getAttribute('data-cmd'));
+      });
     });
-    var rfbSize = document.getElementById('rfb-size');
-    if (rfbSize) {
-      rfbSize.addEventListener('change', function() {
-        var sel = window.getSelection(); if (!sel || !sel.rangeCount) return;
-        var span = document.createElement('span'); span.style.fontSize = rfbSize.value;
-        try { sel.getRangeAt(0).surroundContents(span); } catch(e) {}
-        rfbSize.value = '';
+
+    // Heading / paragraph style
+    var rfbHeading = document.getElementById('rfb-heading');
+    if (rfbHeading) {
+      rfbHeading.addEventListener('mousedown', rfbSaveRange);
+      rfbHeading.addEventListener('change', function() {
+        var val = this.value;
+        rfbExec('formatBlock', val ? '<' + val + '>' : '<p>');
+        this.value = '';
       });
     }
+
+    // Font family
+    var rfbFont = document.getElementById('rfb-font');
+    if (rfbFont) {
+      rfbFont.addEventListener('mousedown', rfbSaveRange);
+      rfbFont.addEventListener('change', function() {
+        rfbExec('fontName', this.value); this.value = '';
+      });
+    }
+
+    // Font size — number input + steppers
+    var rfbSizeInput = document.getElementById('rfb-size-input');
+    var rfbSizeUp    = document.getElementById('rfb-size-up');
+    var rfbSizeDown  = document.getElementById('rfb-size-down');
+    var rfbCurrentSize = 16;
+
+    if (rfbSizeInput) {
+      rfbSizeInput.addEventListener('mousedown', rfbSaveRange);
+      rfbSizeInput.addEventListener('change', function() {
+        rfbCurrentSize = Math.max(8, Math.min(96, parseInt(this.value) || 16));
+        this.value = rfbCurrentSize;
+        rfbApplySize(rfbCurrentSize);
+      });
+      rfbSizeInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); this.dispatchEvent(new Event('change')); }
+      });
+    }
+    if (rfbSizeUp) {
+      rfbSizeUp.addEventListener('mousedown', function(e) {
+        e.preventDefault(); rfbSaveRange();
+        rfbCurrentSize = Math.min(96, rfbCurrentSize + 1);
+        if (rfbSizeInput) rfbSizeInput.value = rfbCurrentSize;
+        rfbApplySize(rfbCurrentSize);
+      });
+    }
+    if (rfbSizeDown) {
+      rfbSizeDown.addEventListener('mousedown', function(e) {
+        e.preventDefault(); rfbSaveRange();
+        rfbCurrentSize = Math.max(8, rfbCurrentSize - 1);
+        if (rfbSizeInput) rfbSizeInput.value = rfbCurrentSize;
+        rfbApplySize(rfbCurrentSize);
+      });
+    }
+
+    // Text colour
+    var rfbColor    = document.getElementById('rfb-color');
+    var rfbColorBar = document.getElementById('rfb-color-bar');
+    if (rfbColor) {
+      rfbColor.addEventListener('mousedown', rfbSaveRange);
+      rfbColor.addEventListener('input', function() {
+        if (rfbColorBar) rfbColorBar.style.background = this.value;
+        rfbExec('foreColor', this.value);
+      });
+    }
+
+    // Highlight
+    var rfbHL    = document.getElementById('rfb-highlight');
+    var rfbHLBar = document.getElementById('rfb-hl-bar');
+    if (rfbHL) {
+      rfbHL.addEventListener('mousedown', rfbSaveRange);
+      rfbHL.addEventListener('input', function() {
+        if (rfbHLBar) rfbHLBar.style.background = this.value;
+        rfbExec('hiliteColor', this.value);
+      });
+    }
+
+    // Line spacing
+    var rfbLineSpacing = document.getElementById('rfb-line-spacing');
+    if (rfbLineSpacing) {
+      rfbLineSpacing.addEventListener('mousedown', rfbSaveRange);
+      rfbLineSpacing.addEventListener('change', function() {
+        var val = this.value;
+        if (!val) return;
+        // Apply line-height to the selected block's parent paragraph
+        rfbRestore();
+        var sel = window.getSelection();
+        if (sel && sel.rangeCount) {
+          var node = sel.anchorNode;
+          // Walk up to find a block element
+          while (node && node.nodeType !== 1) node = node.parentNode;
+          while (node && ['SPAN','A','STRONG','EM','B','I','U'].indexOf(node.tagName) >= 0) node = node.parentNode;
+          if (node && node !== document.getElementById('art-editable-body')) {
+            node.style.lineHeight = val;
+          } else {
+            // Apply to whole body
+            var body = document.getElementById('art-editable-body');
+            if (body) body.style.lineHeight = val;
+          }
+        }
+        this.value = '';
+      });
+    }
+
+    // Save range on any selection inside format bar
+    document.getElementById('reader-format-bar').addEventListener('mousedown', rfbSaveRange);
 
     readerBody.addEventListener('scroll', function() {
       var scrollable = readerBody.scrollHeight - readerBody.clientHeight;

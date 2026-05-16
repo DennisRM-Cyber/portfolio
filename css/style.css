@@ -2447,6 +2447,24 @@ body.owner-unlocked .card-delete-btn {
 /* Respect reduce-motion */
 body.reduce-motion .circuit-canvas { display: none; }
 
+/* Circuit animation — light mode colour adjustment.
+   The SVG uses hardcoded amber (#F0A500) which is nearly invisible
+   on the light slate (#c8cdd8) background.
+   CSS filter: hue-rotate shifts amber → teal/navy, saturate boosts it,
+   invert+sepia+hue is the cleanest way to recolour an SVG without
+   touching the SVG markup. Result: deep teal traces on slate = high contrast. */
+body.contrast-light .circuit-canvas {
+  /* Recolour amber SVG traces to deep engineering navy (#1e3a6e)
+     so they read as technical drawing ink on the slate background */
+  filter:
+    brightness(0)
+    sepia(1)
+    saturate(6)
+    hue-rotate(200deg)
+    brightness(0.55);
+  opacity: 0.85;
+}
+
 /* ═══════════════════════════════════════════════════════════
    LIKE BUTTON — articles + projects
 ═══════════════════════════════════════════════════════════ */
