@@ -895,13 +895,36 @@
   }
 
   function loadStoredUploads() {
-    // On page load, restore any previously uploaded files
+    // On page load, restore any previously uploaded files for data-asset-path elements
     document.querySelectorAll('[data-asset-path]').forEach(function(el) {
       var assetPath = el.getAttribute('data-asset-path');
       var assetType = el.getAttribute('data-asset-type') || 'image';
       var stored = null;
       try { stored = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
       if (stored) applyStoredFile(el, stored, assetType, assetPath);
+    });
+
+    // Restore about page profile photo (no data-asset-path on about page)
+    var aboutPlaceholder = document.querySelector('.about-hero__placeholder');
+    if (aboutPlaceholder) {
+      var stored = null;
+      try { stored = localStorage.getItem(uploadKey('assets/images/rubui-mwangi.jpg')); } catch(e) {}
+      if (stored) applyStoredFile(aboutPlaceholder, stored, 'image', 'assets/images/rubui-mwangi.jpg');
+    }
+
+    // Restore dynamically-keyed image placeholders (project cards, media cards)
+    document.querySelectorAll('.card-media__placeholder, .media-card__placeholder').forEach(function(ph) {
+      if (ph._uploadWired) return; // will be wired by injectUploadZones
+      // Check if a stored image exists for common asset paths derived from card titles
+      var card = ph.closest('.project-card, .media-card');
+      if (!card) return;
+      var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
+      if (!titleEl) return;
+      var slug = titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0,30);
+      var assetPath = 'assets/images/' + slug + '.jpg';
+      var stored = null;
+      try { stored = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
+      if (stored) applyStoredFile(ph, stored, 'image', assetPath);
     });
   }
 
@@ -929,6 +952,24 @@
       // Show local badge
       var badge = container.querySelector('.upload-local-badge');
       if (badge) badge.style.display = '';
+
+      // Mark container as having an upload (for CSS targeting)
+      container.setAttribute('data-has-upload', '1');
+
+      // Add / update CHANGE PHOTO button
+      var changeBtn = container.querySelector('.upload-change-btn');
+      if (!changeBtn) {
+        changeBtn = document.createElement('button');
+        changeBtn.className = 'upload-change-btn';
+        changeBtn.textContent = '✎ CHANGE PHOTO';
+        container.appendChild(changeBtn);
+        changeBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          // Re-trigger the upload zone click
+          var zone = container.querySelector('.upload-zone');
+          if (zone) zone.click();
+        });
+      }
 
     } else if (assetType === 'pdf' || assetType === 'docx') {
       // Update the doc button src to use object URL (session only)
@@ -982,15 +1023,22 @@
         assetType = container.getAttribute('data-asset-type') || 'image';
       } else {
         // Derive from context
-        var card = ph.closest('.project-card, .media-card, .about-hero__img-wrap');
-        if (card) {
-          var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
-          var slug = titleEl
-            ? titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0,30)
-            : 'image-' + Date.now();
-          assetPath = 'assets/images/' + slug + '.jpg';
+        // Special case: about page profile photo
+        if (ph.classList.contains('about-hero__placeholder')) {
+          assetPath = 'assets/images/rubui-mwangi.jpg';
           assetType = 'image';
           container = ph;
+        } else {
+          var card = ph.closest('.project-card, .media-card, .about-hero__img-wrap');
+          if (card) {
+            var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
+            var slug = titleEl
+              ? titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0,30)
+              : 'image-' + Date.now();
+            assetPath = 'assets/images/' + slug + '.jpg';
+            assetType = 'image';
+            container = ph;
+          }
         }
       }
       if (!assetPath) return;
