@@ -177,6 +177,9 @@ button {
   background-color: rgba(16, 26, 52, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  /* Safe area — respect notch on left/right (landscape phones) */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .nav__inner {
@@ -240,6 +243,11 @@ button {
   flex-direction: column;
   gap: 5px;
   padding: 4px;
+  /* Touch target: minimum 44×44px for comfortable mobile tap */
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
 }
 .nav__toggle span {
   display: block;
@@ -540,6 +548,8 @@ button {
 .footer {
   border-top: 0.5px solid var(--border);
   padding: 16px 0;
+  /* Safe area — stay above iOS home bar */
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 
 .footer__inner {
@@ -765,6 +775,8 @@ button {
   }
   .nav__links a {
     font-size: 12px;
+  }
+  .nav__links {
     gap: 36px;
   }
   .hero__label {
@@ -815,9 +827,14 @@ button {
     right: 0;
     flex-direction: column;
     gap: 0;
-    background: var(--navy);
+    background: rgba(16, 26, 52, 0.98);
     border-bottom: 0.5px solid var(--border);
-    padding: 12px 0;
+    padding: 8px 0;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    /* Respect safe area in mobile landscape */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   .nav__links.open {
     display: flex;
@@ -1390,6 +1407,10 @@ body.owner-unlocked .about-hero__placeholder:hover {
   letter-spacing: 0.12em;
   user-select: none;
   white-space: nowrap;
+  /* Safe area — stay above iOS home bar */
+  bottom: max(24px, calc(16px + env(safe-area-inset-bottom)));
+  /* Don't overflow on small screens */
+  max-width: calc(100vw - 32px);
 }
 
 .edit-toolbar__dot {
@@ -1458,7 +1479,8 @@ body.owner-unlocked .about-hero__placeholder:hover {
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 0.14em;
-  padding: 10px 16px;
+  padding: 12px 18px;
+  min-height: 44px;
   background: rgba(5, 8, 18, 0.96);
   border: 1px solid rgba(240,165,0,0.28);
   border-radius: 40px;
@@ -1471,6 +1493,9 @@ body.owner-unlocked .about-hero__placeholder:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Safe area — never clipped by iOS home bar */
+  bottom: max(24px, calc(16px + env(safe-area-inset-bottom)));
+  right: max(24px, calc(16px + env(safe-area-inset-right)));
 }
 .lock-btn:hover {
   background: rgba(18, 28, 52, 0.98);
@@ -1681,8 +1706,8 @@ body.contrast-light .lock-modal__cancel:hover {
   transform: translateY(8px);
   transition: opacity 0.15s, transform 0.15s;
   max-width: calc(100vw - 24px);
-  min-width: 580px;
-  overflow: visible;
+  /* No fixed min-width — let rows scroll instead */
+  overflow: hidden;
 }
 .format-bar.visible {
   opacity: 1; pointer-events: all; transform: translateY(0);
@@ -1700,8 +1725,17 @@ body.contrast-light .lock-modal__cancel:hover {
 /* Two rows */
 .format-bar__row {
   display: flex; align-items: center;
-  gap: 2px; padding: 6px 10px; flex-wrap: wrap;
+  gap: 2px; padding: 6px 10px;
+  /* Scroll horizontally instead of overflowing the page */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  flex-wrap: nowrap;
+  /* Min-width on desktop for comfortable layout */
+  min-width: min(580px, calc(100vw - 24px));
 }
+.format-bar__row::-webkit-scrollbar { display: none; }
 .format-bar__row + .format-bar__row {
   border-top: 1px solid rgba(240,165,0,0.12);
   padding-top: 6px;
@@ -1886,8 +1920,8 @@ button.card--add {
   top: 72px;
   left: 16px;
   z-index: 210;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 10px;
   border: 1px solid rgba(240,165,0,0.28);
   background: rgba(16,26,52,0.96);
@@ -1901,6 +1935,8 @@ button.card--add {
   -webkit-backdrop-filter: blur(14px);
   box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   transition: border-color 0.18s, background 0.18s, transform 0.18s;
+  /* Safe area — never hidden behind notch or screen edge */
+  left: max(16px, calc(16px + env(safe-area-inset-left)));
 }
 .settings-btn:hover {
   border-color: var(--amber);
@@ -2861,3 +2897,538 @@ body.contrast-light .asset-guide {
 body.contrast-light .asset-guide__title   { color: #0e1420 !important; }
 body.contrast-light .asset-guide__step-text { color: #2a3248 !important; }
 body.contrast-light .asset-guide__close  { border-color: rgba(13,110,110,0.3) !important; color: #0d6e6e !important; }
+
+
+/* ════════════════════════════════════════════════════════════
+   COMPREHENSIVE RESPONSIVE SYSTEM
+   Full device coverage: 320px phones → 4K TVs
+   Fixes all missing breakpoints, touch targets, safe areas,
+   and large-screen scaling gaps identified in the audit.
+════════════════════════════════════════════════════════════ */
+
+
+/* ── TOUCH TARGETS ─────────────────────────────────────────
+   All tappable elements must be at least 44×44px per
+   Apple HIG and WCAG 2.5.5. Applied globally so new
+   elements added later inherit these defaults.
+──────────────────────────────────────────────────────────── */
+.btn,
+.nav__links a,
+.contrast-btn,
+.fontsize-btn,
+.filter-btn,
+.lock-btn,
+.edit-toolbar__btn,
+.format-bar__btn,
+.card-btn,
+.card-btn--primary,
+.like-btn {
+  -webkit-tap-highlight-color: transparent; /* remove iOS blue flash */
+}
+
+/* Ensure minimum touch height on inline interactive controls */
+@media (hover: none) and (pointer: coarse) {
+  /* This targets genuine touch screens */
+  .btn              { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .contrast-btn,
+  .fontsize-btn     { min-height: 40px; }
+  .filter-btn       { min-height: 40px; }
+  .nav__links a     { min-height: 48px; display: flex; align-items: center; }
+  .edu-block__tag,
+  .project-highlight__tag,
+  .article-tag      { padding: 8px 14px; }
+}
+
+
+/* ── LIGHT MODE: mobile nav dropdown ──────────────────────
+   In light mode the nav background is a lighter slate, so the
+   dropdown must match it rather than the dark fallback.
+──────────────────────────────────────────────────────────── */
+body.contrast-light .nav__links {
+  background: rgba(228, 233, 243, 0.99) !important;
+  border-color: rgba(14,20,32,0.14) !important;
+}
+
+
+/* ── ABOUT HERO FACTS GRID — responsive ───────────────────
+   The inline style on the mini-stats container can't be
+   overridden without !important. On phones ≤ 400px we stack
+   the four fact boxes to a single column.
+──────────────────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .about-hero__facts {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* ── SETTINGS PANEL — hide on mobile when nav is open ─────
+   The settings panel is tucked in the top-left. On small
+   phones it competes with the hamburger dropdown. We push
+   it below the dropdown area when the nav is open.
+──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .settings-btn {
+    top: calc(var(--nav-height) + 8px);
+    /* On phones, move below the dropdown when open */
+  }
+  .settings-panel {
+    top: calc(var(--nav-height) + 56px);
+    left: 8px;
+    width: min(250px, calc(100vw - 16px));
+  }
+  /* Lock button — don't overlap edit toolbar */
+  .lock-btn {
+    right: max(16px, calc(16px + env(safe-area-inset-right)));
+  }
+}
+
+
+/* ── 320px — VERY SMALL PHONES ─────────────────────────────
+   Galaxy A series, iPhone SE (1st gen), budget Androids.
+   320px viewport is still actively used.
+──────────────────────────────────────────────────────────── */
+@media (max-width: 360px) {
+  :root {
+    --nav-height: 52px;
+  }
+  .container {
+    padding: 0 14px;
+  }
+  .hero {
+    padding: 36px 0 24px;
+  }
+  .hero__title {
+    font-size: clamp(28px, 9vw, 44px) !important;
+  }
+  .hero__name {
+    font-size: clamp(32px, 10vw, 52px) !important;
+  }
+  .hero__title em {
+    font-size: clamp(20px, 7vw, 32px) !important;
+  }
+  .stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stats__item {
+    padding: 14px 12px;
+  }
+  .stats__number {
+    font-size: 20px;
+  }
+  .nav-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .hero__actions {
+    flex-direction: column;
+  }
+  .btn {
+    text-align: center;
+    width: 100%;
+  }
+  /* About page */
+  .about-hero {
+    padding: 32px 0 24px;
+  }
+  .about-hero__photo {
+    max-width: 200px;
+  }
+  .achievement-banner {
+    padding: 18px 16px;
+  }
+  .achievement-banner__text {
+    font-size: 13px;
+  }
+  .exp-card,
+  .edu-block,
+  .project-highlight {
+    padding: 18px 14px;
+  }
+  .exp-card__role {
+    font-size: 13px;
+  }
+  /* Edit toolbar — shrink on tiny screens */
+  .edit-toolbar {
+    font-size: 8px;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  .edit-toolbar__btn {
+    font-size: 7px;
+    padding: 5px 8px;
+  }
+  /* Lock button */
+  .lock-btn {
+    font-size: 8px;
+    padding: 10px 12px;
+  }
+}
+
+
+/* ── 540px — INTERMEDIATE PHONES / SMALL TABLETS ───────────
+   Fills the gap between 480px (current rules) and 768px.
+   Large iPhones in landscape (iPhone Plus/Pro Max), small
+   Android tablets, and some folded foldables land here.
+──────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .container {
+    padding: 0 18px;
+  }
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .nav-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  /* About hero stacks cleanly */
+  .about-hero {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 40px 0 28px;
+  }
+  .about-hero__photo {
+    max-width: 240px;
+    margin: 0 auto;
+  }
+  /* Project highlight link wraps under content */
+  .project-highlight {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .project-highlight__link {
+    align-self: flex-start;
+  }
+  /* Edu modules wrap tightly */
+  .edu-block__modules {
+    gap: 6px;
+  }
+  /* Format bar — reduce row padding on small screens */
+  .format-bar__row {
+    padding: 5px 8px;
+    gap: 1px;
+  }
+  .format-bar__btn {
+    min-width: 26px;
+    height: 26px;
+  }
+}
+
+
+/* ── 768px TABLET PORTRAIT — refine layout ─────────────────
+   iPad mini portrait, small Android tablets.
+   This fills in detail missing from the simple max-width:768px block.
+──────────────────────────────────────────────────────────── */
+@media (min-width: 601px) and (max-width: 900px) {
+  .nav-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .exp-grid,
+  .exp-grid--bottom {
+    grid-template-columns: 1fr;
+  }
+  .about-hero {
+    grid-template-columns: 1fr 220px;
+    gap: 32px;
+  }
+  .project-highlight {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+
+/* ── 1024px — TABLET LANDSCAPE / SMALL LAPTOP ─────────────
+   iPad Pro landscape, Surface Go, Chromebooks.
+   Currently untreated between 768px and 1280px.
+──────────────────────────────────────────────────────────── */
+@media (min-width: 901px) and (max-width: 1279px) {
+  :root {
+    --max-width: 980px;
+  }
+  .container {
+    padding: 0 clamp(20px, 4vw, 48px);
+  }
+  .nav-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .about-hero {
+    grid-template-columns: 1fr 240px;
+    gap: 40px;
+  }
+  .exp-grid,
+  .exp-grid--bottom {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .hero__title {
+    font-size: clamp(34px, 5vw, 56px);
+  }
+  .nav-card__title {
+    font-size: 14px;
+  }
+  .nav-card__desc {
+    font-size: 11px;
+  }
+}
+
+
+/* ── 1440px — STANDARD LAPTOPS ─────────────────────────────
+   13"–16" MacBooks, Dell XPS, most 1440×900 and 1440×1080
+   laptop displays. The most common professional viewing context.
+──────────────────────────────────────────────────────────── */
+@media (min-width: 1440px) and (max-width: 1919px) {
+  :root {
+    --max-width: 1280px;
+    --nav-height: 60px;
+  }
+  body {
+    font-size: 17px;
+  }
+  .nav__logo {
+    font-size: 13px;
+  }
+  .nav__links a {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+  .hero__desc {
+    font-size: 16px;
+    max-width: 580px;
+  }
+  .stats__number {
+    font-size: 30px;
+  }
+  .nav-card {
+    padding: 34px 30px 28px;
+  }
+  .stats__item {
+    padding: 22px 32px;
+  }
+  .nav-card__title {
+    font-size: 16px;
+  }
+  .nav-card__desc {
+    font-size: 12px;
+  }
+  .about-hero {
+    grid-template-columns: 1fr 300px;
+  }
+}
+
+
+/* ── 1920px TV/FHD — already exists but extended ───────────
+   Smart TVs via HDMI, desktop monitors, wide-format displays.
+   The existing breakpoint had a gap bug and missing elements.
+──────────────────────────────────────────────────────────── */
+@media (min-width: 1920px) {
+  /* Stat cards — taller for the expanded layout */
+  .stats__item {
+    padding: 28px 44px;
+  }
+  /* Nav cards — more breathing room */
+  .nav-card {
+    padding: 44px 36px 38px;
+  }
+  /* About page */
+  .about-hero {
+    grid-template-columns: 1fr 360px;
+    gap: 72px;
+  }
+  /* Experience cards */
+  .exp-card {
+    padding: 36px 32px;
+  }
+  .exp-card__role {
+    font-size: 17px;
+  }
+  .exp-card__bullets li {
+    font-size: 14px;
+  }
+  /* Section dividers */
+  .section-divider {
+    margin: 64px 0 36px;
+  }
+  /* Footer text */
+  .footer__left,
+  .footer__right {
+    font-size: 11px;
+  }
+}
+
+
+/* ── 2560px — 2K / QHD MONITORS ───────────────────────────
+   Dell UltraSharp 27", LG 27" QHD, gaming monitors.
+   These are becoming the new standard for professional setups.
+──────────────────────────────────────────────────────────── */
+@media (min-width: 2560px) {
+  :root {
+    --max-width: 1920px;
+    --nav-height: 72px;
+  }
+  body {
+    font-size: 20px;
+  }
+  .nav__logo {
+    font-size: 15px;
+  }
+  .nav__links {
+    gap: 40px;
+  }
+  .nav__links a {
+    font-size: 13px;
+  }
+  .hero__label {
+    font-size: 14px;
+  }
+  .hero__desc {
+    font-size: 20px;
+    max-width: 720px;
+  }
+  .stats__number {
+    font-size: 44px;
+  }
+  .stats__label {
+    font-size: 13px;
+  }
+  .nav-card__title {
+    font-size: 20px;
+  }
+  .nav-card__desc {
+    font-size: 14px;
+  }
+  .btn {
+    font-size: 13px;
+    padding: 16px 36px;
+  }
+  .section-label {
+    font-size: 12px;
+  }
+  .hero__title {
+    font-size: clamp(56px, 5vw, 100px);
+  }
+  .hero__name {
+    font-size: clamp(64px, 6vw, 120px);
+  }
+  .about-hero {
+    grid-template-columns: 1fr 420px;
+    gap: 96px;
+  }
+  .exp-card__org    { font-size: 11px; }
+  .exp-card__role   { font-size: 19px; }
+  .exp-card__bullets li { font-size: 16px; }
+  .edu-block__degree { font-size: 22px; }
+  .edu-block__uni    { font-size: 17px; }
+  .edu-block__tag    { font-size: 11px; padding: 7px 16px; }
+  .achievement-banner__text { font-size: 20px; }
+  .footer__left,
+  .footer__right { font-size: 13px; }
+  /* Fixed UI panels scale up */
+  .lock-btn    { font-size: 11px; padding: 14px 22px; }
+  .settings-btn { width: 52px; height: 52px; font-size: 18px; }
+}
+
+
+/* ── LANDSCAPE PHONE — special handling ────────────────────
+   iPhones and Android phones rotated to landscape.
+   These have narrow height but wide width — content must
+   not clip behind the side notch (safe area handles this).
+──────────────────────────────────────────────────────────── */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --nav-height: 48px;
+  }
+  .hero {
+    padding: 28px 0 20px;
+  }
+  .hero__name {
+    font-size: clamp(28px, 6vw, 52px) !important;
+  }
+  .hero__title em {
+    font-size: clamp(18px, 4vw, 32px) !important;
+  }
+  .hero__desc {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .stats {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 16px 0;
+  }
+  .about-hero {
+    padding: 24px 0 16px;
+  }
+  .section-divider {
+    margin: 28px 0 16px;
+  }
+  /* Format bar — more compact in landscape */
+  .format-bar__row {
+    padding: 4px 8px;
+  }
+  .format-bar__btn {
+    height: 24px;
+  }
+}
+
+
+/* ── PRINT STYLES ──────────────────────────────────────────
+   When printing or saving as PDF, strip decorative elements
+   and ensure text is black on white.
+──────────────────────────────────────────────────────────── */
+@media print {
+  .nav,
+  .footer__pulse,
+  .circuit-canvas,
+  .edit-toolbar,
+  .lock-btn,
+  .settings-btn,
+  .settings-panel,
+  .format-bar,
+  .lock-overlay,
+  .page-frame::before,
+  .page-frame::after { display: none !important; }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .nav-card,
+  .stats__item,
+  .exp-card,
+  .edu-block,
+  .project-highlight,
+  .skill-card {
+    background: #ffffff !important;
+    border: 1px solid #cccccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  a { color: #000000 !important; text-decoration: none !important; }
+  .hero__title,
+  .hero__name,
+  .section__title { color: #000000 !important; }
+  .hero__title em,
+  .section-label,
+  .nav-card__tag,
+  .exp-card__org,
+  .hero__label { color: #333333 !important; }
+}
+
