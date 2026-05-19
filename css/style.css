@@ -382,15 +382,15 @@ button {
 
 .stats__item {
   padding: 22px 24px;
-  background: rgba(16, 26, 52, 0.97);
-  border: 1px solid rgba(240, 165, 0, 0.20);
+  background: rgba(20, 32, 66, 0.98);
+  border: 1px solid rgba(240, 165, 0, 0.28);
   border-radius: 14px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   transition: border-color 0.22s, background 0.22s, transform 0.22s, box-shadow 0.22s;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.60), 0 0 0 1px rgba(0,0,0,0.35);
 }
 /* Amber hairline across the top of each stat card */
 .stats__item::before {
@@ -448,8 +448,8 @@ button {
 
 .nav-card {
   padding: 30px 28px 26px;
-  background: rgba(16, 26, 52, 0.97);
-  border: 1px solid rgba(240, 165, 0, 0.18);
+  background: rgba(20, 32, 66, 0.98);
+  border: 1px solid rgba(240, 165, 0, 0.26);
   border-radius: 18px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -459,9 +459,9 @@ button {
   text-decoration: none;
   display: block;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.05),
-    0 4px 24px rgba(0,0,0,0.55),
-    0 0 0 1px rgba(0,0,0,0.3);
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 4px 24px rgba(0,0,0,0.60),
+    0 0 0 1px rgba(0,0,0,0.35);
 }
 
 /* Ambient radial glow in bottom-left — appears on hover */
@@ -1914,15 +1914,15 @@ button.card--add {
   left: 16px;
   z-index: 209;
   width: 260px;
-  background: rgba(14,20,44,0.99);
-  border: 1px solid rgba(240,165,0,0.28);
+  background: rgba(18, 28, 62, 0.99);
+  border: 1px solid rgba(240,165,0,0.35);
   border-radius: 16px;
   padding: 20px 18px 18px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.05),
-    0 12px 40px rgba(0,0,0,0.55);
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 12px 40px rgba(0,0,0,0.65);
   opacity: 0;
   pointer-events: none;
   transform: translateY(-8px);
@@ -2078,24 +2078,24 @@ button.card--add {
 
 /* LIGHT theme — default */
 body.contrast-light {
-  --navy:           #c8cdd8;   /* 4 levels down from white — proper slate grey */
-  --navy-light:     #b4bac8;   /* darker shade for hover */
+  --navy:           #adb6c8;   /* medium slate — noticeably darker than white cards */
+  --navy-light:     #9aa4b8;   /* deeper shade for hover/active */
   --text-primary:   #0e1420;   /* deep ink — near black */
   --text-secondary: #2a3248;   /* dark navy-blue — body copy */
   --text-muted:     #4a556e;   /* medium slate — labels, meta */
   --amber:          #0d6e6e;   /* teal — stands out sharply on slate */
-  --border-faint:   rgba(14,20,32,0.14);
-  background-color: #c8cdd8;
+  --border-faint:   rgba(14,20,32,0.16);
+  background-color: #adb6c8;   /* clearly distinct from white cards */
   color: #0e1420;
 }
 
 /* Grid lines on light theme — dark navy lines on slate */
 body.contrast-light {
   background-image:
-    radial-gradient(ellipse 70vw 55vh at 8% 5%,  rgba(14,20,32,0.07) 0%, transparent 65%),
-    radial-gradient(ellipse 50vw 40vh at 92% 90%, rgba(14,20,32,0.04) 0%, transparent 60%),
-    linear-gradient(rgba(14,20,32,0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(14,20,32,0.12) 1px, transparent 1px) !important;
+    radial-gradient(ellipse 70vw 55vh at 8% 5%,  rgba(14,20,32,0.09) 0%, transparent 65%),
+    radial-gradient(ellipse 50vw 40vh at 92% 90%, rgba(14,20,32,0.06) 0%, transparent 60%),
+    linear-gradient(rgba(14,20,32,0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14,20,32,0.14) 1px, transparent 1px) !important;
   background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px !important;
 }
 
@@ -2110,25 +2110,25 @@ body.contrast-light .cert-card,
 body.contrast-light .achievement-banner,
 body.contrast-light .project-card,
 body.contrast-light .edu-block {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(14, 20, 32, 0.16) !important;
-  box-shadow: 0 4px 20px rgba(14,20,32,0.10), 0 1px 0 rgba(14,20,32,0.08) !important;
+  background: rgba(255, 255, 255, 1.0) !important;
+  border-color: rgba(14, 20, 32, 0.14) !important;
+  box-shadow: 0 4px 24px rgba(14,20,32,0.18), 0 1px 0 rgba(14,20,32,0.10) !important;
 }
 body.contrast-light .nav-card:hover,
 body.contrast-light .skill-card:hover,
 body.contrast-light .stats__item:hover {
   border-color: #0d6e6e !important;
-  box-shadow: 0 8px 28px rgba(14,20,32,0.15) !important;
+  box-shadow: 0 8px 32px rgba(14,20,32,0.22) !important;
 }
 
 /* Nav + footer */
 body.contrast-light .nav {
-  background-color: rgba(200, 205, 216, 0.97) !important;
-  border-bottom: 1px solid rgba(14,20,32,0.14) !important;
+  background-color: rgba(228, 233, 243, 0.98) !important;
+  border-bottom: 1px solid rgba(14,20,32,0.16) !important;
 }
 body.contrast-light .footer {
-  background: rgba(180, 186, 200, 0.98) !important;
-  border-top: 1px solid rgba(14,20,32,0.12) !important;
+  background: rgba(154, 164, 184, 0.98) !important;
+  border-top: 1px solid rgba(14,20,32,0.16) !important;
 }
 
 /* All text elements — comprehensive coverage */
@@ -2266,13 +2266,15 @@ body.contrast-light .stats__number { color: #0d6e6e !important; }
 /* Owner / settings controls on light */
 body.contrast-light .lock-btn,
 body.contrast-light .settings-btn {
-  background: rgba(255,255,255,0.92) !important;
-  border-color: rgba(13,110,110,0.35) !important;
+  background: rgba(240, 244, 252, 0.97) !important;
+  border-color: rgba(13,110,110,0.45) !important;
   color: #0d6e6e !important;
+  box-shadow: 0 2px 12px rgba(14,20,32,0.20) !important;
 }
 body.contrast-light .settings-panel {
-  background: rgba(255,255,255,0.97) !important;
-  border-color: rgba(14,20,32,0.15) !important;
+  background: rgba(237, 241, 250, 0.99) !important;   /* distinct cool off-white — not pure white */
+  border-color: rgba(14,20,32,0.18) !important;
+  box-shadow: 0 8px 32px rgba(14,20,32,0.18), inset 0 1px 0 rgba(255,255,255,0.9) !important;
 }
 body.contrast-light .settings-panel__title { color: #0d6e6e !important; }
 body.contrast-light .settings-group__label,
@@ -2289,8 +2291,9 @@ body.contrast-light .fontsize-btn.active {
   border-color: #0d6e6e !important;
 }
 body.contrast-light .edit-toolbar {
-  background: rgba(255,255,255,0.97) !important;
-  border-color: rgba(14,20,32,0.15) !important;
+  background: rgba(237, 241, 250, 0.99) !important;   /* cool off-white — matches settings panel */
+  border-color: rgba(14,20,32,0.16) !important;
+  box-shadow: 0 4px 20px rgba(14,20,32,0.16) !important;
 }
 body.contrast-light .edit-toolbar__label,
 body.contrast-light .edit-toolbar__btn { color: #2a3248 !important; }
@@ -2311,6 +2314,98 @@ body.contrast-dark {
     linear-gradient(90deg, rgba(240,165,0,0.13) 1px, transparent 1px);
   background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
 }
+
+/* ── DARK MODE — improved card & panel contrast ─────────────
+   Cards are lifted to a visibly lighter navy-indigo so they
+   clearly float off the deep #0d1526 background.
+   Amber borders bumped to 0.30 opacity for clear definition.
+──────────────────────────────────────────────────────────── */
+body.contrast-dark .nav-card,
+body.contrast-dark .stats__item,
+body.contrast-dark .exp-card,
+body.contrast-dark .edu-block,
+body.contrast-dark .project-highlight,
+body.contrast-dark .skill-card,
+body.contrast-dark .cert-card,
+body.contrast-dark .achievement-banner,
+body.contrast-dark .project-card {
+  background: rgba(24, 38, 78, 0.98) !important;
+  border-color: rgba(240, 165, 0, 0.30) !important;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.60), 0 0 0 1px rgba(0,0,0,0.35) !important;
+}
+body.contrast-dark .nav-card:hover,
+body.contrast-dark .stats__item:hover,
+body.contrast-dark .skill-card:hover {
+  background: rgba(28, 44, 88, 0.98) !important;
+  border-color: rgba(240, 165, 0, 0.60) !important;
+  box-shadow: 0 10px 36px rgba(0,0,0,0.45), 0 0 0 1px rgba(240,165,0,0.12) !important;
+}
+body.contrast-dark .settings-panel {
+  background: rgba(18, 28, 62, 0.99) !important;
+  border-color: rgba(240,165,0,0.35) !important;
+}
+body.contrast-dark .nav {
+  background-color: rgba(16, 26, 52, 0.97) !important;
+  border-bottom: 0.5px solid rgba(240,165,0,0.28) !important;
+}
+
+/* ── LIGHT MODE — format bar (Word toolbar) is pure white ───
+   All other panels use off-white #edf1fa to stay distinct.
+   The format bar matches the card surface for doc-editing feel.
+──────────────────────────────────────────────────────────── */
+body.contrast-light .format-bar {
+  background: rgba(255, 255, 255, 0.99) !important;
+  border-color: rgba(14,20,32,0.15) !important;
+  box-shadow: 0 8px 32px rgba(14,20,32,0.18), 0 0 0 1px rgba(14,20,32,0.06) !important;
+}
+body.contrast-light .format-bar::after {
+  border-top-color: rgba(14,20,32,0.15) !important;
+}
+body.contrast-light .format-bar__row + .format-bar__row {
+  border-top-color: rgba(14,20,32,0.10) !important;
+}
+body.contrast-light .format-bar__divider {
+  background: rgba(14,20,32,0.14) !important;
+}
+body.contrast-light .format-bar__btn {
+  color: #2a3248 !important;
+}
+body.contrast-light .format-bar__btn:hover {
+  background: rgba(13,110,110,0.10) !important;
+  color: #0d6e6e !important;
+  border-color: rgba(13,110,110,0.28) !important;
+}
+body.contrast-light .format-bar__btn.active {
+  background: rgba(13,110,110,0.15) !important;
+  color: #0d6e6e !important;
+  border-color: rgba(13,110,110,0.38) !important;
+}
+body.contrast-light .format-bar__btn--clear { color: #dc2626 !important; }
+body.contrast-light .format-bar__btn--clear:hover {
+  background: rgba(220,38,38,0.10) !important;
+  border-color: rgba(220,38,38,0.30) !important;
+}
+body.contrast-light .format-bar__font-select,
+body.contrast-light .format-bar__heading-select,
+body.contrast-light .format-bar__size-input {
+  background: #f4f6fb !important;
+  border-color: rgba(14,20,32,0.18) !important;
+  color: #2a3248 !important;
+}
+body.contrast-light .format-bar__font-select option,
+body.contrast-light .format-bar__heading-select option {
+  background: #ffffff !important;
+  color: #0e1420 !important;
+}
+body.contrast-light .format-bar__size-step {
+  background: rgba(14,20,32,0.06) !important;
+  color: #4a556e !important;
+}
+body.contrast-light .format-bar__size-step:hover {
+  background: rgba(13,110,110,0.12) !important;
+  color: #0d6e6e !important;
+}
+body.contrast-light .format-bar__color-letter { color: #0e1420 !important; }
 
 /* ── FONT SIZE THEMES ── */
 /* Use !important to override all the hardcoded font-sizes in component CSS */
