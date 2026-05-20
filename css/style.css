@@ -1689,7 +1689,7 @@ body.contrast-light .lock-modal__cancel:hover {
 ═══════════════════════════════════════════════════════════ */
 
 .format-bar {
-  position: absolute;
+  position: fixed;
   z-index: 500;
   display: flex;
   flex-direction: column;
@@ -1712,7 +1712,7 @@ body.contrast-light .lock-modal__cancel:hover {
 .format-bar.visible {
   opacity: 1; pointer-events: all; transform: translateY(0);
 }
-/* Arrow pointing down to selection */
+/* Arrow pointing down to selection (hidden when bar is pinned) */
 .format-bar::after {
   content: '';
   position: absolute;
@@ -1721,6 +1721,7 @@ body.contrast-light .lock-modal__cancel:hover {
   border: 6px solid transparent;
   border-top-color: rgba(240,165,0,0.3);
 }
+.format-bar--pinned::after { display: none; }
 
 /* Two rows */
 .format-bar__row {
@@ -1861,6 +1862,41 @@ body.contrast-light .lock-modal__cancel:hover {
 
 /* Line spacing button label */
 .format-bar__btn[data-spacing] { font-size: 10px; }
+
+/* ── Drag handle ────────────────────────────────────────────────────────── */
+.format-bar__handle {
+  display: flex; align-items: center; justify-content: center;
+  height: 14px;
+  cursor: grab;
+  color: rgba(240,165,0,0.35);
+  font-size: 13px; letter-spacing: 2px;
+  user-select: none; -webkit-user-select: none;
+  transition: color 0.14s, background 0.14s;
+  border-radius: 12px 12px 0 0;
+  padding: 0 8px;
+}
+.format-bar__handle:hover {
+  color: rgba(240,165,0,0.75);
+  background: rgba(240,165,0,0.06);
+}
+/* Pinned indicator: subtle amber top-border to show it's locked in place */
+.format-bar--pinned .format-bar__handle {
+  color: rgba(240,165,0,0.55);
+}
+.format-bar--pinned .format-bar__handle::after {
+  content: ' \2022'; /* dot — visual hint that position is saved */
+  font-size: 8px; vertical-align: middle;
+  color: rgba(240,165,0,0.45);
+}
+/* While dragging */
+.format-bar--dragging {
+  opacity: 0.92;
+  box-shadow:
+    0 16px 48px rgba(0,0,0,0.75),
+    0 0 0 1px rgba(240,165,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.format-bar--dragging .format-bar__handle { cursor: grabbing; }
 
 /* ═══════════════════════════════════════════════════════════
    NEW CARD (dynamically added) — delete button
