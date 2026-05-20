@@ -355,10 +355,63 @@
   }
 
   function loadSavedChanges() {
+    // 1. Restore text edits (data-edit-id fields)
     getEditables().forEach(function(el) {
       var id = el.getAttribute('data-edit-id');
       if (id) { var s = localStorage.getItem(storageKey(id)); if (s !== null) el.innerHTML = s; }
     });
+
+    // 2. Restore dynamically added cards (exp, nav, media, skill, cert)
+    //    These were saved by saveChanges() → __dynamic__ key but never reloaded.
+    try {
+      var dynJSON = localStorage.getItem(storageKey('__dynamic__'));
+      if (!dynJSON) return;
+      var dynCards = JSON.parse(dynJSON);
+      if (!Array.isArray(dynCards) || !dynCards.length) return;
+
+      dynCards.forEach(function(html) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        var card = tmp.firstElementChild;
+        if (!card) return;
+
+        // Find the right sibling to insert before based on card class
+        var anchor = null;
+        if (card.classList.contains('exp-card') && !card.classList.contains('exp-card--add')) {
+          anchor = document.querySelector('.exp-card--add');
+          // prefer exp-grid--bottom for proper layout
+          if (!anchor) anchor = document.querySelector('.exp-grid--bottom .exp-card--add');
+        } else if (card.classList.contains('nav-card')) {
+          anchor = document.querySelector('.card--add');
+        } else if (card.classList.contains('media-card')) {
+          anchor = document.getElementById('btn-add-media');
+        } else if (card.classList.contains('skill-card')) {
+          anchor = document.querySelector('.skill-add-card');
+        } else if (card.classList.contains('cert-card')) {
+          anchor = document.querySelector('.cert-add-card');
+        } else if (card.classList.contains('project-card')) {
+          anchor = document.querySelector('.project-add-card');
+        }
+
+        if (anchor && anchor.parentNode) {
+          anchor.parentNode.insertBefore(card, anchor);
+        }
+      });
+
+      // Notify page-level scripts that dynamic cards have been reinjected
+      // (e.g. media.html re-wires click handlers; projects.html re-wires doc viewers)
+      setTimeout(function() {
+        document.dispatchEvent(new CustomEvent('dynamicCardsRestored'));
+        // Re-wire add cards in case newly inserted cards have add-card children
+        wireAddCards();
+        if (document.body.classList.contains('owner-unlocked')) {
+          injectAllDeleteBtns();
+          setTimeout(injectUploadTriggers, 60);
+        }
+      }, 80);
+    } catch(e) {
+      // Silent — malformed JSON or missing elements are non-fatal
+    }
   }
 
   btnSave.addEventListener('click', saveChanges);

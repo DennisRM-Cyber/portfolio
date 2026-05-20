@@ -9,7 +9,7 @@
   <style>
 
     /* ═══════════════════════════════════════════════
-       MEDIA PAGE
+       MEDIA PAGE — LOCAL STYLES
     ═══════════════════════════════════════════════ */
 
     .media-hero { padding: 56px 0 36px; }
@@ -35,6 +35,7 @@
       background: rgba(16,26,52,0.85);
       color: var(--text-muted); cursor: pointer;
       transition: all 0.18s; backdrop-filter: blur(10px);
+      min-height: 40px;
     }
     .filter-btn:hover { border-color: var(--amber); color: var(--amber); }
     .filter-btn.active {
@@ -50,7 +51,162 @@
     @media (max-width: 900px) { .media-grid { columns: 2; } }
     @media (max-width: 520px) { .media-grid { columns: 1; } }
 
-    /* ── MEDIA CARD ────────────────────────────── */
+    /* ════════════════════════════════════════════
+       COLLECTION CARD  (Photography / Design)
+       One card per category — holds many images.
+    ════════════════════════════════════════════ */
+    .collection-card {
+      break-inside: avoid;
+      margin-bottom: 16px;
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.18);
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+      display: block;
+    }
+    .collection-card:hover {
+      border-color: rgba(240,165,0,0.45);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+    }
+    .collection-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; opacity: 0; transition: opacity 0.22s;
+    }
+    .collection-card:hover::before { opacity: 1; }
+    .collection-card[data-type="photo"]::before  { background: linear-gradient(90deg,transparent,rgba(96,165,250,0.7),transparent); }
+    .collection-card[data-type="design"]::before { background: linear-gradient(90deg,transparent,rgba(74,222,128,0.7),transparent); }
+
+    /* ── PREVIEW AREA (with slideshow) ──────────── */
+    .collection-card__preview {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      background: rgba(8,14,30,0.95);
+    }
+    .collection-card__slides {
+      position: absolute; inset: 0;
+    }
+    .collection-slide {
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity 0.9s ease-in-out;
+    }
+    .collection-slide.active { opacity: 1; }
+    .collection-slide img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform 6s ease;
+    }
+    .collection-slide.active img {
+      transform: scale(1.04); /* subtle Ken Burns */
+    }
+
+    /* Empty state — shown when no images yet */
+    .collection-card__empty {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px;
+      background-image:
+        linear-gradient(rgba(240,165,0,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240,165,0,0.04) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .collection-card__empty-icon { font-size: 32px; opacity: 0.25; }
+    .collection-card__empty-label {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.18em; color: rgba(240,165,0,0.3);
+    }
+
+    /* Badges */
+    .collection-card__count {
+      position: absolute; bottom: 10px; left: 10px; z-index: 3;
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.10em; padding: 3px 9px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.75); color: #fff;
+    }
+    .type--photo  { background: rgba(96,165,250,0.85); color: #fff; }
+    .type--design { background: rgba(74,222,128,0.85); color: #0d1526; }
+
+    /* Hover overlay — shows VIEW ALL button */
+    .collection-card__hover-overlay {
+      position: absolute; inset: 0; z-index: 4;
+      background: rgba(5,9,22,0.52);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.22s;
+    }
+    .collection-card:hover .collection-card__hover-overlay { opacity: 1; }
+    .collection-card__view-btn {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.18em; padding: 10px 28px;
+      border-radius: 30px;
+      border: 1.5px solid rgba(240,165,0,0.85);
+      background: rgba(240,165,0,0.12);
+      color: var(--amber); cursor: pointer;
+      transition: background 0.18s, transform 0.18s;
+    }
+    .collection-card__view-btn:hover {
+      background: var(--amber); color: var(--navy);
+      transform: scale(1.04);
+    }
+
+    /* ── CARD BODY ─────────────────────────────── */
+    .collection-card .media-card__body {
+      padding: 14px 16px 16px;
+    }
+    .collection-card .media-card__title {
+      font-family: var(--font-heading);
+      font-size: 14px; font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.3; margin-bottom: 6px;
+      transition: color 0.18s;
+    }
+    .collection-card:hover .media-card__title { color: var(--amber); }
+    .collection-card .media-card__desc {
+      font-size: 12px; color: var(--text-secondary);
+      line-height: 1.6; margin-bottom: 10px;
+    }
+    .collection-card .media-card__footer {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 6px;
+    }
+    .collection-card .media-card__tags { display: flex; gap: 5px; flex-wrap: wrap; }
+    .collection-card .media-card__tag {
+      font-family: var(--font-mono); font-size: 7px;
+      letter-spacing: 0.1em; padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(240,165,0,0.07);
+      border: 1px solid rgba(240,165,0,0.15);
+      color: var(--amber);
+    }
+
+    /* Add to collection button (owner only, inside card footer) */
+    .collection-add-btn {
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.12em;
+      background: transparent; border: 1px solid rgba(240,165,0,0.28);
+      border-radius: 20px; padding: 4px 12px;
+      color: var(--amber); cursor: pointer;
+      transition: background 0.18s, border-color 0.18s;
+    }
+    .collection-add-btn:hover {
+      background: rgba(240,165,0,0.1);
+      border-color: var(--amber);
+    }
+    /* Override the global owner-only flex to inline-flex for this button */
+    body.owner-unlocked .collection-add-btn.owner-only {
+      display: inline-flex !important;
+      align-items: center;
+    }
+
+    /* ── EXISTING INDIVIDUAL MEDIA CARD ────────── */
     .media-card {
       break-inside: avoid;
       margin-bottom: 16px;
@@ -69,69 +225,47 @@
       transform: translateY(-3px);
       box-shadow: 0 12px 36px rgba(0,0,0,0.6);
     }
-    /* Category colour accent on top edge */
     .media-card::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0;
-      height: 2px; opacity: 0;
-      transition: opacity 0.22s;
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; opacity: 0; transition: opacity 0.22s;
     }
     .media-card:hover::before { opacity: 1; }
-    .media-card[data-type="video"]::before       { background: linear-gradient(90deg,transparent,rgba(240,165,0,0.7),transparent); }
-    .media-card[data-type="social"]::before      { background: linear-gradient(90deg,transparent,rgba(167,139,250,0.7),transparent); }
-    .media-card[data-type="photo"]::before       { background: linear-gradient(90deg,transparent,rgba(96,165,250,0.7),transparent); }
-    .media-card[data-type="design"]::before      { background: linear-gradient(90deg,transparent,rgba(74,222,128,0.7),transparent); }
+    .media-card[data-type="video"]::before  { background: linear-gradient(90deg,transparent,rgba(240,165,0,0.7),transparent); }
+    .media-card[data-type="social"]::before { background: linear-gradient(90deg,transparent,rgba(167,139,250,0.7),transparent); }
 
-    /* ── THUMBNAIL ─────────────────────────────── */
     .media-card__thumb {
-      width: 100%;
-      position: relative;
-      overflow: hidden;
+      width: 100%; position: relative; overflow: hidden;
       background: rgba(8,14,30,0.95);
     }
-    /* Aspect ratios by content type */
-    .media-card__thumb--16x9  { aspect-ratio: 16/9; }
-    .media-card__thumb--9x16  { aspect-ratio: 9/16; }  /* TikTok/Reels portrait */
-    .media-card__thumb--1x1   { aspect-ratio: 1/1; }   /* Instagram square */
-    .media-card__thumb--4x3   { aspect-ratio: 4/3; }   /* Photo */
-    .media-card__thumb--photo { aspect-ratio: 4/3; }
-
+    .media-card__thumb--16x9 { aspect-ratio: 16/9; }
+    .media-card__thumb--9x16 { aspect-ratio: 9/16; }
+    .media-card__thumb--1x1  { aspect-ratio: 1/1; }
     .media-card__thumb img {
-      width: 100%; height: 100%;
-      object-fit: cover; display: block;
-      transition: transform 0.4s, opacity 0.3s;
-      opacity: 0.88;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.4s, opacity 0.3s; opacity: 0.88;
     }
-    .media-card:hover .media-card__thumb img {
-      transform: scale(1.04); opacity: 1;
-    }
+    .media-card:hover .media-card__thumb img { transform: scale(1.04); opacity: 1; }
 
-    /* Blueprint grid placeholder when no image */
     .media-card__placeholder {
       width: 100%; height: 100%;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 8px;
+      align-items: center; justify-content: center; gap: 8px;
       position: relative;
     }
     .media-card__placeholder::before {
-      content: '';
-      position: absolute; inset: 0;
+      content: ''; position: absolute; inset: 0;
       background-image:
         linear-gradient(rgba(240,165,0,0.05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(240,165,0,0.05) 1px, transparent 1px);
       background-size: 20px 20px;
     }
-    .media-card__placeholder-icon {
-      font-size: 28px; opacity: 0.25; position: relative; z-index: 1;
-    }
+    .media-card__placeholder-icon  { font-size: 28px; opacity: 0.25; position: relative; z-index: 1; }
     .media-card__placeholder-label {
       font-family: var(--font-mono); font-size: 8px;
       letter-spacing: 0.16em; color: rgba(240,165,0,0.3);
       position: relative; z-index: 1;
     }
 
-    /* Play button overlay — only on video/social */
     .media-card__play {
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
@@ -152,7 +286,6 @@
       color: var(--navy); transform: scale(1.1);
     }
 
-    /* Platform badge (TikTok / Instagram / YouTube) */
     .media-card__platform {
       position: absolute; top: 10px; left: 10px;
       font-family: var(--font-mono); font-size: 8px;
@@ -160,102 +293,292 @@
       border-radius: 20px; font-weight: 700;
       backdrop-filter: blur(8px); z-index: 2;
     }
-    .platform--tiktok   { background: rgba(0,0,0,0.65); color: #fff; }
-    .platform--instagram{ background: rgba(131,58,180,0.75); color: #fff; }
-    .platform--youtube  { background: rgba(255,0,0,0.72); color: #fff; }
-    .platform--local    { background: rgba(240,165,0,0.75); color: #0d1526; }
-    .platform--behance  { background: rgba(23,105,255,0.75); color: #fff; }
+    .platform--tiktok    { background: rgba(0,0,0,0.65); color: #fff; }
+    .platform--instagram { background: rgba(131,58,180,0.75); color: #fff; }
+    .platform--youtube   { background: rgba(255,0,0,0.72); color: #fff; }
+    .platform--local     { background: rgba(240,165,0,0.75); color: #0d1526; }
 
-    /* Duration badge */
     .media-card__duration {
       position: absolute; bottom: 10px; right: 10px;
       font-family: var(--font-mono); font-size: 9px;
       letter-spacing: 0.08em; padding: 2px 7px;
-      border-radius: 4px;
-      background: rgba(0,0,0,0.75); color: #fff;
-      z-index: 2;
+      border-radius: 4px; background: rgba(0,0,0,0.75); color: #fff; z-index: 2;
     }
-
-    /* Type badge (top-right) */
     .media-card__type {
       position: absolute; top: 10px; right: 10px;
       font-family: var(--font-mono); font-size: 8px;
-      letter-spacing: 0.12em; padding: 3px 8px;
-      border-radius: 6px; z-index: 2;
+      letter-spacing: 0.12em; padding: 3px 8px; border-radius: 6px; z-index: 2;
     }
     .type--video  { background: rgba(240,165,0,0.85); color: #0d1526; }
     .type--social { background: rgba(167,139,250,0.85); color: #fff; }
-    .type--photo  { background: rgba(96,165,250,0.85); color: #fff; }
-    .type--design { background: rgba(74,222,128,0.85); color: #0d1526; }
 
-    /* ── CARD BODY ─────────────────────────────── */
-    .media-card__body {
-      padding: 14px 16px 16px;
-    }
+    .media-card__body { padding: 14px 16px 16px; }
     .media-card__title {
       font-family: var(--font-heading);
-      font-size: 14px; font-weight: 800;
-      color: var(--text-primary);
-      line-height: 1.3; margin-bottom: 6px;
-      transition: color 0.18s;
+      font-size: 14px; font-weight: 800; color: var(--text-primary);
+      line-height: 1.3; margin-bottom: 6px; transition: color 0.18s;
     }
     .media-card:hover .media-card__title { color: var(--amber); }
-    .media-card__desc {
-      font-size: 12px; color: var(--text-secondary);
-      line-height: 1.6; margin-bottom: 10px;
-    }
+    .media-card__desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
     .media-card__footer {
       display: flex; align-items: center;
       justify-content: space-between; flex-wrap: wrap; gap: 6px;
     }
     .media-card__tags { display: flex; gap: 5px; flex-wrap: wrap; }
     .media-card__tag {
-      font-family: var(--font-mono); font-size: 7px;
-      letter-spacing: 0.1em; padding: 2px 7px;
-      border-radius: 4px;
-      background: rgba(240,165,0,0.07);
-      border: 1px solid rgba(240,165,0,0.15);
-      color: var(--amber);
+      font-family: var(--font-mono); font-size: 7px; letter-spacing: 0.1em;
+      padding: 2px 7px; border-radius: 4px;
+      background: rgba(240,165,0,0.07); border: 1px solid rgba(240,165,0,0.15); color: var(--amber);
     }
     .media-card__link {
-      font-family: var(--font-mono); font-size: 8px;
-      letter-spacing: 0.12em; color: var(--amber);
-      opacity: 0.6; transition: opacity 0.18s;
-      white-space: nowrap;
+      font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.12em;
+      color: var(--amber); opacity: 0.6; transition: opacity 0.18s; white-space: nowrap;
+      background: none; border: none; cursor: pointer; padding: 0;
     }
     .media-card:hover .media-card__link { opacity: 1; }
 
-    /* ── ADD MEDIA CARD ────────────────────────── */
+    /* ── ADD MEDIA (video/social only) ─────────── */
     .media-add-card {
-      break-inside: avoid;
-      margin-bottom: 16px;
+      break-inside: avoid; margin-bottom: 16px;
       background: transparent;
       border: 1.5px dashed rgba(240,165,0,0.22);
-      border-radius: 14px;
-      aspect-ratio: 4/3;
-      display: flex; flex-direction: column;
+      border-radius: 14px; aspect-ratio: 4/3;
       align-items: center; justify-content: center;
-      gap: 10px; cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
+      flex-direction: column; gap: 10px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
       font-family: inherit; width: 100%;
     }
-    .media-add-card:hover {
-      border-color: var(--amber);
-      background: rgba(240,165,0,0.04);
-    }
-    .media-add-card__icon {
-      font-size: 24px; color: rgba(240,165,0,0.3);
-      transition: color 0.2s;
-    }
+    /* Correct display override for flex container */
+    body.owner-unlocked .media-add-card.owner-only { display: flex !important; }
+    .media-add-card:hover { border-color: var(--amber); background: rgba(240,165,0,0.04); }
+    .media-add-card__icon { font-size: 24px; color: rgba(240,165,0,0.3); transition: color 0.2s; }
     .media-add-card:hover .media-add-card__icon { color: var(--amber); }
     .media-add-card__label {
       font-family: var(--font-mono); font-size: 9px;
-      letter-spacing: 0.18em; color: var(--text-muted);
-      transition: color 0.2s;
+      letter-spacing: 0.18em; color: var(--text-muted); transition: color 0.2s;
     }
     .media-add-card:hover .media-add-card__label { color: var(--amber); }
 
-    /* ── VIDEO / LIGHTBOX OVERLAY ──────────────── */
+    /* ── FOLLOW BUTTON ─────────────────────────── */
+    .follow-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.14em; font-weight: 700;
+      padding: 5px 12px; border-radius: 20px;
+      border: 1px solid rgba(240,165,0,0.35);
+      background: rgba(240,165,0,0.08);
+      color: var(--amber); cursor: pointer;
+      text-decoration: none; transition: all 0.18s; white-space: nowrap;
+    }
+    .follow-btn:hover { background: var(--amber); color: var(--navy); border-color: var(--amber); }
+
+    /* ════════════════════════════════════════════
+       GALLERY OVERLAY
+       Full-page overlay with grid + fullscreen views.
+    ════════════════════════════════════════════ */
+    .media-gallery {
+      position: fixed; inset: 0; z-index: 800;
+      background: rgba(3,6,14,0.98);
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .media-gallery.open { opacity: 1; pointer-events: all; }
+
+    /* Header */
+    .media-gallery__header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: rgba(14,20,44,0.99);
+      border-bottom: 1px solid rgba(240,165,0,0.15);
+      flex-shrink: 0; gap: 12px; flex-wrap: wrap;
+      /* Safe area for notch */
+      padding-left: max(24px, calc(20px + env(safe-area-inset-left)));
+      padding-right: max(24px, calc(20px + env(safe-area-inset-right)));
+    }
+    .media-gallery__header-left {
+      display: flex; align-items: baseline; gap: 10px; flex: 1; min-width: 0;
+    }
+    .media-gallery__label {
+      font-family: var(--font-mono); font-size: 9px;
+      color: var(--amber); letter-spacing: 0.2em; opacity: 0.75; flex-shrink: 0;
+    }
+    .media-gallery__title {
+      font-family: var(--font-heading); font-size: 15px; font-weight: 800;
+      color: var(--text-primary); white-space: nowrap;
+    }
+    .media-gallery__count {
+      font-family: var(--font-mono); font-size: 9px;
+      color: var(--text-muted); letter-spacing: 0.1em; flex-shrink: 0;
+    }
+    .media-gallery__header-right {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .media-gallery__add-btn {
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
+      padding: 7px 16px; border-radius: 20px;
+      border: 1px solid rgba(240,165,0,0.38);
+      background: rgba(240,165,0,0.08); color: var(--amber);
+      cursor: pointer; transition: background 0.18s;
+      min-height: 36px;
+    }
+    .media-gallery__add-btn:hover { background: rgba(240,165,0,0.18); border-color: var(--amber); }
+    .media-gallery__close {
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
+      padding: 7px 16px; border-radius: 8px;
+      border: 1px solid rgba(248,113,113,0.35);
+      background: transparent; color: #f87171;
+      cursor: pointer; transition: all 0.15s;
+      min-height: 36px;
+    }
+    .media-gallery__close:hover { background: rgba(248,113,113,0.12); border-color: #f87171; }
+
+    /* Grid view */
+    .media-gallery__grid {
+      flex: 1; overflow-y: auto; padding: 20px 24px 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px; align-content: start;
+    }
+    @media (max-width: 600px) {
+      .media-gallery__grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 14px 14px 60px; }
+    }
+    @media (max-width: 380px) {
+      .media-gallery__grid { grid-template-columns: 1fr; }
+    }
+
+    /* Gallery item */
+    .media-gallery__item {
+      background: rgba(16,26,52,0.97);
+      border: 1px solid rgba(240,165,0,0.12);
+      border-radius: 12px; overflow: hidden;
+      transition: border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+    }
+    .media-gallery__item:hover {
+      border-color: rgba(240,165,0,0.40);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    }
+    .media-gallery__item-img-wrap {
+      position: relative; aspect-ratio: 4/3; overflow: hidden;
+      background: rgba(8,14,30,0.95); cursor: pointer;
+    }
+    .media-gallery__item-img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.4s;
+    }
+    .media-gallery__item:hover .media-gallery__item-img { transform: scale(1.05); }
+
+    /* Delete button on item */
+    .media-gallery__item-delete {
+      position: absolute; top: 7px; right: 7px;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(248,113,113,0.88); color: #fff;
+      border: none; cursor: pointer; font-size: 11px;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.18s; z-index: 5;
+    }
+    .media-gallery__item-img-wrap:hover .media-gallery__item-delete { opacity: 1; }
+
+    /* Caption */
+    .media-gallery__item-caption {
+      padding: 9px 11px; font-size: 11px;
+      color: var(--text-secondary); line-height: 1.5;
+      min-height: 34px; outline: none;
+      border-top: 1px solid rgba(240,165,0,0.08);
+      transition: border-top-color 0.18s, background 0.18s;
+    }
+    .media-gallery__item-caption[contenteditable="true"] {
+      border-top-color: rgba(240,165,0,0.22);
+    }
+    .media-gallery__item-caption[contenteditable="true"]:focus {
+      border-top-color: rgba(240,165,0,0.5);
+      background: rgba(240,165,0,0.03);
+    }
+    .media-gallery__item-caption:empty::before {
+      content: 'Add a note or description…';
+      color: var(--text-muted); opacity: 0.45; pointer-events: none;
+    }
+    .media-gallery__item-caption-hint {
+      font-family: var(--font-mono); font-size: 7px;
+      letter-spacing: 0.12em; color: var(--amber);
+      opacity: 0.5; padding: 0 11px 6px;
+    }
+
+    /* Empty state inside gallery */
+    .gallery-empty {
+      grid-column: 1 / -1;
+      padding: 64px 24px;
+      text-align: center;
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.14em; color: var(--text-muted); line-height: 1.8;
+    }
+    .gallery-empty__icon { font-size: 32px; display: block; margin-bottom: 12px; opacity: 0.3; }
+
+    /* ── FULLSCREEN VIEW ───────────────────────── */
+    .media-gallery__fullscreen {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative; padding: 60px 80px 24px;
+      overflow: hidden;
+    }
+    @media (max-width: 600px) { .media-gallery__fullscreen { padding: 60px 52px 16px; } }
+
+    .media-gallery__fs-img {
+      max-width: 90vw; max-height: 68vh;
+      object-fit: contain; border-radius: 8px; display: block;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+    }
+    .media-gallery__fs-info {
+      text-align: center; margin-top: 18px;
+      max-width: min(600px, 88vw);
+    }
+    .media-gallery__fs-caption {
+      font-size: 14px; color: var(--text-secondary);
+      line-height: 1.65; margin-bottom: 8px;
+    }
+    .media-gallery__fs-caption[contenteditable="true"] {
+      outline: none;
+      border-bottom: 1px dashed rgba(240,165,0,0.35);
+      padding-bottom: 3px;
+    }
+    .media-gallery__fs-counter {
+      font-family: var(--font-mono); font-size: 9px;
+      color: var(--text-muted); letter-spacing: 0.12em;
+    }
+    /* Nav arrows */
+    .media-gallery__fs-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 48px; height: 48px; border-radius: 50%;
+      border: 1px solid rgba(240,165,0,0.28);
+      background: rgba(16,26,52,0.8);
+      color: var(--amber); font-size: 22px; cursor: pointer;
+      transition: all 0.18s; display: flex; align-items: center; justify-content: center;
+    }
+    .media-gallery__fs-nav:disabled { opacity: 0.25; cursor: default; }
+    .media-gallery__fs-nav:not(:disabled):hover {
+      background: rgba(240,165,0,0.15); border-color: var(--amber);
+    }
+    .media-gallery__fs-prev { left: 16px; }
+    .media-gallery__fs-next { right: 16px; }
+    @media (max-width: 600px) {
+      .media-gallery__fs-prev { left: 6px; }
+      .media-gallery__fs-next { right: 6px; }
+    }
+
+    /* Back to grid */
+    .media-gallery__fs-back {
+      position: absolute; top: 14px; left: 24px;
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em;
+      padding: 7px 14px; border-radius: 8px;
+      border: 1px solid rgba(240,165,0,0.22);
+      background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .media-gallery__fs-back:hover { border-color: var(--amber); color: var(--amber); }
+
+    /* ── VIDEO LIGHTBOX OVERLAY ─────────────────── */
     .media-overlay {
       position: fixed; inset: 0; z-index: 700;
       background: rgba(3,6,14,0.96);
@@ -263,8 +586,7 @@
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 16px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.22s;
+      opacity: 0; pointer-events: none; transition: opacity 0.22s;
     }
     .media-overlay.open { opacity: 1; pointer-events: all; }
 
@@ -291,13 +613,7 @@
       cursor: pointer; transition: all 0.15s;
     }
     .media-overlay__close:hover { background: rgba(248,113,113,0.12); border-color: #f87171; }
-
-    .media-overlay__inner {
-      width: min(960px, 92vw);
-      margin-top: 56px;
-    }
-
-    /* Video container */
+    .media-overlay__inner { width: min(960px, 92vw); margin-top: 56px; }
     .media-overlay__video-wrap {
       position: relative; padding-bottom: 56.25%;
       border-radius: 12px; overflow: hidden;
@@ -305,31 +621,16 @@
       box-shadow: 0 24px 80px rgba(0,0,0,0.7);
     }
     .media-overlay__video-wrap.portrait {
-      padding-bottom: 0;
-      width: min(360px, 80vw);
-      margin: 0 auto;
+      padding-bottom: 0; width: min(360px, 80vw); margin: 0 auto;
     }
     .media-overlay__video-wrap iframe,
     .media-overlay__video-wrap video {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%; border: none;
+      position: absolute; inset: 0; width: 100%; height: 100%; border: none;
     }
     .media-overlay__video-wrap.portrait iframe,
     .media-overlay__video-wrap.portrait video {
-      position: static; width: 100%;
-      height: min(640px, 80vh);
+      position: static; width: 100%; height: min(640px, 80vh);
     }
-
-    /* Photo lightbox */
-    .media-overlay__photo {
-      max-width: 90vw; max-height: 80vh;
-      border-radius: 12px; display: block;
-      object-fit: contain;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.7);
-      margin-top: 56px;
-    }
-
-    /* Caption below overlay content */
     .media-overlay__caption {
       font-family: var(--font-mono); font-size: 10px;
       letter-spacing: 0.12em; color: var(--text-muted);
@@ -337,51 +638,50 @@
     }
 
     /* ── LIGHT THEME ───────────────────────────── */
+    body.contrast-light .collection-card {
+      background: rgba(255,255,255,1.0) !important;
+      border-color: rgba(14,20,32,0.14) !important;
+      box-shadow: 0 4px 20px rgba(14,20,32,0.12) !important;
+    }
+    body.contrast-light .collection-card:hover { border-color: #0d6e6e !important; }
+    body.contrast-light .collection-card .media-card__title { color: #0e1420 !important; }
+    body.contrast-light .collection-card:hover .media-card__title { color: #0d6e6e !important; }
+    body.contrast-light .collection-card .media-card__desc  { color: #2a3248 !important; }
+    body.contrast-light .collection-card .media-card__tag   { background: rgba(13,110,110,0.08) !important; border-color: rgba(13,110,110,0.2) !important; color: #0d6e6e !important; }
+    body.contrast-light .collection-add-btn { border-color: rgba(13,110,110,0.35) !important; color: #0d6e6e !important; }
     body.contrast-light .media-card {
-      background: rgba(255,255,255,0.92) !important;
+      background: rgba(255,255,255,1.0) !important;
       border-color: rgba(14,20,32,0.14) !important;
       box-shadow: 0 4px 20px rgba(14,20,32,0.10) !important;
     }
-    body.contrast-light .media-card:hover { border-color: #0d6e6e !important; box-shadow: 0 8px 28px rgba(14,20,32,0.15) !important; }
+    body.contrast-light .media-card:hover { border-color: #0d6e6e !important; }
     body.contrast-light .media-card__title { color: #0e1420 !important; }
     body.contrast-light .media-card:hover .media-card__title { color: #0d6e6e !important; }
     body.contrast-light .media-card__desc  { color: #2a3248 !important; }
-    body.contrast-light .media-card__link  { color: #0d6e6e !important; }
     body.contrast-light .media-card__tag   { background: rgba(13,110,110,0.08) !important; border-color: rgba(13,110,110,0.2) !important; color: #0d6e6e !important; }
-    body.contrast-light .media-card__placeholder { background: rgba(200,205,216,0.5); }
-    body.contrast-light .media-card__placeholder-label { color: rgba(14,20,32,0.3) !important; }
-    body.contrast-light .media-add-card { border-color: rgba(13,110,110,0.28) !important; }
-    body.contrast-light .media-add-card:hover { background: rgba(13,110,110,0.04) !important; border-color: #0d6e6e !important; }
-    body.contrast-light .media-add-card__icon  { color: rgba(13,110,110,0.4) !important; }
-    body.contrast-light .media-add-card__label { color: #4a556e !important; }
-    body.contrast-light .media-add-card:hover .media-add-card__icon,
-    body.contrast-light .media-add-card:hover .media-add-card__label { color: #0d6e6e !important; }
     body.contrast-light .filter-btn { background: rgba(255,255,255,0.75) !important; border-color: rgba(14,20,32,0.18) !important; color: #4a556e !important; }
     body.contrast-light .filter-btn.active { background: #0d6e6e !important; border-color: #0d6e6e !important; color: #fff !important; }
     body.contrast-light .filter-btn:hover:not(.active) { border-color: #0d6e6e !important; color: #0d6e6e !important; }
-    /* Stats on light */
     body.contrast-light .stats__number { color: #0d6e6e !important; }
-    body.contrast-light .stats__item   { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
+    body.contrast-light .stats__item   { background: rgba(255,255,255,1.0) !important; border-color: rgba(14,20,32,0.14) !important; }
     body.contrast-light .stats__label  { color: #4a556e !important; }
-    /* Media overlay always dark — intentional for video/photo viewing */
-
-
-    /* ── FOLLOW BUTTON ─────────────────────────── */
-    .follow-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-family: var(--font-mono); font-size: 8px;
-      letter-spacing: 0.14em; font-weight: 700;
-      padding: 5px 12px; border-radius: 20px;
-      border: 1px solid rgba(240,165,0,0.35);
-      background: rgba(240,165,0,0.08);
-      color: var(--amber); cursor: pointer;
-      text-decoration: none;
-      transition: all 0.18s; white-space: nowrap;
+    body.contrast-light .media-gallery {
+      background: rgba(220,226,240,0.99) !important;
     }
-    .follow-btn:hover {
-      background: var(--amber); color: var(--navy);
-      border-color: var(--amber);
+    body.contrast-light .media-gallery__header {
+      background: rgba(228,233,243,0.99) !important;
+      border-bottom-color: rgba(14,20,32,0.14) !important;
     }
+    body.contrast-light .media-gallery__title { color: #0e1420 !important; }
+    body.contrast-light .media-gallery__count { color: #4a556e !important; }
+    body.contrast-light .media-gallery__item {
+      background: rgba(255,255,255,1.0) !important;
+      border-color: rgba(14,20,32,0.12) !important;
+    }
+    body.contrast-light .media-gallery__item:hover { border-color: #0d6e6e !important; }
+    body.contrast-light .media-gallery__item-caption { color: #2a3248 !important; }
+    body.contrast-light .media-gallery__fs-caption { color: #2a3248 !important; }
+    body.contrast-light .media-gallery__fs-counter { color: #4a556e !important; }
     body.contrast-light .follow-btn {
       border-color: rgba(13,110,110,0.35) !important;
       background: rgba(13,110,110,0.07) !important;
@@ -391,6 +691,11 @@
       background: #0d6e6e !important;
       color: #fff !important;
       border-color: #0d6e6e !important;
+    }
+    /* Gallery overlay stays dark even in light mode — intentional for focus */
+    body.contrast-light .media-gallery .media-gallery__grid,
+    body.contrast-light .media-gallery .media-gallery__fullscreen {
+      /* inherits the overlay dark bg */
     }
   </style>
 </head>
@@ -429,22 +734,22 @@
         </p>
       </div>
 
-      <!-- STATS -->
+      <!-- STATS (updated dynamically from collections + card counts) -->
       <div class="media-stats">
         <div class="stats__item fade-in">
-          <div class="stats__number" data-edit-id="m-s1">2</div>
+          <div class="stats__number" id="stat-video" data-edit-id="m-s1">2</div>
           <div class="stats__label">Video edits</div>
         </div>
         <div class="stats__item fade-in">
-          <div class="stats__number" data-edit-id="m-s2">2</div>
+          <div class="stats__number" id="stat-social" data-edit-id="m-s2">2</div>
           <div class="stats__label">Social media</div>
         </div>
         <div class="stats__item fade-in">
-          <div class="stats__number" data-edit-id="m-s3">2</div>
+          <div class="stats__number" id="stat-photo" data-edit-id="m-s3">0</div>
           <div class="stats__label">Photos</div>
         </div>
         <div class="stats__item fade-in">
-          <div class="stats__number" data-edit-id="m-s4">1</div>
+          <div class="stats__number" id="stat-design" data-edit-id="m-s4">0</div>
           <div class="stats__label">Design works</div>
         </div>
       </div>
@@ -461,19 +766,98 @@
       <!-- MASONRY GRID -->
       <div class="media-grid" id="media-grid">
 
-        <!-- ═══ VIDEO EDITS ═══ -->
+        <!-- ═══════════════════════════════
+             PHOTOGRAPHY — COLLECTION CARD
+             One card holds unlimited photos.
+             Click VIEW ALL to browse in gallery.
+        ════════════════════════════════ -->
+        <div class="collection-card fade-in" data-type="photo" data-filter="photo"
+             data-collection-id="photo">
+          <div class="collection-card__preview">
+            <!-- Slideshow injected by JS -->
+            <div class="collection-card__slides" id="slides-photo"></div>
+            <!-- Placeholder shown when collection is empty -->
+            <div class="collection-card__empty" id="empty-photo">
+              <div class="collection-card__empty-icon">📷</div>
+              <div class="collection-card__empty-label">NO PHOTOS YET</div>
+            </div>
+            <!-- Badges -->
+            <span class="media-card__type type--photo">PHOTO</span>
+            <span class="collection-card__count" id="count-photo">0 photos</span>
+            <!-- Hover: open gallery -->
+            <div class="collection-card__hover-overlay">
+              <button class="collection-card__view-btn" data-collection="photo">
+                VIEW ALL →
+              </button>
+            </div>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="photo-col-title">Photography</div>
+            <div class="media-card__desc" data-edit-id="photo-col-desc">
+              Moments captured — events, landscapes, and everyday scenes from Nairobi and beyond.
+            </div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="photo-col-t1">Photography</span>
+                <span class="media-card__tag" data-edit-id="photo-col-t2">Nairobi</span>
+              </div>
+              <!-- Owner-only: add images to this collection -->
+              <button class="collection-add-btn owner-only" data-collection="photo"
+                      title="Add photos to this collection">
+                + ADD PHOTOS
+              </button>
+            </div>
+          </div>
+        </div>
 
-        <!-- Video 1 — featured production (landscape) -->
+        <!-- ═══════════════════════════════
+             GRAPHIC DESIGN — COLLECTION CARD
+        ════════════════════════════════ -->
+        <div class="collection-card fade-in" data-type="design" data-filter="design"
+             data-collection-id="design">
+          <div class="collection-card__preview">
+            <div class="collection-card__slides" id="slides-design"></div>
+            <div class="collection-card__empty" id="empty-design">
+              <div class="collection-card__empty-icon">🎨</div>
+              <div class="collection-card__empty-label">NO DESIGNS YET</div>
+            </div>
+            <span class="media-card__type type--design">DESIGN</span>
+            <span class="collection-card__count" id="count-design">0 designs</span>
+            <div class="collection-card__hover-overlay">
+              <button class="collection-card__view-btn" data-collection="design">
+                VIEW ALL →
+              </button>
+            </div>
+          </div>
+          <div class="media-card__body">
+            <div class="media-card__title" data-edit-id="design-col-title">Graphic Design</div>
+            <div class="media-card__desc" data-edit-id="design-col-desc">
+              Posters, social visuals, infographics and brand work — built in Canva, Photoshop and Illustrator.
+            </div>
+            <div class="media-card__footer">
+              <div class="media-card__tags">
+                <span class="media-card__tag" data-edit-id="design-col-t1">Canva</span>
+                <span class="media-card__tag" data-edit-id="design-col-t2">Design</span>
+              </div>
+              <button class="collection-add-btn owner-only" data-collection="design"
+                      title="Add designs to this collection">
+                + ADD DESIGNS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════
+             VIDEO EDITS — individual cards
+        ════════════════════════════════ -->
+
+        <!-- Video 1 -->
         <div class="media-card fade-in" data-type="video" data-filter="video"
              data-media-type="youtube"
              data-media-src="https://www.youtube.com/embed/YOUR_VIDEO_ID_1"
              data-media-title="Highlight Reel — Video Edit #1"
              data-media-portrait="false">
           <div class="media-card__thumb media-card__thumb--16x9">
-            <!--
-              Replace with thumbnail:
-              <img src="assets/images/video-thumb-1.jpg" alt="Video Edit #1" />
-            -->
             <div class="media-card__placeholder">
               <div class="media-card__placeholder-icon">🎬</div>
               <div class="media-card__placeholder-label">ADD THUMBNAIL</div>
@@ -492,12 +876,11 @@
                 <span class="media-card__tag" data-edit-id="v1-t2">Colour Grade</span>
               </div>
               <a href="https://youtube.com/@YOUR_YOUTUBE" target="_blank" rel="noopener" class="follow-btn">+ SUBSCRIBE</a>
-              <span class="media-card__link">WATCH →</span>
             </div>
           </div>
         </div>
 
-        <!-- Video 2 — short edit -->
+        <!-- Video 2 -->
         <div class="media-card fade-in" data-type="video" data-filter="video"
              data-media-type="local"
              data-media-src="assets/videos/edit-2.mp4"
@@ -521,14 +904,15 @@
                 <span class="media-card__tag" data-edit-id="v2-t1">After Effects</span>
                 <span class="media-card__tag" data-edit-id="v2-t2">Motion</span>
               </div>
-              <span class="media-card__link">WATCH →</span>
             </div>
           </div>
         </div>
 
-        <!-- ═══ SOCIAL MEDIA ═══ -->
+        <!-- ═══════════════════════════════
+             SOCIAL MEDIA — individual cards
+        ════════════════════════════════ -->
 
-        <!-- TikTok / Reels — portrait -->
+        <!-- TikTok / Reel -->
         <div class="media-card fade-in" data-type="social" data-filter="social"
              data-media-type="youtube"
              data-media-src="https://www.youtube.com/embed/YOUR_SHORT_ID_1"
@@ -552,12 +936,11 @@
                 <span class="media-card__tag" data-edit-id="s1-t2">Reels</span>
               </div>
               <a href="https://tiktok.com/@YOUR_TIKTOK" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
-              <span class="media-card__link">WATCH →</span>
             </div>
           </div>
         </div>
 
-        <!-- Instagram square post -->
+        <!-- Instagram post -->
         <div class="media-card fade-in" data-type="social" data-filter="social"
              data-media-type="photo"
              data-media-src="assets/images/social-post-1.jpg"
@@ -579,93 +962,14 @@
                 <span class="media-card__tag" data-edit-id="s2-t2">Content</span>
               </div>
               <a href="https://instagram.com/YOUR_INSTAGRAM" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
-              <span class="media-card__link">VIEW →</span>
             </div>
           </div>
         </div>
 
-        <!-- ═══ PHOTOGRAPHY ═══ -->
-
-        <!-- Photo 1 -->
-        <div class="media-card fade-in" data-type="photo" data-filter="photo"
-             data-media-type="photo"
-             data-media-src="assets/images/photo-1.jpg"
-             data-media-title="Photography #1">
-          <div class="media-card__thumb media-card__thumb--4x3">
-            <div class="media-card__placeholder">
-              <div class="media-card__placeholder-icon">🌅</div>
-              <div class="media-card__placeholder-label">ADD PHOTO</div>
-            </div>
-            <span class="media-card__type type--photo">PHOTO</span>
-          </div>
-          <div class="media-card__body">
-            <div class="media-card__title" data-edit-id="p1-title">Photography — Shot #1</div>
-            <div class="media-card__desc" data-edit-id="p1-desc">Where was this? What caught your eye? Add camera or settings if you want.</div>
-            <div class="media-card__footer">
-              <div class="media-card__tags">
-                <span class="media-card__tag" data-edit-id="p1-t1">Photography</span>
-                <span class="media-card__tag" data-edit-id="p1-t2">Nairobi</span>
-              </div>
-              <span class="media-card__link">VIEW →</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Photo 2 — portrait crop -->
-        <div class="media-card fade-in" data-type="photo" data-filter="photo"
-             data-media-type="photo"
-             data-media-src="assets/images/photo-2.jpg"
-             data-media-title="Photography #2">
-          <div class="media-card__thumb media-card__thumb--4x3">
-            <div class="media-card__placeholder">
-              <div class="media-card__placeholder-icon">📷</div>
-              <div class="media-card__placeholder-label">ADD PHOTO</div>
-            </div>
-            <span class="media-card__type type--photo">PHOTO</span>
-          </div>
-          <div class="media-card__body">
-            <div class="media-card__title" data-edit-id="p2-title">Photography — Shot #2</div>
-            <div class="media-card__desc" data-edit-id="p2-desc">Context for this shot. Unlock to edit.</div>
-            <div class="media-card__footer">
-              <div class="media-card__tags">
-                <span class="media-card__tag" data-edit-id="p2-t1">Photography</span>
-              </div>
-              <span class="media-card__link">VIEW →</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ═══ GRAPHIC DESIGN ═══ -->
-
-        <!-- Design 1 -->
-        <div class="media-card fade-in" data-type="design" data-filter="design"
-             data-media-type="photo"
-             data-media-src="assets/images/design-1.jpg"
-             data-media-title="Graphic Design #1">
-          <div class="media-card__thumb media-card__thumb--1x1">
-            <div class="media-card__placeholder">
-              <div class="media-card__placeholder-icon">🎨</div>
-              <div class="media-card__placeholder-label">ADD DESIGN</div>
-            </div>
-            <span class="media-card__type type--design">DESIGN</span>
-          </div>
-          <div class="media-card__body">
-            <div class="media-card__title" data-edit-id="d1-title">Graphic Design — Work #1</div>
-            <div class="media-card__desc" data-edit-id="d1-desc">What was this designed for? Brief, tools used, outcome. Unlock to edit.</div>
-            <div class="media-card__footer">
-              <div class="media-card__tags">
-                <span class="media-card__tag" data-edit-id="d1-t1">Canva</span>
-                <span class="media-card__tag" data-edit-id="d1-t2">Design</span>
-              </div>
-              <span class="media-card__link">VIEW →</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- ADD MEDIA BUTTON — always last -->
-        <button class="media-add-card owner-only" id="btn-add-media" title="Add media item">
+        <!-- ADD MEDIA — video/social only (owner-only) -->
+        <button class="media-add-card owner-only" id="btn-add-media" title="Add a new video or social card">
           <div class="media-add-card__icon">+</div>
-          <div class="media-add-card__label">ADD MEDIA</div>
+          <div class="media-add-card__label">ADD VIDEO / SOCIAL</div>
         </button>
 
       </div><!-- end media-grid -->
@@ -685,7 +989,40 @@
     </div>
   </footer>
 
-  <!-- MEDIA LIGHTBOX / VIDEO OVERLAY -->
+  <!-- ═══════════════════════════════════════════
+       GALLERY OVERLAY — Photography & Design
+  ════════════════════════════════════════════ -->
+  <div class="media-gallery" id="media-gallery" role="dialog" aria-modal="true" aria-label="Media gallery">
+    <!-- Header -->
+    <div class="media-gallery__header">
+      <div class="media-gallery__header-left">
+        <span class="media-gallery__label">// gallery</span>
+        <span class="media-gallery__title" id="gallery-title">Photography</span>
+        <span class="media-gallery__count" id="gallery-count">0 items</span>
+      </div>
+      <div class="media-gallery__header-right">
+        <button class="media-gallery__add-btn" id="gallery-add-btn" style="display:none;" title="Add images to this collection">
+          + ADD IMAGES
+        </button>
+        <button class="media-gallery__close" id="gallery-close">✕ CLOSE</button>
+      </div>
+    </div>
+    <!-- Grid of all images with captions -->
+    <div class="media-gallery__grid" id="gallery-grid"></div>
+    <!-- Fullscreen single-image view (hidden until an image is clicked) -->
+    <div class="media-gallery__fullscreen" id="gallery-fullscreen" style="display:none;">
+      <button class="media-gallery__fs-back" id="gallery-fs-back">← BACK TO GRID</button>
+      <img class="media-gallery__fs-img" id="gallery-fs-img" src="" alt="" />
+      <div class="media-gallery__fs-info">
+        <div class="media-gallery__fs-caption" id="gallery-fs-caption"></div>
+        <div class="media-gallery__fs-counter" id="gallery-fs-counter"></div>
+      </div>
+      <button class="media-gallery__fs-nav media-gallery__fs-prev" id="gallery-prev" aria-label="Previous image">‹</button>
+      <button class="media-gallery__fs-nav media-gallery__fs-next" id="gallery-next" aria-label="Next image">›</button>
+    </div>
+  </div>
+
+  <!-- VIDEO LIGHTBOX OVERLAY -->
   <div class="media-overlay" id="media-overlay" role="dialog" aria-modal="true" aria-label="Media viewer">
     <div class="media-overlay__topbar">
       <span class="media-overlay__title" id="media-overlay-title"></span>
@@ -711,100 +1048,478 @@
   </div>
 
   <script src="js/main.js"></script>
-  <script>
-  (function() {
 
-    /* ── FILTER BAR ─────────────────────────────── */
-    document.querySelectorAll('.filter-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
-        btn.classList.add('active');
-        var f = btn.getAttribute('data-filter');
-        document.querySelectorAll('.media-card').forEach(function(card) {
-          var show = f === 'all' || card.getAttribute('data-filter') === f;
-          card.style.display = show ? '' : 'none';
+  <script>
+  /* ================================================================
+     MEDIA PAGE — COLLECTION SYSTEM + VIDEO LIGHTBOX
+     ================================================================ */
+  (function() {
+    'use strict';
+
+    /* ── COLLECTION STORAGE ─────────────────────────────────────── */
+    var COLL_PREFIX = 'portfolio__collection__';
+
+    var Collections = {
+      key: function(id) { return COLL_PREFIX + id; },
+
+      load: function(id) {
+        try { return JSON.parse(localStorage.getItem(this.key(id)) || '{"items":[]}'); }
+        catch(e) { return { items: [] }; }
+      },
+
+      save: function(id, data) {
+        try { localStorage.setItem(this.key(id), JSON.stringify(data)); return true; }
+        catch(e) { return false; }
+      },
+
+      addItem: function(id, src, caption) {
+        var data = this.load(id);
+        var item = {
+          id: 'i' + Date.now() + Math.random().toString(36).slice(2,5),
+          src: src,
+          caption: caption || '',
+          ts: Date.now()
+        };
+        data.items.push(item);
+        this.save(id, data);
+        return item;
+      },
+
+      removeItem: function(collId, itemId) {
+        var data = this.load(collId);
+        data.items = data.items.filter(function(i) { return i.id !== itemId; });
+        this.save(collId, data);
+      },
+
+      updateCaption: function(collId, itemId, caption) {
+        var data = this.load(collId);
+        data.items.forEach(function(i) { if (i.id === itemId) i.caption = caption; });
+        this.save(collId, data);
+      }
+    };
+
+    /* ── SLIDESHOW ───────────────────────────────────────────────── */
+    var timers = {};
+
+    function stopSlideshow(collId) {
+      if (timers[collId]) { clearInterval(timers[collId]); delete timers[collId]; }
+    }
+
+    function startSlideshow(collId) {
+      stopSlideshow(collId);
+      var slides = document.querySelectorAll('#slides-' + collId + ' .collection-slide');
+      if (slides.length < 2) return;
+      var cur = 0;
+      timers[collId] = setInterval(function() {
+        slides[cur].classList.remove('active');
+        cur = (cur + 1) % slides.length;
+        slides[cur].classList.add('active');
+      }, 3200);
+    }
+
+    function renderPreview(collId) {
+      var data     = Collections.load(collId);
+      var slidesEl = document.getElementById('slides-' + collId);
+      var countEl  = document.getElementById('count-' + collId);
+      var emptyEl  = document.getElementById('empty-' + collId);
+      if (!slidesEl) return;
+
+      stopSlideshow(collId);
+      slidesEl.innerHTML = '';
+
+      var n    = data.items.length;
+      var noun = collId === 'photo' ? ' photo' : ' design';
+      if (countEl) countEl.textContent = n + noun + (n !== 1 ? 's' : '');
+
+      if (n === 0) {
+        if (emptyEl) emptyEl.style.display = '';
+        return;
+      }
+      if (emptyEl) emptyEl.style.display = 'none';
+
+      // Shuffle for variety on each load
+      var items = data.items.slice().sort(function() { return Math.random() - 0.5; });
+      items.forEach(function(item, idx) {
+        var slide = document.createElement('div');
+        slide.className = 'collection-slide' + (idx === 0 ? ' active' : '');
+        var img = document.createElement('img');
+        img.src = item.src;
+        img.alt = item.caption || (collId + ' ' + (idx + 1));
+        slide.appendChild(img);
+        slidesEl.appendChild(slide);
+      });
+      startSlideshow(collId);
+    }
+
+    /* ── STATS UPDATE ───────────────────────────────────────────── */
+    function updateStats() {
+      var photoN  = Collections.load('photo').items.length;
+      var designN = Collections.load('design').items.length;
+      var videoN  = document.querySelectorAll('.media-card[data-filter="video"]').length;
+      var socialN = document.querySelectorAll('.media-card[data-filter="social"]').length;
+      var sp = document.getElementById('stat-photo');
+      var sd = document.getElementById('stat-design');
+      var sv = document.getElementById('stat-video');
+      var ss = document.getElementById('stat-social');
+      if (sp) sp.textContent = photoN;
+      if (sd) sd.textContent = designN;
+      if (sv) sv.textContent = videoN;
+      if (ss) ss.textContent = socialN;
+    }
+
+    /* ── ADD IMAGES TO COLLECTION ───────────────────────────────── */
+    function addToCollection(collId) {
+      if (!document.body.classList.contains('owner-unlocked')) return;
+
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/jpeg,image/png,image/webp,image/gif';
+      input.multiple = true;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+
+      input.addEventListener('change', function() {
+        var files = Array.prototype.slice.call(input.files);
+        document.body.removeChild(input);
+        if (!files.length) return;
+
+        var done = 0, errors = [];
+        var SIZE_LIMIT = 4 * 1024 * 1024; // 4MB
+
+        files.forEach(function(file) {
+          if (file.size > SIZE_LIMIT) {
+            errors.push(file.name + ' is too large (max 4 MB — resize first)');
+            if (++done === files.length) finish();
+            return;
+          }
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            Collections.addItem(collId, e.target.result, '');
+            if (++done === files.length) finish();
+          };
+          reader.readAsDataURL(file);
         });
+
+        function finish() {
+          renderPreview(collId);
+          updateStats();
+          // If gallery is open for this collection, re-render it
+          if (currentCollection === collId &&
+              document.getElementById('media-gallery').classList.contains('open')) {
+            renderGalleryGrid(collId);
+            updateGalleryCount(collId);
+          }
+          if (errors.length) alert('Skipped:\n' + errors.join('\n'));
+        }
+      });
+
+      input.click();
+    }
+
+    /* ── GALLERY OVERLAY ────────────────────────────────────────── */
+    var currentCollection = null;
+    var currentFsIndex    = -1;
+
+    var galleryEl    = document.getElementById('media-gallery');
+    var galleryGrid  = document.getElementById('gallery-grid');
+    var galleryFs    = document.getElementById('gallery-fullscreen');
+    var galleryTitle = document.getElementById('gallery-title');
+    var galleryCount = document.getElementById('gallery-count');
+    var galleryClose = document.getElementById('gallery-close');
+    var galleryAddBtn= document.getElementById('gallery-add-btn');
+    var galleryFsImg = document.getElementById('gallery-fs-img');
+    var galleryFsCap = document.getElementById('gallery-fs-caption');
+    var galleryFsCtr = document.getElementById('gallery-fs-counter');
+    var galleryPrev  = document.getElementById('gallery-prev');
+    var galleryNext  = document.getElementById('gallery-next');
+    var galleryBack  = document.getElementById('gallery-fs-back');
+
+    var COLLECTION_TITLES = { photo: 'Photography', design: 'Graphic Design' };
+    var COLLECTION_ADDLABEL= { photo: '+ ADD PHOTOS', design: '+ ADD DESIGNS' };
+
+    function updateGalleryCount(collId) {
+      var n = Collections.load(collId).items.length;
+      galleryCount.textContent = n + (n === 1 ? ' item' : ' items');
+    }
+
+    function openGallery(collId) {
+      currentCollection = collId;
+      galleryTitle.textContent = COLLECTION_TITLES[collId] || collId;
+      galleryAddBtn.textContent = COLLECTION_ADDLABEL[collId] || '+ ADD';
+      galleryAddBtn.setAttribute('data-collection', collId);
+      updateGalleryCount(collId);
+
+      renderGalleryGrid(collId);
+      showGalleryGrid();
+
+      galleryEl.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      // Sync add-button visibility (owner-only, only when gallery is open)
+      galleryAddBtn.style.display =
+        document.body.classList.contains('owner-unlocked') ? '' : 'none';
+    }
+
+    function closeGallery() {
+      galleryEl.classList.remove('open');
+      document.body.style.overflow = '';
+      galleryAddBtn.style.display = 'none'; // always hide when gallery closes
+      currentCollection = null;
+      currentFsIndex    = -1;
+    }
+
+    function showGalleryGrid() {
+      galleryGrid.style.display = '';
+      galleryFs.style.display   = 'none';
+    }
+
+    function renderGalleryGrid(collId) {
+      var data     = Collections.load(collId);
+      var isOwner  = document.body.classList.contains('owner-unlocked');
+      galleryGrid.innerHTML = '';
+
+      if (!data.items.length) {
+        galleryGrid.innerHTML =
+          '<div class="gallery-empty">' +
+          '<span class="gallery-empty__icon">🖼</span>' +
+          (isOwner
+            ? 'No images yet. Click <strong>&nbsp;' + (COLLECTION_ADDLABEL[collId] || '+ ADD') + '&nbsp;</strong> above to add your first image.'
+            : 'No images have been added to this collection yet.') +
+          '</div>';
+        return;
+      }
+
+      data.items.forEach(function(item, idx) {
+        var div = document.createElement('div');
+        div.className = 'media-gallery__item fade-in visible';
+        div.setAttribute('data-item-id', item.id);
+
+        // Image wrapper
+        var wrap = document.createElement('div');
+        wrap.className = 'media-gallery__item-img-wrap';
+
+        var img = document.createElement('img');
+        img.src = item.src;
+        img.alt = item.caption || ('Image ' + (idx + 1));
+        img.className = 'media-gallery__item-img';
+        img.loading = 'lazy';
+
+        // Click image → fullscreen
+        var capturedIdx = idx;
+        img.addEventListener('click', function() { openFullscreen(collId, capturedIdx); });
+        wrap.appendChild(img);
+
+        // Delete button (owner only)
+        if (isOwner) {
+          var del = document.createElement('button');
+          del.className = 'media-gallery__item-delete';
+          del.innerHTML = '✕';
+          del.title = 'Remove image';
+          del.setAttribute('aria-label', 'Remove this image');
+          (function(capturedItem) {
+            del.addEventListener('click', function(e) {
+              e.stopPropagation();
+              if (!confirm('Remove this image from the collection?')) return;
+              Collections.removeItem(collId, capturedItem.id);
+              renderGalleryGrid(collId);
+              renderPreview(collId);
+              updateGalleryCount(collId);
+              updateStats();
+            });
+          })(item);
+          wrap.appendChild(del);
+        }
+        div.appendChild(wrap);
+
+        // Caption
+        var cap = document.createElement('div');
+        cap.className = 'media-gallery__item-caption';
+        cap.textContent = item.caption || '';
+        if (isOwner) {
+          cap.setAttribute('contenteditable', 'true');
+          cap.setAttribute('data-placeholder', 'Add a note or description…');
+          (function(capturedItem) {
+            cap.addEventListener('blur', function() {
+              var text = cap.textContent.trim();
+              Collections.updateCaption(collId, capturedItem.id, text);
+              capturedItem.caption = text; // update local reference too
+            });
+          })(item);
+          // Hint
+          var hint = document.createElement('div');
+          hint.className = 'media-gallery__item-caption-hint';
+          hint.textContent = 'CLICK TO ADD NOTE';
+          if (item.caption) hint.style.display = 'none';
+          cap.addEventListener('focus', function() { hint.style.display = 'none'; });
+          cap.addEventListener('blur',  function() { if (!cap.textContent.trim()) hint.style.display = ''; });
+          div.appendChild(hint);
+        }
+        div.appendChild(cap);
+        galleryGrid.appendChild(div);
+      });
+    }
+
+    function openFullscreen(collId, idx) {
+      var data = Collections.load(collId);
+      if (!data.items[idx]) return;
+      currentFsIndex = idx;
+      var item = data.items[idx];
+      var isOwner = document.body.classList.contains('owner-unlocked');
+
+      galleryFsImg.src = item.src;
+      galleryFsImg.alt = item.caption || '';
+      galleryFsCap.textContent = item.caption || '';
+      galleryFsCtr.textContent = (idx + 1) + ' / ' + data.items.length;
+
+      // Allow caption editing in fullscreen too
+      if (isOwner) {
+        galleryFsCap.setAttribute('contenteditable', 'true');
+        (function(capturedItem) {
+          galleryFsCap.onblur = function() {
+            var text = galleryFsCap.textContent.trim();
+            Collections.updateCaption(collId, capturedItem.id, text);
+          };
+        })(item);
+      } else {
+        galleryFsCap.removeAttribute('contenteditable');
+        galleryFsCap.onblur = null;
+      }
+
+      galleryPrev.disabled = (idx === 0);
+      galleryNext.disabled = (idx === data.items.length - 1);
+
+      galleryGrid.style.display = 'none';
+      galleryFs.style.display   = '';
+    }
+
+    function navigateFullscreen(dir) {
+      if (!currentCollection) return;
+      var data = Collections.load(currentCollection);
+      var newIdx = currentFsIndex + dir;
+      if (newIdx < 0 || newIdx >= data.items.length) return;
+      openFullscreen(currentCollection, newIdx);
+    }
+
+    // Wire gallery controls
+    galleryClose.addEventListener('click', closeGallery);
+    galleryBack.addEventListener('click', showGalleryGrid);
+    galleryPrev.addEventListener('click', function() { navigateFullscreen(-1); });
+    galleryNext.addEventListener('click', function() { navigateFullscreen(1); });
+    galleryAddBtn.addEventListener('click', function() {
+      addToCollection(galleryAddBtn.getAttribute('data-collection'));
+    });
+    // Click outside content closes gallery
+    galleryEl.addEventListener('click', function(e) {
+      if (e.target === galleryEl) closeGallery();
+    });
+
+    /* ── COLLECTION CARD BUTTONS ────────────────────────────────── */
+    // VIEW ALL buttons (inside hover overlay)
+    document.querySelectorAll('.collection-card__view-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openGallery(btn.getAttribute('data-collection'));
+      });
+    });
+    // Clicking anywhere on collection card also opens gallery
+    document.querySelectorAll('.collection-card').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.collection-add-btn')) return; // handled below
+        openGallery(card.getAttribute('data-collection-id'));
+      });
+    });
+    // ADD PHOTOS buttons (in card footer — owner only)
+    document.querySelectorAll('.collection-add-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        addToCollection(btn.getAttribute('data-collection'));
       });
     });
 
-    /* ── LIGHTBOX / VIDEO OVERLAY ───────────────── */
-    var overlay     = document.getElementById('media-overlay');
-    var overlayInner= document.getElementById('media-overlay-inner');
-    var overlayTitle= document.getElementById('media-overlay-title');
-    var overlayCap  = document.getElementById('media-overlay-caption');
-    var overlayClose= document.getElementById('media-overlay-close');
+    /* ── VIDEO LIGHTBOX ─────────────────────────────────────────── */
+    var videoOverlay      = document.getElementById('media-overlay');
+    var videoOverlayInner = document.getElementById('media-overlay-inner');
+    var videoOverlayTitle = document.getElementById('media-overlay-title');
+    var videoOverlayCap   = document.getElementById('media-overlay-caption');
+    var videoOverlayClose = document.getElementById('media-overlay-close');
 
-    function openMedia(type, src, title, portrait) {
-      overlayTitle.textContent = title || '';
-      overlayInner.innerHTML = '';
+    function openVideoOverlay(type, src, title, portrait) {
+      videoOverlayTitle.textContent = title || '';
+      videoOverlayInner.innerHTML   = '';
 
-      if (type === 'photo') {
-        var img = document.createElement('img');
-        img.src = src; img.alt = title;
-        img.className = 'media-overlay__photo';
-        overlayInner.style.marginTop = '0';
-        overlayInner.appendChild(img);
-        overlayCap.textContent = title;
+      var wrap = document.createElement('div');
+      wrap.className = 'media-overlay__video-wrap' + (portrait ? ' portrait' : '');
+      var el;
+      if (type === 'youtube') {
+        el = document.createElement('iframe');
+        el.src = src + '?autoplay=1&rel=0';
+        el.setAttribute('allow', 'autoplay; fullscreen');
+        el.setAttribute('allowfullscreen', '');
+        el.title = title || '';
       } else {
-        // video — youtube or local
-        var wrap = document.createElement('div');
-        wrap.className = 'media-overlay__video-wrap' + (portrait ? ' portrait' : '');
-        var el;
-        if (type === 'youtube') {
-          el = document.createElement('iframe');
-          el.src = src + '?autoplay=1&rel=0';
-          el.setAttribute('allow', 'autoplay; fullscreen');
-          el.setAttribute('allowfullscreen', '');
-          el.title = title;
-        } else {
-          el = document.createElement('video');
-          el.src = src; el.controls = true; el.autoplay = true;
-        }
-        wrap.appendChild(el);
-        overlayInner.style.marginTop = '56px';
-        overlayInner.appendChild(wrap);
-        overlayCap.textContent = '';
+        el = document.createElement('video');
+        el.src = src; el.controls = true; el.autoplay = true;
       }
+      wrap.appendChild(el);
+      videoOverlayInner.style.marginTop = '56px';
+      videoOverlayInner.appendChild(wrap);
+      videoOverlayCap.textContent = '';
 
-      overlay.classList.add('open');
+      videoOverlay.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
 
-    function closeMedia() {
-      overlay.classList.remove('open');
+    function closeVideoOverlay() {
+      videoOverlay.classList.remove('open');
       document.body.style.overflow = '';
-      setTimeout(function(){ overlayInner.innerHTML = ''; }, 280);
+      setTimeout(function() { videoOverlayInner.innerHTML = ''; }, 280);
     }
 
-    overlayClose.addEventListener('click', closeMedia);
-    overlay.addEventListener('click', function(e){ if (e.target === overlay) closeMedia(); });
+    videoOverlayClose.addEventListener('click', closeVideoOverlay);
+    videoOverlay.addEventListener('click', function(e) {
+      if (e.target === videoOverlay) closeVideoOverlay();
+    });
 
-    /* Wire all media cards */
+    // Wire video/social cards for lightbox
     function wireMediaCards() {
       document.querySelectorAll('.media-card[data-media-type]').forEach(function(card) {
-        if (card._wired) return; card._wired = true;
+        if (card._wired) return;
+        card._wired = true;
         card.addEventListener('click', function(e) {
           if (e.target.closest('.card-delete-btn')) return;
-          openMedia(
-            card.getAttribute('data-media-type'),
-            card.getAttribute('data-media-src'),
-            card.getAttribute('data-media-title'),
-            card.getAttribute('data-media-portrait') === 'true'
-          );
+          var type = card.getAttribute('data-media-type');
+          var src  = card.getAttribute('data-media-src');
+          if (type === 'photo') {
+            // Photo in a social card — open lightbox with image
+            videoOverlayTitle.textContent = card.getAttribute('data-media-title') || '';
+            videoOverlayInner.innerHTML   = '';
+            var img = document.createElement('img');
+            img.src = src; img.alt = videoOverlayTitle.textContent;
+            img.style.cssText = 'max-width:90vw;max-height:80vh;border-radius:12px;display:block;margin-top:56px;object-fit:contain;';
+            videoOverlayInner.appendChild(img);
+            videoOverlayCap.textContent = card.getAttribute('data-media-title') || '';
+            videoOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+          } else {
+            openVideoOverlay(type, src, card.getAttribute('data-media-title'),
+              card.getAttribute('data-media-portrait') === 'true');
+          }
         });
       });
     }
     wireMediaCards();
+    // Expose globally for dynamic card restore
+    window.__wireMediaCards = wireMediaCards;
 
-    /* ── ADD MEDIA CARD ─────────────────────────── */
-    var addBtn = document.getElementById('btn-add-media');
-    var addCounter = 0;
+    /* ── ADD MEDIA BUTTON (video/social) ────────────────────────── */
+    var addMediaBtn  = document.getElementById('btn-add-media');
+    var addCounter   = 0;
 
     function makeMediaCardHTML(uid) {
       return [
         '<div class="media-card new-card fade-in visible" data-type="video" data-filter="video"',
-        '     data-media-type="youtube" data-media-src="" data-media-title="New Media" data-media-portrait="false"',
-        '     data-new-id="' + uid + '">',
+        '  data-media-type="youtube" data-media-src="" data-media-title="New Media"',
+        '  data-media-portrait="false" data-new-id="' + uid + '">',
         '  <div class="media-card__thumb media-card__thumb--16x9">',
         '    <div class="media-card__placeholder">',
         '      <div class="media-card__placeholder-icon">+</div>',
@@ -815,47 +1530,108 @@
         '  </div>',
         '  <div class="media-card__body">',
         '    <div class="media-card__title" contenteditable="false">Media Title</div>',
-        '    <div class="media-card__desc" contenteditable="false">Description of this media item.</div>',
+        '    <div class="media-card__desc" contenteditable="false">Description of this item.</div>',
         '    <div class="media-card__footer">',
-        '      <div class="media-card__tags"><span class="media-card__tag" contenteditable="false">Tag</span></div>',
-        '      <span class="media-card__link">VIEW →</span>',
+        '      <div class="media-card__tags">',
+        '        <span class="media-card__tag" contenteditable="false">Tag</span>',
+        '      </div>',
         '    </div>',
         '  </div>',
         '</div>'
       ].join('\n');
     }
 
-    if (addBtn) {
-      addBtn.addEventListener('click', function(e) {
+    if (addMediaBtn) {
+      addMediaBtn.addEventListener('click', function(e) {
         e.preventDefault();
         if (!document.body.classList.contains('owner-unlocked')) return;
         addCounter++;
-        var id = 'media-new-' + addCounter;
+        var id  = 'media-new-' + addCounter;
         var tmp = document.createElement('div');
         tmp.innerHTML = makeMediaCardHTML(id);
         var card = tmp.firstElementChild;
-        addBtn.parentNode.insertBefore(card, addBtn);
+        addMediaBtn.parentNode.insertBefore(card, addMediaBtn);
         wireMediaCards();
-
-        var titleEl = card.querySelector('.media-card__title');
-        if (titleEl) {
-          titleEl.setAttribute('contenteditable', 'true');
+        updateStats();
+        // Enter edit mode and focus title
+        if (typeof enableEditMode === 'function') enableEditMode();
+        var t = card.querySelector('.media-card__title');
+        if (t) {
+          t.setAttribute('contenteditable', 'true');
           setTimeout(function() {
-            titleEl.focus();
+            t.focus();
             var r = document.createRange();
-            r.selectNodeContents(titleEl);
+            r.selectNodeContents(t);
             window.getSelection().removeAllRanges();
             window.getSelection().addRange(r);
-          }, 60);
+          }, 80);
         }
       });
     }
 
-    /* ── KEYBOARD ESC ───────────────────────────── */
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && overlay.classList.contains('open')) closeMedia();
+    // Re-wire when editor.js restores dynamic cards on page load
+    document.addEventListener('dynamicCardsRestored', function() {
+      wireMediaCards();
+      updateStats();
     });
 
+    /* ── FILTER BAR ─────────────────────────────────────────────── */
+    document.querySelectorAll('.filter-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var f = btn.getAttribute('data-filter');
+        // Filter both media cards AND collection cards
+        document.querySelectorAll('.media-card, .collection-card').forEach(function(card) {
+          var show = f === 'all' || card.getAttribute('data-filter') === f;
+          card.style.display = show ? '' : 'none';
+        });
+      });
+    });
+
+    /* ── KEYBOARD ───────────────────────────────────────────────── */
+    document.addEventListener('keydown', function(e) {
+      // Gallery fullscreen navigation
+      if (galleryEl.classList.contains('open') && galleryFs.style.display !== 'none') {
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateFullscreen(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); navigateFullscreen(1);  }
+        if (e.key === 'Escape')     { e.preventDefault(); showGalleryGrid(); return; }
+      }
+      if (e.key === 'Escape') {
+        if (galleryEl.classList.contains('open')) { closeGallery(); return; }
+        if (videoOverlay.classList.contains('open')) { closeVideoOverlay(); }
+      }
+    });
+
+    /* ── SWIPE SUPPORT for fullscreen (mobile) ──────────────────── */
+    var touchStartX = 0;
+    galleryFs.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    galleryFs.addEventListener('touchend', function(e) {
+      var diff = touchStartX - e.changedTouches[0].screenX;
+      if (Math.abs(diff) > 50) navigateFullscreen(diff > 0 ? 1 : -1);
+    }, { passive: true });
+
+    /* ── INIT ───────────────────────────────────────────────────── */
+    renderPreview('photo');
+    renderPreview('design');
+    updateStats();
+
+    // Show gallery add-button when owner unlocks (or on session-restore)
+    function syncGalleryAddBtn() {
+      var isOwner = document.body.classList.contains('owner-unlocked');
+      // Only show when gallery is actually open
+      if (galleryEl.classList.contains('open')) {
+        galleryAddBtn.style.display = isOwner ? '' : 'none';
+      } else {
+        galleryAddBtn.style.display = 'none';
+      }
+    }
+    var bodyObserver = new MutationObserver(syncGalleryAddBtn);
+    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    // Sync immediately (handles session-restore where body is already unlocked)
+    syncGalleryAddBtn();
   })();
   </script>
 
