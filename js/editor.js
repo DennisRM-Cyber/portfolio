@@ -238,11 +238,133 @@
   var lockCancel = document.getElementById('lock-cancel');
   var lockError  = document.getElementById('lock-error');
 
+  /* ── INJECT FIREBASE SIGN-IN SECTION ──────────────────────
+     Appended to the existing .lock-modal at runtime so all
+     7 HTML pages get it from one place (here) — no HTML changes.
+     Only visible when window.FIREBASE_CONFIG has been filled in.
+  ──────────────────────────────────────────────────────────── */
+  var fbSection = null, fbEmail = null, fbPassword = null,
+      fbSigninBtn = null, fbSkipBtn = null, fbStatus = null;
+
+  var lockModal = document.querySelector('.lock-modal');
+  if (lockModal) {
+    var fbDiv = document.createElement('div');
+    fbDiv.id = 'fb-signin-section';
+    fbDiv.style.display = 'none';
+    fbDiv.innerHTML = [
+      '<div class="lock-modal__divider">',
+        '<div class="lock-modal__divider-line"></div>',
+        '<span class="lock-modal__divider-text">FIREBASE SYNC</span>',
+        '<div class="lock-modal__divider-line"></div>',
+      '</div>',
+      '<p class="lock-modal__hint" style="margin-bottom:14px;">',
+        'Sign in to sync edits across all your devices.',
+        ' <span id="fb-status-badge" class="lock-modal__fb-badge"></span>',
+      '</p>',
+      '<input class="lock-modal__input" id="fb-email"    type="email"    placeholder="owner email"    autocomplete="email"            style="margin-bottom:8px;" />',
+      '<input class="lock-modal__input" id="fb-password" type="password" placeholder="firebase password" autocomplete="current-password" style="margin-bottom:12px;" />',
+      '<div class="lock-modal__actions">',
+        '<button class="lock-modal__submit" id="fb-signin-btn">SIGN IN</button>',
+        '<button class="lock-modal__cancel" id="fb-skip-btn">SKIP — LOCAL ONLY</button>',
+      '</div>',
+      '<div class="lock-modal__error" id="fb-error" style="margin-top:8px;">Sign-in failed — check email and password</div>',
+    ].join('');
+    lockModal.appendChild(fbDiv);
+
+    fbSection   = document.getElementById('fb-signin-section');
+    fbEmail     = document.getElementById('fb-email');
+    fbPassword  = document.getElementById('fb-password');
+    fbSigninBtn = document.getElementById('fb-signin-btn');
+    fbSkipBtn   = document.getElementById('fb-skip-btn');
+    fbStatus    = document.getElementById('fb-status-badge');
+
+    // Firebase sign-in button
+    fbSigninBtn.addEventListener('click', function() {
+      var email = fbEmail.value.trim();
+      var pass  = fbPassword.value;
+      if (!email || !pass) {
+        showFbError('Enter your email and password'); return;
+      }
+      fbSigninBtn.textContent = 'SIGNING IN…';
+      fbSigninBtn.disabled = true;
+
+      var api = window.Portfolio;
+      if (!api) { finishUnlock(); return; }
+
+      api.signIn(email, pass,
+        function() {   // success
+          fbSigninBtn.disabled = false;
+          finishUnlock();
+        },
+        function(err) { // error
+          fbSigninBtn.disabled = false;
+          fbSigninBtn.textContent = 'SIGN IN';
+          showFbError(err && err.code === 'auth/wrong-password' ? 'Wrong password'
+                    : err && err.code === 'auth/user-not-found' ? 'Email not found'
+                    : err && err.code === 'auth/invalid-email'  ? 'Invalid email'
+                    : 'Sign-in failed — check email and password');
+        }
+      );
+    });
+
+    // Skip Firebase — local-only
+    fbSkipBtn.addEventListener('click', function() { finishUnlock(); });
+
+    // Enter key in password field
+    fbPassword.addEventListener('keydown', function(e) { if (e.key === 'Enter') fbSigninBtn.click(); });
+  }
+
+  function showFbError(msg) {
+    var el = document.getElementById('fb-error');
+    if (el) { el.textContent = msg; el.classList.add('visible'); }
+  }
+  function hideFbError() {
+    var el = document.getElementById('fb-error');
+    if (el) el.classList.remove('visible');
+  }
+  function finishUnlock() {
+    closeLockOverlay();
+    setTimeout(unlock, 80);
+  }
+
+  /* ── Check if Firebase sign-in step is needed ─────────────
+     Shown when: firebase-config.js has a real apiKey AND
+     Portfolio is not yet signed in (owner not authenticated).
+  ──────────────────────────────────────────────────────────── */
+  function needsFirebaseStep() {
+    var cfg = window.FIREBASE_CONFIG;
+    if (!cfg || !cfg.apiKey || cfg.apiKey.indexOf('PASTE_') === 0) return false;
+    var api = window.Portfolio;
+    if (!api) return false;
+    return !api.isOwner();
+  }
+
+  /* ── Show Firebase step in modal ─────────────────────────── */
+  function showFirebaseStep() {
+    if (!fbSection) return;
+    // Reset form
+    if (fbEmail)    fbEmail.value    = '';
+    if (fbPassword) fbPassword.value = '';
+    if (fbSigninBtn){ fbSigninBtn.textContent = 'SIGN IN'; fbSigninBtn.disabled = false; }
+    hideFbError();
+    // Update connection badge
+    if (fbStatus) {
+      var api = window.Portfolio;
+      var connected = api && api.isFirebaseConnected && api.isFirebaseConnected();
+      fbStatus.textContent  = connected ? '● CONNECTED' : '● CONNECTING…';
+      fbStatus.style.color  = connected ? '#4ade80'     : 'rgba(240,165,0,0.7)';
+    }
+    fbSection.style.display = '';
+    if (fbEmail) setTimeout(function() { fbEmail.focus(); }, 80);
+  }
+
   function openLockOverlay() {
     if (!overlay) return;
     lockInput.value = '';
     lockError.classList.remove('visible');
     lockInput.classList.remove('error');
+    // Hide Firebase section until passphrase step passes
+    if (fbSection) fbSection.style.display = 'none';
     overlay.classList.add('visible');
     setTimeout(function() { lockInput.focus(); }, 100);
   }
@@ -251,8 +373,15 @@
   }
   function tryUnlock() {
     if (lockInput.value === OWNER_PASSPHRASE) {
-      closeLockOverlay();   // close first — always runs even if unlock() has an error
-      setTimeout(unlock, 80); // slight delay so closing animation plays cleanly
+      if (needsFirebaseStep()) {
+        // Correct passphrase — show Firebase sign-in step
+        lockInput.value = '';
+        lockError.classList.remove('visible');
+        showFirebaseStep();
+      } else {
+        // No Firebase configured OR already signed in — unlock immediately
+        finishUnlock();
+      }
     } else {
       lockInput.classList.add('error');
       lockError.classList.add('visible');
@@ -336,94 +465,127 @@
 
   /* ══════════════════════════════════════════════════════════
      PART 3 — SAVE / LOAD / RESET
+     Uses Portfolio.* API (firebase.js) — falls back to
+     localStorage automatically if Firebase is not configured.
   ══════════════════════════════════════════════════════════ */
 
   var pageName = window.location.pathname.split('/').pop().replace('.html','') || 'index';
+  // storageKey kept for legacy references inside this file only
   function storageKey(id) { return 'portfolio__edit__' + pageName + '__' + id; }
 
   function saveChanges() {
+    // Build edits map
+    var editsMap = {};
     getEditables().forEach(function(el) {
       var id = el.getAttribute('data-edit-id');
-      if (id) localStorage.setItem(storageKey(id), el.innerHTML);
+      if (id) editsMap[id] = el.innerHTML;
     });
+
+    // Build dynamic cards array
     var dynamic = [];
     document.querySelectorAll('.new-card').forEach(function(c) { dynamic.push(c.outerHTML); });
-    localStorage.setItem(storageKey('__dynamic__'), JSON.stringify(dynamic));
+
+    // Use Portfolio API (Firebase if available, localStorage fallback)
+    var api = window.Portfolio;
+    if (api) {
+      api.saveAllEdits(pageName, editsMap);
+      api.saveDynamic(pageName, dynamic);
+    } else {
+      // Direct localStorage if firebase.js not loaded yet
+      Object.keys(editsMap).forEach(function(id) {
+        localStorage.setItem(storageKey(id), editsMap[id]);
+      });
+      localStorage.setItem(storageKey('__dynamic__'), JSON.stringify(dynamic));
+    }
+
     btnSave.textContent = 'SAVED \u2713';
     btnSave.style.background = '#4ade80';
     setTimeout(function() { btnSave.textContent = 'SAVE CHANGES'; btnSave.style.background = ''; }, 1800);
   }
 
-  function loadSavedChanges() {
-    // 1. Restore text edits (data-edit-id fields)
-    getEditables().forEach(function(el) {
-      var id = el.getAttribute('data-edit-id');
-      if (id) { var s = localStorage.getItem(storageKey(id)); if (s !== null) el.innerHTML = s; }
+  function applyDynamicCards(dynCards) {
+    if (!Array.isArray(dynCards) || !dynCards.length) return;
+    dynCards.forEach(function(html) {
+      var tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      var card = tmp.firstElementChild;
+      if (!card) return;
+      var anchor = null;
+      if (card.classList.contains('exp-card') && !card.classList.contains('exp-card--add')) {
+        anchor = document.querySelector('.exp-card--add') ||
+                 document.querySelector('.exp-grid--bottom .exp-card--add');
+      } else if (card.classList.contains('nav-card')) {
+        anchor = document.querySelector('.card--add');
+      } else if (card.classList.contains('media-card')) {
+        anchor = document.getElementById('btn-add-media');
+      } else if (card.classList.contains('skill-card')) {
+        anchor = document.querySelector('.skill-add-card');
+      } else if (card.classList.contains('cert-card')) {
+        anchor = document.querySelector('.cert-add-card');
+      } else if (card.classList.contains('project-card')) {
+        anchor = document.querySelector('.project-add-card');
+      }
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(card, anchor);
     });
+    setTimeout(function() {
+      document.dispatchEvent(new CustomEvent('dynamicCardsRestored'));
+      wireAddCards();
+      if (document.body.classList.contains('owner-unlocked')) {
+        injectAllDeleteBtns();
+        setTimeout(injectUploadTriggers, 60);
+      }
+    }, 80);
+  }
 
-    // 2. Restore dynamically added cards (exp, nav, media, skill, cert)
-    //    These were saved by saveChanges() → __dynamic__ key but never reloaded.
-    try {
-      var dynJSON = localStorage.getItem(storageKey('__dynamic__'));
-      if (!dynJSON) return;
-      var dynCards = JSON.parse(dynJSON);
-      if (!Array.isArray(dynCards) || !dynCards.length) return;
+  function loadSavedChanges() {
+    var api = window.Portfolio;
+    if (!api) {
+      // firebase.js not loaded — direct localStorage
+      getEditables().forEach(function(el) {
+        var id = el.getAttribute('data-edit-id');
+        if (id) { var s = localStorage.getItem(storageKey(id)); if (s !== null) el.innerHTML = s; }
+      });
+      try {
+        var arr = JSON.parse(localStorage.getItem(storageKey('__dynamic__')) || '[]');
+        applyDynamicCards(arr);
+      } catch(e) {}
+      return;
+    }
 
-      dynCards.forEach(function(html) {
-        var tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        var card = tmp.firstElementChild;
-        if (!card) return;
-
-        // Find the right sibling to insert before based on card class
-        var anchor = null;
-        if (card.classList.contains('exp-card') && !card.classList.contains('exp-card--add')) {
-          anchor = document.querySelector('.exp-card--add');
-          // prefer exp-grid--bottom for proper layout
-          if (!anchor) anchor = document.querySelector('.exp-grid--bottom .exp-card--add');
-        } else if (card.classList.contains('nav-card')) {
-          anchor = document.querySelector('.card--add');
-        } else if (card.classList.contains('media-card')) {
-          anchor = document.getElementById('btn-add-media');
-        } else if (card.classList.contains('skill-card')) {
-          anchor = document.querySelector('.skill-add-card');
-        } else if (card.classList.contains('cert-card')) {
-          anchor = document.querySelector('.cert-add-card');
-        } else if (card.classList.contains('project-card')) {
-          anchor = document.querySelector('.project-add-card');
-        }
-
-        if (anchor && anchor.parentNode) {
-          anchor.parentNode.insertBefore(card, anchor);
+    // Use Portfolio API — Firebase or localStorage depending on config
+    api.whenReady(function() {
+      api.loadEdits(pageName, function(err, map) {
+        if (!err && map) {
+          getEditables().forEach(function(el) {
+            var id = el.getAttribute('data-edit-id');
+            if (id && map[id] != null) el.innerHTML = map[id];
+          });
         }
       });
-
-      // Notify page-level scripts that dynamic cards have been reinjected
-      // (e.g. media.html re-wires click handlers; projects.html re-wires doc viewers)
-      setTimeout(function() {
-        document.dispatchEvent(new CustomEvent('dynamicCardsRestored'));
-        // Re-wire add cards in case newly inserted cards have add-card children
-        wireAddCards();
-        if (document.body.classList.contains('owner-unlocked')) {
-          injectAllDeleteBtns();
-          setTimeout(injectUploadTriggers, 60);
-        }
-      }, 80);
-    } catch(e) {
-      // Silent — malformed JSON or missing elements are non-fatal
-    }
+      api.loadDynamic(pageName, function(err, arr) {
+        if (!err) applyDynamicCards(arr);
+      });
+    });
   }
 
   btnSave.addEventListener('click', saveChanges);
+
   btnReset.addEventListener('click', function() {
-    if (!confirm('Reset all edits on this page?')) return;
-    getEditables().forEach(function(el) {
-      var id = el.getAttribute('data-edit-id');
-      if (id) localStorage.removeItem(storageKey(id));
-    });
-    localStorage.removeItem(storageKey('__dynamic__'));
+    if (!confirm('Reset all edits on this page? This cannot be undone.')) return;
+    var api = window.Portfolio;
+    if (api) {
+      api.clearEdits(pageName);
+      api.clearDynamic(pageName);
+    } else {
+      getEditables().forEach(function(el) {
+        var id = el.getAttribute('data-edit-id');
+        if (id) localStorage.removeItem(storageKey(id));
+      });
+      localStorage.removeItem(storageKey('__dynamic__'));
+    }
     window.location.reload();
   });
+
   window.addEventListener('beforeunload', function() { if (editMode) saveChanges(); });
   setTimeout(loadSavedChanges, 80);
 
@@ -643,16 +805,21 @@
   ══════════════════════════════════════════════════════════ */
 
   /* ── FORMAT BAR: MS Word-style two-row ribbon ── */
-  var FMTBAR_POS_KEY = 'editorFmtBarPos'; // localStorage key for pinned position
-  var fmtBarPinned   = false;             // true once user drags the bar
-
   var formatBar = document.createElement('div');
   formatBar.className = 'format-bar';
   formatBar.setAttribute('role', 'toolbar');
   formatBar.setAttribute('aria-label', 'Text formatting');
   formatBar.innerHTML = [
-    // Drag handle — grab to move, double-click to reset
-    '<div class="format-bar__handle" title="Drag to reposition \u00b7 Double-click to reset">\u283f</div>',
+    // DRAG HANDLE — grab to move, double-click to reset/unpin
+    '<div class="format-bar__drag-handle" id="fmt-drag-handle" title="Drag to move · Double-click to reset position">',
+      '<div class="format-bar__drag-dots">',
+        '<span></span><span></span><span></span>',
+        '<span></span><span></span><span></span>',
+        '<span></span><span></span><span></span>',
+      '</div>',
+      '<span class="format-bar__drag-label">FORMAT BAR — DRAG TO MOVE</span>',
+      '<button class="format-bar__pin-btn" id="fmt-pin-btn" title="Unpin — reset to follow text selection">📌</button>',
+    '</div>',
     // ROW 1: paragraph style, font, size, colour
     '<div class="format-bar__row">',
       '<select class="format-bar__heading-select" id="fmt-heading" title="Paragraph style">',
@@ -719,70 +886,6 @@
   ].join('');
   document.body.appendChild(formatBar);
 
-  // ── Restore pinned position from previous session ──────────────────────────
-  (function () {
-    var saved = localStorage.getItem(FMTBAR_POS_KEY);
-    if (!saved) return;
-    try {
-      var pos = JSON.parse(saved);
-      formatBar.style.left = Math.max(0, Math.min(pos.left, window.innerWidth  - 100)) + 'px';
-      formatBar.style.top  = Math.max(0, Math.min(pos.top,  window.innerHeight - 40))  + 'px';
-      fmtBarPinned = true;
-      formatBar.classList.add('format-bar--pinned');
-    } catch (e) { localStorage.removeItem(FMTBAR_POS_KEY); }
-  }());
-
-  // ── Drag handle logic ──────────────────────────────────────────────────────
-  var fmtHandle = formatBar.querySelector('.format-bar__handle');
-  var fmtDrag   = { active: false, startX: 0, startY: 0, origLeft: 0, origTop: 0 };
-
-  fmtHandle.addEventListener('mousedown', function (e) {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    fmtDrag.active   = true;
-    fmtDrag.startX   = e.clientX;
-    fmtDrag.startY   = e.clientY;
-    fmtDrag.origLeft = parseInt(formatBar.style.left) || 0;
-    fmtDrag.origTop  = parseInt(formatBar.style.top)  || 0;
-    formatBar.classList.add('format-bar--dragging');
-  });
-
-  document.addEventListener('mousemove', function (e) {
-    if (!fmtDrag.active) return;
-    var newLeft = Math.max(0, Math.min(
-      window.innerWidth  - formatBar.offsetWidth,
-      fmtDrag.origLeft + (e.clientX - fmtDrag.startX)
-    ));
-    var newTop = Math.max(0, Math.min(
-      window.innerHeight - formatBar.offsetHeight,
-      fmtDrag.origTop  + (e.clientY - fmtDrag.startY)
-    ));
-    formatBar.style.left = newLeft + 'px';
-    formatBar.style.top  = newTop  + 'px';
-  });
-
-  document.addEventListener('mouseup', function () {
-    if (!fmtDrag.active) return;
-    fmtDrag.active = false;
-    formatBar.classList.remove('format-bar--dragging');
-    fmtBarPinned = true;
-    formatBar.classList.add('format-bar--pinned');
-    localStorage.setItem(FMTBAR_POS_KEY, JSON.stringify({
-      left: parseInt(formatBar.style.left),
-      top:  parseInt(formatBar.style.top)
-    }));
-  });
-
-  // Double-click handle → reset to auto-follow mode
-  fmtHandle.addEventListener('dblclick', function (e) {
-    e.stopPropagation();
-    fmtBarPinned = false;
-    formatBar.classList.remove('format-bar--pinned');
-    localStorage.removeItem(FMTBAR_POS_KEY);
-    hideFormatBar(); // re-appears on next text selection
-  });
-
   var savedRange = null;
 
   function saveRange() {
@@ -791,16 +894,13 @@
   }
   function hideFormatBar() { formatBar.classList.remove('visible'); }
   function showFormatBar(x, y) {
-    if (!fmtBarPinned) {
-      // Position above selection, clamped to viewport (coords are already viewport-relative)
-      var barW = Math.min(620, window.innerWidth - 16);
-      var left = Math.min(x - barW / 2, window.innerWidth - barW - 8);
-      if (left < 8) left = 8;
-      var top  = Math.max(8, y - formatBar.offsetHeight - 8);
-      formatBar.style.left     = left + 'px';
-      formatBar.style.top      = top  + 'px';
-      formatBar.style.minWidth = barW + 'px';
-    }
+    // Position above selection, clamped to viewport
+    var barW = Math.min(620, window.innerWidth - 16);
+    var left = Math.min(x - barW/2, window.innerWidth - barW - 8);
+    if (left < 8) left = 8;
+    formatBar.style.left  = left + 'px';
+    formatBar.style.top   = (y - 20) + 'px'; // shows above cursor
+    formatBar.style.minWidth = barW + 'px';
     formatBar.classList.add('visible');
   }
   function restoreSelection() {
@@ -912,12 +1012,191 @@
     if (!inEdit) return;
     savedRange = sel.getRangeAt(0).cloneRange();
     var rect = sel.getRangeAt(0).getBoundingClientRect();
-    showFormatBar(rect.left + rect.width / 2, rect.top);
+    // rect coords are viewport-relative; format-bar is position:fixed — no scrollY offset needed
+    showFormatBar(rect.left + rect.width / 2 - 280, rect.top);
   });
 
-  formatBar.addEventListener('mousedown', function() {
-    var sel = window.getSelection();
-    if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
+  formatBar.addEventListener('mousedown', function(e) {
+    // Only save range when clicking on formatting controls, not the drag handle
+    if (!e.target.closest('#fmt-drag-handle')) {
+      var sel = window.getSelection();
+      if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
+    }
+  });
+
+  /* ── FORMAT BAR: DRAG + PIN LOGIC ──────────────────────────
+     The drag handle (top strip) lets the owner grab and move
+     the format bar anywhere on screen.
+     Pin button   → locks position; bar no longer jumps on selection
+     Double-click → resets to follow-selection behaviour
+     Position persisted in localStorage so it survives reloads.
+  ──────────────────────────────────────────────────────────── */
+  var FMT_POS_KEY   = 'portfolio__fmtbar__pos';
+  var fmtPinBtn     = document.getElementById('fmt-pin-btn');
+  var fmtDragHandle = document.getElementById('fmt-drag-handle');
+
+  // State
+  var fmtPinned     = false;   // true  → bar stays put; false → follows selection
+  var fmtDragActive = false;
+  var fmtDragStartX = 0, fmtDragStartY = 0;  // pointer start
+  var fmtBarStartX  = 0, fmtBarStartY  = 0;  // bar start
+
+  // ── Persist / restore position ──────────────────────────────
+  function saveFmtPos() {
+    try {
+      localStorage.setItem(FMT_POS_KEY, JSON.stringify({
+        left:   formatBar.style.left,
+        top:    formatBar.style.top,
+        pinned: fmtPinned
+      }));
+    } catch(e) {}
+  }
+
+  function loadFmtPos() {
+    try {
+      var s = JSON.parse(localStorage.getItem(FMT_POS_KEY) || '{}');
+      if (s.left && s.top) {
+        formatBar.style.left = s.left;
+        formatBar.style.top  = s.top;
+      }
+      if (s.pinned) {
+        fmtPinned = true;
+        formatBar.classList.add('pinned');
+        fmtPinBtn.title = 'Unpin — let bar follow selection';
+        fmtPinBtn.textContent = '📍';
+      }
+    } catch(e) {}
+  }
+  loadFmtPos();
+
+  // ── Pin / unpin ──────────────────────────────────────────────
+  function pinFormatBar() {
+    fmtPinned = true;
+    formatBar.classList.add('pinned');
+    fmtPinBtn.title     = 'Unpin — let bar follow text selection';
+    fmtPinBtn.textContent = '📍';
+    saveFmtPos();
+  }
+  function unpinFormatBar() {
+    fmtPinned = false;
+    formatBar.classList.remove('pinned');
+    fmtPinBtn.title     = 'Pin here — stop bar from jumping on selection';
+    fmtPinBtn.textContent = '📌';
+    saveFmtPos();
+  }
+  fmtPinBtn.addEventListener('mousedown', function(e) { e.stopPropagation(); e.preventDefault(); });
+  fmtPinBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    fmtPinned ? unpinFormatBar() : pinFormatBar();
+  });
+
+  // ── Double-click handle → reset to centre-top default ───────
+  fmtDragHandle.addEventListener('dblclick', function(e) {
+    if (e.target === fmtPinBtn) return;
+    unpinFormatBar();
+    // Reset to a sensible centred default position
+    var barW = formatBar.offsetWidth;
+    formatBar.style.left = Math.max(8, (window.innerWidth  - barW) / 2) + 'px';
+    formatBar.style.top  = Math.max(8, window.innerHeight  * 0.12) + 'px';
+    saveFmtPos();
+  });
+
+  // ── Clamp helper ─────────────────────────────────────────────
+  function clampFmtPos(x, y) {
+    var barW = formatBar.offsetWidth  || 580;
+    var barH = formatBar.offsetHeight || 88;
+    var maxX = window.innerWidth  - barW  - 4;
+    var maxY = window.innerHeight - barH  - 4;
+    return {
+      x: Math.max(4, Math.min(x, maxX)),
+      y: Math.max(4, Math.min(y, maxY))
+    };
+  }
+
+  // ── Pointer helpers (unifies mouse + touch) ──────────────────
+  function getClientXY(e) {
+    if (e.touches && e.touches.length) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    if (e.changedTouches && e.changedTouches.length) {
+      return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  // ── Drag start ───────────────────────────────────────────────
+  function onDragStart(e) {
+    if (e.target === fmtPinBtn) return;   // pin button handles its own click
+    e.preventDefault();
+    var pt = getClientXY(e);
+    fmtDragActive = true;
+    fmtDragStartX = pt.x;
+    fmtDragStartY = pt.y;
+    fmtBarStartX  = parseInt(formatBar.style.left) || formatBar.getBoundingClientRect().left;
+    fmtBarStartY  = parseInt(formatBar.style.top)  || formatBar.getBoundingClientRect().top;
+    formatBar.classList.add('dragging');
+    // Auto-pin when user starts dragging
+    if (!fmtPinned) pinFormatBar();
+  }
+
+  // ── Drag move ────────────────────────────────────────────────
+  function onDragMove(e) {
+    if (!fmtDragActive) return;
+    e.preventDefault();
+    var pt  = getClientXY(e);
+    var dx  = pt.x - fmtDragStartX;
+    var dy  = pt.y - fmtDragStartY;
+    var pos = clampFmtPos(fmtBarStartX + dx, fmtBarStartY + dy);
+    formatBar.style.left = pos.x + 'px';
+    formatBar.style.top  = pos.y + 'px';
+  }
+
+  // ── Drag end ─────────────────────────────────────────────────
+  function onDragEnd() {
+    if (!fmtDragActive) return;
+    fmtDragActive = false;
+    formatBar.classList.remove('dragging');
+    saveFmtPos();   // persist final position
+  }
+
+  // Mouse events on handle; move/up on document so fast moves don't lose the bar
+  fmtDragHandle.addEventListener('mousedown',  onDragStart);
+  document.addEventListener('mousemove',       onDragMove);
+  document.addEventListener('mouseup',         onDragEnd);
+
+  // Touch events — full mobile drag support
+  fmtDragHandle.addEventListener('touchstart', onDragStart, { passive: false });
+  document.addEventListener('touchmove',       onDragMove,  { passive: false });
+  document.addEventListener('touchend',        onDragEnd);
+  document.addEventListener('touchcancel',     onDragEnd);
+
+  // ── Patch showFormatBar — respect pinned state ───────────────
+  // When pinned the bar stays where it is; it only becomes visible/hidden.
+  var _origShowFormatBar = showFormatBar;
+  showFormatBar = function(x, y) {
+    if (fmtPinned) {
+      // Just make it visible at its current position — don't move it
+      formatBar.classList.add('visible');
+      return;
+    }
+    // Not pinned — clamp and position normally
+    var barW = Math.min(620, window.innerWidth - 16);
+    var pos  = clampFmtPos(x, y - 72);
+    formatBar.style.left     = pos.x + 'px';
+    formatBar.style.top      = pos.y + 'px';
+    formatBar.style.minWidth = barW + 'px';
+    formatBar.classList.add('visible');
+  };
+
+  // Re-clamp on window resize so bar never ends up off-screen
+  window.addEventListener('resize', function() {
+    if (!fmtPinned || !formatBar.classList.contains('visible')) return;
+    var pos = clampFmtPos(
+      parseInt(formatBar.style.left) || 8,
+      parseInt(formatBar.style.top)  || 8
+    );
+    formatBar.style.left = pos.x + 'px';
+    formatBar.style.top  = pos.y + 'px';
   });
 
 
@@ -942,6 +1221,9 @@
     toolbar.style.display = 'none';
     disableEditMode();
     lockBtn.innerHTML = '<span class="lock-btn__icon">\uD83D\uDD12</span><span class="lock-btn__text">OWNER</span>';
+    // Firebase sign-out — clears the auth token so next unlock requires sign-in again
+    var api = window.Portfolio;
+    if (api && api.signOut) api.signOut();
   }
 
   if (sessionStorage.getItem(SESSION_KEY) === '1') unlock();
@@ -1453,6 +1735,7 @@
   /* ── Storage helpers ─────────────────────────────────── */
   var IMAGE_STORE_PREFIX = 'portfolio__img__';
 
+  /* storeImage — localStorage only (base64 fallback, called when Firebase unavailable) */
   function storeImage(key, dataUrl) {
     try { localStorage.setItem(IMAGE_STORE_PREFIX + key, dataUrl); return true; }
     catch(e) {
@@ -1464,11 +1747,26 @@
   }
 
   function loadStoredImages() {
-    // On page load, apply any stored images to their placeholders
+    // On page load, apply any stored images to their placeholders.
+    // Checks Portfolio API (which covers both Firebase URL cache AND legacy base64).
     document.querySelectorAll('[data-img-key]').forEach(function(placeholder) {
       var key = placeholder.getAttribute('data-img-key');
-      var stored = localStorage.getItem(IMAGE_STORE_PREFIX + key);
-      if (stored) applyStoredImage(placeholder, stored);
+      var api = window.Portfolio;
+      if (api) {
+        // Portfolio.getUploadedImage checks localStorage cache first (instant),
+        // then Firebase Storage — covers both paths
+        var storagePath = 'uploads/cards/' + key.replace(/[^a-zA-Z0-9_\-]/g, '_') + '.jpg';
+        api.getUploadedImage(storagePath, function(err, url) {
+          if (url) { applyStoredImage(placeholder, url); return; }
+          // Also check legacy base64 key for backwards compatibility
+          var legacy = localStorage.getItem(IMAGE_STORE_PREFIX + key);
+          if (legacy) applyStoredImage(placeholder, legacy);
+        });
+      } else {
+        // firebase.js not loaded — use legacy localStorage key
+        var stored = localStorage.getItem(IMAGE_STORE_PREFIX + key);
+        if (stored) applyStoredImage(placeholder, stored);
+      }
     });
   }
 
@@ -1581,25 +1879,60 @@
           var file = fileInput.files[0];
           if (!file) return;
           if (file.size > 4 * 1024 * 1024) {
-            alert('Image is ' + (file.size / 1024 / 1024).toFixed(1) + 'MB — too large for browser storage. Please resize to under 4MB, or add it directly to assets/images/ in your GitHub repo.');
+            alert('Image is ' + (file.size / 1024 / 1024).toFixed(1) + 'MB — too large. Please resize to under 4MB, or add it directly to assets/images/ in your GitHub repo.');
             return;
           }
-          var reader = new FileReader();
-          reader.onload = function(ev) {
-            var dataUrl = ev.target.result;
-            var ok = storeImage(key, dataUrl);
-            if (ok) {
-              applyStoredImage(placeholder, dataUrl);
-              // Flash the + button green briefly on success
-              trigger.style.background = '#4ade80';
-              trigger.querySelector('.upload-trigger__icon').textContent = '✓';
-              setTimeout(function() {
-                trigger.style.background = '';
-                trigger.querySelector('.upload-trigger__icon').textContent = '+';
-              }, 2000);
-            }
-          };
-          reader.readAsDataURL(file);
+
+          var api = window.Portfolio;
+          if (api && api.isFirebaseConnected && api.isFirebaseConnected()) {
+            // Firebase Storage path
+            var ext         = file.name.split('.').pop() || 'jpg';
+            var safeKey     = key.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            var storagePath = 'uploads/cards/' + safeKey + '.' + ext;
+            // Show uploading state
+            trigger.style.background = 'rgba(240,165,0,0.18)';
+            trigger.querySelector('.upload-trigger__icon').textContent = '↑';
+            api.uploadImage(storagePath, file,
+              function(progress) {
+                trigger.querySelector('.upload-trigger__icon').textContent = progress < 100 ? '↑' : '✓';
+              },
+              function(err, url) {
+                if (err) {
+                  trigger.style.background = 'rgba(248,113,113,0.2)';
+                  trigger.querySelector('.upload-trigger__icon').textContent = '!';
+                  setTimeout(function() {
+                    trigger.style.background = '';
+                    trigger.querySelector('.upload-trigger__icon').textContent = '+';
+                  }, 2500);
+                  return;
+                }
+                applyStoredImage(placeholder, url);
+                trigger.style.background = '#4ade80';
+                trigger.querySelector('.upload-trigger__icon').textContent = '✓';
+                setTimeout(function() {
+                  trigger.style.background = '';
+                  trigger.querySelector('.upload-trigger__icon').textContent = '+';
+                }, 2000);
+              }
+            );
+          } else {
+            // localStorage path (base64) — existing behaviour
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+              var dataUrl = ev.target.result;
+              var ok = storeImage(key, dataUrl);
+              if (ok) {
+                applyStoredImage(placeholder, dataUrl);
+                trigger.style.background = '#4ade80';
+                trigger.querySelector('.upload-trigger__icon').textContent = '✓';
+                setTimeout(function() {
+                  trigger.style.background = '';
+                  trigger.querySelector('.upload-trigger__icon').textContent = '+';
+                }, 2000);
+              }
+            };
+            reader.readAsDataURL(file);
+          }
           fileInput.value = ''; // reset so same file can be re-selected
         });
 
