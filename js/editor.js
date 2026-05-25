@@ -355,10 +355,63 @@
   }
 
   function loadSavedChanges() {
+    // 1. Restore text edits (data-edit-id fields)
     getEditables().forEach(function(el) {
       var id = el.getAttribute('data-edit-id');
       if (id) { var s = localStorage.getItem(storageKey(id)); if (s !== null) el.innerHTML = s; }
     });
+
+    // 2. Restore dynamically added cards (exp, nav, media, skill, cert)
+    //    These were saved by saveChanges() → __dynamic__ key but never reloaded.
+    try {
+      var dynJSON = localStorage.getItem(storageKey('__dynamic__'));
+      if (!dynJSON) return;
+      var dynCards = JSON.parse(dynJSON);
+      if (!Array.isArray(dynCards) || !dynCards.length) return;
+
+      dynCards.forEach(function(html) {
+        var tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        var card = tmp.firstElementChild;
+        if (!card) return;
+
+        // Find the right sibling to insert before based on card class
+        var anchor = null;
+        if (card.classList.contains('exp-card') && !card.classList.contains('exp-card--add')) {
+          anchor = document.querySelector('.exp-card--add');
+          // prefer exp-grid--bottom for proper layout
+          if (!anchor) anchor = document.querySelector('.exp-grid--bottom .exp-card--add');
+        } else if (card.classList.contains('nav-card')) {
+          anchor = document.querySelector('.card--add');
+        } else if (card.classList.contains('media-card')) {
+          anchor = document.getElementById('btn-add-media');
+        } else if (card.classList.contains('skill-card')) {
+          anchor = document.querySelector('.skill-add-card');
+        } else if (card.classList.contains('cert-card')) {
+          anchor = document.querySelector('.cert-add-card');
+        } else if (card.classList.contains('project-card')) {
+          anchor = document.querySelector('.project-add-card');
+        }
+
+        if (anchor && anchor.parentNode) {
+          anchor.parentNode.insertBefore(card, anchor);
+        }
+      });
+
+      // Notify page-level scripts that dynamic cards have been reinjected
+      // (e.g. media.html re-wires click handlers; projects.html re-wires doc viewers)
+      setTimeout(function() {
+        document.dispatchEvent(new CustomEvent('dynamicCardsRestored'));
+        // Re-wire add cards in case newly inserted cards have add-card children
+        wireAddCards();
+        if (document.body.classList.contains('owner-unlocked')) {
+          injectAllDeleteBtns();
+          setTimeout(injectUploadTriggers, 60);
+        }
+      }, 80);
+    } catch(e) {
+      // Silent — malformed JSON or missing elements are non-fatal
+    }
   }
 
   btnSave.addEventListener('click', saveChanges);
@@ -595,6 +648,16 @@
   formatBar.setAttribute('role', 'toolbar');
   formatBar.setAttribute('aria-label', 'Text formatting');
   formatBar.innerHTML = [
+    // DRAG HANDLE — grab to move, double-click to reset/unpin
+    '<div class="format-bar__drag-handle" id="fmt-drag-handle" title="Drag to move · Double-click to reset position">',
+      '<div class="format-bar__drag-dots">',
+        '<span></span><span></span><span></span>',
+        '<span></span><span></span><span></span>',
+        '<span></span><span></span><span></span>',
+      '</div>',
+      '<span class="format-bar__drag-label">FORMAT BAR — DRAG TO MOVE</span>',
+      '<button class="format-bar__pin-btn" id="fmt-pin-btn" title="Unpin — reset to follow text selection">📌</button>',
+    '</div>',
     // ROW 1: paragraph style, font, size, colour
     '<div class="format-bar__row">',
       '<select class="format-bar__heading-select" id="fmt-heading" title="Paragraph style">',
@@ -787,12 +850,191 @@
     if (!inEdit) return;
     savedRange = sel.getRangeAt(0).cloneRange();
     var rect = sel.getRangeAt(0).getBoundingClientRect();
-    showFormatBar(rect.left + window.scrollX + rect.width/2 - 280, rect.top + window.scrollY);
+    // rect coords are viewport-relative; format-bar is position:fixed — no scrollY offset needed
+    showFormatBar(rect.left + rect.width / 2 - 280, rect.top);
   });
 
-  formatBar.addEventListener('mousedown', function() {
-    var sel = window.getSelection();
-    if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
+  formatBar.addEventListener('mousedown', function(e) {
+    // Only save range when clicking on formatting controls, not the drag handle
+    if (!e.target.closest('#fmt-drag-handle')) {
+      var sel = window.getSelection();
+      if (sel && sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
+    }
+  });
+
+  /* ── FORMAT BAR: DRAG + PIN LOGIC ──────────────────────────
+     The drag handle (top strip) lets the owner grab and move
+     the format bar anywhere on screen.
+     Pin button   → locks position; bar no longer jumps on selection
+     Double-click → resets to follow-selection behaviour
+     Position persisted in localStorage so it survives reloads.
+  ──────────────────────────────────────────────────────────── */
+  var FMT_POS_KEY   = 'portfolio__fmtbar__pos';
+  var fmtPinBtn     = document.getElementById('fmt-pin-btn');
+  var fmtDragHandle = document.getElementById('fmt-drag-handle');
+
+  // State
+  var fmtPinned     = false;   // true  → bar stays put; false → follows selection
+  var fmtDragActive = false;
+  var fmtDragStartX = 0, fmtDragStartY = 0;  // pointer start
+  var fmtBarStartX  = 0, fmtBarStartY  = 0;  // bar start
+
+  // ── Persist / restore position ──────────────────────────────
+  function saveFmtPos() {
+    try {
+      localStorage.setItem(FMT_POS_KEY, JSON.stringify({
+        left:   formatBar.style.left,
+        top:    formatBar.style.top,
+        pinned: fmtPinned
+      }));
+    } catch(e) {}
+  }
+
+  function loadFmtPos() {
+    try {
+      var s = JSON.parse(localStorage.getItem(FMT_POS_KEY) || '{}');
+      if (s.left && s.top) {
+        formatBar.style.left = s.left;
+        formatBar.style.top  = s.top;
+      }
+      if (s.pinned) {
+        fmtPinned = true;
+        formatBar.classList.add('pinned');
+        fmtPinBtn.title = 'Unpin — let bar follow selection';
+        fmtPinBtn.textContent = '📍';
+      }
+    } catch(e) {}
+  }
+  loadFmtPos();
+
+  // ── Pin / unpin ──────────────────────────────────────────────
+  function pinFormatBar() {
+    fmtPinned = true;
+    formatBar.classList.add('pinned');
+    fmtPinBtn.title     = 'Unpin — let bar follow text selection';
+    fmtPinBtn.textContent = '📍';
+    saveFmtPos();
+  }
+  function unpinFormatBar() {
+    fmtPinned = false;
+    formatBar.classList.remove('pinned');
+    fmtPinBtn.title     = 'Pin here — stop bar from jumping on selection';
+    fmtPinBtn.textContent = '📌';
+    saveFmtPos();
+  }
+  fmtPinBtn.addEventListener('mousedown', function(e) { e.stopPropagation(); e.preventDefault(); });
+  fmtPinBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    fmtPinned ? unpinFormatBar() : pinFormatBar();
+  });
+
+  // ── Double-click handle → reset to centre-top default ───────
+  fmtDragHandle.addEventListener('dblclick', function(e) {
+    if (e.target === fmtPinBtn) return;
+    unpinFormatBar();
+    // Reset to a sensible centred default position
+    var barW = formatBar.offsetWidth;
+    formatBar.style.left = Math.max(8, (window.innerWidth  - barW) / 2) + 'px';
+    formatBar.style.top  = Math.max(8, window.innerHeight  * 0.12) + 'px';
+    saveFmtPos();
+  });
+
+  // ── Clamp helper ─────────────────────────────────────────────
+  function clampFmtPos(x, y) {
+    var barW = formatBar.offsetWidth  || 580;
+    var barH = formatBar.offsetHeight || 88;
+    var maxX = window.innerWidth  - barW  - 4;
+    var maxY = window.innerHeight - barH  - 4;
+    return {
+      x: Math.max(4, Math.min(x, maxX)),
+      y: Math.max(4, Math.min(y, maxY))
+    };
+  }
+
+  // ── Pointer helpers (unifies mouse + touch) ──────────────────
+  function getClientXY(e) {
+    if (e.touches && e.touches.length) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    if (e.changedTouches && e.changedTouches.length) {
+      return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  // ── Drag start ───────────────────────────────────────────────
+  function onDragStart(e) {
+    if (e.target === fmtPinBtn) return;   // pin button handles its own click
+    e.preventDefault();
+    var pt = getClientXY(e);
+    fmtDragActive = true;
+    fmtDragStartX = pt.x;
+    fmtDragStartY = pt.y;
+    fmtBarStartX  = parseInt(formatBar.style.left) || formatBar.getBoundingClientRect().left;
+    fmtBarStartY  = parseInt(formatBar.style.top)  || formatBar.getBoundingClientRect().top;
+    formatBar.classList.add('dragging');
+    // Auto-pin when user starts dragging
+    if (!fmtPinned) pinFormatBar();
+  }
+
+  // ── Drag move ────────────────────────────────────────────────
+  function onDragMove(e) {
+    if (!fmtDragActive) return;
+    e.preventDefault();
+    var pt  = getClientXY(e);
+    var dx  = pt.x - fmtDragStartX;
+    var dy  = pt.y - fmtDragStartY;
+    var pos = clampFmtPos(fmtBarStartX + dx, fmtBarStartY + dy);
+    formatBar.style.left = pos.x + 'px';
+    formatBar.style.top  = pos.y + 'px';
+  }
+
+  // ── Drag end ─────────────────────────────────────────────────
+  function onDragEnd() {
+    if (!fmtDragActive) return;
+    fmtDragActive = false;
+    formatBar.classList.remove('dragging');
+    saveFmtPos();   // persist final position
+  }
+
+  // Mouse events on handle; move/up on document so fast moves don't lose the bar
+  fmtDragHandle.addEventListener('mousedown',  onDragStart);
+  document.addEventListener('mousemove',       onDragMove);
+  document.addEventListener('mouseup',         onDragEnd);
+
+  // Touch events — full mobile drag support
+  fmtDragHandle.addEventListener('touchstart', onDragStart, { passive: false });
+  document.addEventListener('touchmove',       onDragMove,  { passive: false });
+  document.addEventListener('touchend',        onDragEnd);
+  document.addEventListener('touchcancel',     onDragEnd);
+
+  // ── Patch showFormatBar — respect pinned state ───────────────
+  // When pinned the bar stays where it is; it only becomes visible/hidden.
+  var _origShowFormatBar = showFormatBar;
+  showFormatBar = function(x, y) {
+    if (fmtPinned) {
+      // Just make it visible at its current position — don't move it
+      formatBar.classList.add('visible');
+      return;
+    }
+    // Not pinned — clamp and position normally
+    var barW = Math.min(620, window.innerWidth - 16);
+    var pos  = clampFmtPos(x, y - 72);
+    formatBar.style.left     = pos.x + 'px';
+    formatBar.style.top      = pos.y + 'px';
+    formatBar.style.minWidth = barW + 'px';
+    formatBar.classList.add('visible');
+  };
+
+  // Re-clamp on window resize so bar never ends up off-screen
+  window.addEventListener('resize', function() {
+    if (!fmtPinned || !formatBar.classList.contains('visible')) return;
+    var pos = clampFmtPos(
+      parseInt(formatBar.style.left) || 8,
+      parseInt(formatBar.style.top)  || 8
+    );
+    formatBar.style.left = pos.x + 'px';
+    formatBar.style.top  = pos.y + 'px';
   });
 
 
