@@ -810,6 +810,10 @@
   formatBar.setAttribute('role', 'toolbar');
   formatBar.setAttribute('aria-label', 'Text formatting');
   formatBar.innerHTML = [
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 1ab7832b1697feacc9fb089d4072d4268719491b
     // DRAG HANDLE — grab to move, double-click to reset/unpin
     '<div class="format-bar__drag-handle" id="fmt-drag-handle" title="Drag to move · Double-click to reset position">',
       '<div class="format-bar__drag-dots">',
@@ -820,6 +824,13 @@
       '<span class="format-bar__drag-label">FORMAT BAR — DRAG TO MOVE</span>',
       '<button class="format-bar__pin-btn" id="fmt-pin-btn" title="Unpin — reset to follow text selection">📌</button>',
     '</div>',
+<<<<<<< HEAD
+=======
+=======
+    // Drag handle — grab to move, double-click to reset
+    '<div class="format-bar__handle" title="Drag to reposition \u00b7 Double-click to reset">\u283f</div>',
+>>>>>>> 5223e90d2a1039125410e70b603b403d916f4156
+>>>>>>> 1ab7832b1697feacc9fb089d4072d4268719491b
     // ROW 1: paragraph style, font, size, colour
     '<div class="format-bar__row">',
       '<select class="format-bar__heading-select" id="fmt-heading" title="Paragraph style">',
@@ -1012,8 +1023,17 @@
     if (!inEdit) return;
     savedRange = sel.getRangeAt(0).cloneRange();
     var rect = sel.getRangeAt(0).getBoundingClientRect();
+<<<<<<< HEAD
     // rect coords are viewport-relative; format-bar is position:fixed — no scrollY offset needed
     showFormatBar(rect.left + rect.width / 2 - 280, rect.top);
+=======
+<<<<<<< HEAD
+    // rect coords are viewport-relative; format-bar is position:fixed — no scrollY offset needed
+    showFormatBar(rect.left + rect.width / 2 - 280, rect.top);
+=======
+    showFormatBar(rect.left + rect.width / 2, rect.top);
+>>>>>>> 5223e90d2a1039125410e70b603b403d916f4156
+>>>>>>> 1ab7832b1697feacc9fb089d4072d4268719491b
   });
 
   formatBar.addEventListener('mousedown', function(e) {
