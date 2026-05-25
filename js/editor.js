@@ -643,11 +643,15 @@
   ══════════════════════════════════════════════════════════ */
 
   /* ── FORMAT BAR: MS Word-style two-row ribbon ── */
+  var FMTBAR_POS_KEY = 'editorFmtBarPos'; // localStorage key for pinned position
+  var fmtBarPinned   = false;             // true once user drags the bar
+
   var formatBar = document.createElement('div');
   formatBar.className = 'format-bar';
   formatBar.setAttribute('role', 'toolbar');
   formatBar.setAttribute('aria-label', 'Text formatting');
   formatBar.innerHTML = [
+<<<<<<< HEAD
     // DRAG HANDLE — grab to move, double-click to reset/unpin
     '<div class="format-bar__drag-handle" id="fmt-drag-handle" title="Drag to move · Double-click to reset position">',
       '<div class="format-bar__drag-dots">',
@@ -658,6 +662,10 @@
       '<span class="format-bar__drag-label">FORMAT BAR — DRAG TO MOVE</span>',
       '<button class="format-bar__pin-btn" id="fmt-pin-btn" title="Unpin — reset to follow text selection">📌</button>',
     '</div>',
+=======
+    // Drag handle — grab to move, double-click to reset
+    '<div class="format-bar__handle" title="Drag to reposition \u00b7 Double-click to reset">\u283f</div>',
+>>>>>>> 5223e90d2a1039125410e70b603b403d916f4156
     // ROW 1: paragraph style, font, size, colour
     '<div class="format-bar__row">',
       '<select class="format-bar__heading-select" id="fmt-heading" title="Paragraph style">',
@@ -724,6 +732,70 @@
   ].join('');
   document.body.appendChild(formatBar);
 
+  // ── Restore pinned position from previous session ──────────────────────────
+  (function () {
+    var saved = localStorage.getItem(FMTBAR_POS_KEY);
+    if (!saved) return;
+    try {
+      var pos = JSON.parse(saved);
+      formatBar.style.left = Math.max(0, Math.min(pos.left, window.innerWidth  - 100)) + 'px';
+      formatBar.style.top  = Math.max(0, Math.min(pos.top,  window.innerHeight - 40))  + 'px';
+      fmtBarPinned = true;
+      formatBar.classList.add('format-bar--pinned');
+    } catch (e) { localStorage.removeItem(FMTBAR_POS_KEY); }
+  }());
+
+  // ── Drag handle logic ──────────────────────────────────────────────────────
+  var fmtHandle = formatBar.querySelector('.format-bar__handle');
+  var fmtDrag   = { active: false, startX: 0, startY: 0, origLeft: 0, origTop: 0 };
+
+  fmtHandle.addEventListener('mousedown', function (e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    fmtDrag.active   = true;
+    fmtDrag.startX   = e.clientX;
+    fmtDrag.startY   = e.clientY;
+    fmtDrag.origLeft = parseInt(formatBar.style.left) || 0;
+    fmtDrag.origTop  = parseInt(formatBar.style.top)  || 0;
+    formatBar.classList.add('format-bar--dragging');
+  });
+
+  document.addEventListener('mousemove', function (e) {
+    if (!fmtDrag.active) return;
+    var newLeft = Math.max(0, Math.min(
+      window.innerWidth  - formatBar.offsetWidth,
+      fmtDrag.origLeft + (e.clientX - fmtDrag.startX)
+    ));
+    var newTop = Math.max(0, Math.min(
+      window.innerHeight - formatBar.offsetHeight,
+      fmtDrag.origTop  + (e.clientY - fmtDrag.startY)
+    ));
+    formatBar.style.left = newLeft + 'px';
+    formatBar.style.top  = newTop  + 'px';
+  });
+
+  document.addEventListener('mouseup', function () {
+    if (!fmtDrag.active) return;
+    fmtDrag.active = false;
+    formatBar.classList.remove('format-bar--dragging');
+    fmtBarPinned = true;
+    formatBar.classList.add('format-bar--pinned');
+    localStorage.setItem(FMTBAR_POS_KEY, JSON.stringify({
+      left: parseInt(formatBar.style.left),
+      top:  parseInt(formatBar.style.top)
+    }));
+  });
+
+  // Double-click handle → reset to auto-follow mode
+  fmtHandle.addEventListener('dblclick', function (e) {
+    e.stopPropagation();
+    fmtBarPinned = false;
+    formatBar.classList.remove('format-bar--pinned');
+    localStorage.removeItem(FMTBAR_POS_KEY);
+    hideFormatBar(); // re-appears on next text selection
+  });
+
   var savedRange = null;
 
   function saveRange() {
@@ -732,13 +804,16 @@
   }
   function hideFormatBar() { formatBar.classList.remove('visible'); }
   function showFormatBar(x, y) {
-    // Position above selection, clamped to viewport
-    var barW = Math.min(620, window.innerWidth - 16);
-    var left = Math.min(x - barW/2, window.innerWidth - barW - 8);
-    if (left < 8) left = 8;
-    formatBar.style.left  = left + 'px';
-    formatBar.style.top   = (y - 20) + 'px'; // shows above cursor
-    formatBar.style.minWidth = barW + 'px';
+    if (!fmtBarPinned) {
+      // Position above selection, clamped to viewport (coords are already viewport-relative)
+      var barW = Math.min(620, window.innerWidth - 16);
+      var left = Math.min(x - barW / 2, window.innerWidth - barW - 8);
+      if (left < 8) left = 8;
+      var top  = Math.max(8, y - formatBar.offsetHeight - 8);
+      formatBar.style.left     = left + 'px';
+      formatBar.style.top      = top  + 'px';
+      formatBar.style.minWidth = barW + 'px';
+    }
     formatBar.classList.add('visible');
   }
   function restoreSelection() {
@@ -850,8 +925,12 @@
     if (!inEdit) return;
     savedRange = sel.getRangeAt(0).cloneRange();
     var rect = sel.getRangeAt(0).getBoundingClientRect();
+<<<<<<< HEAD
     // rect coords are viewport-relative; format-bar is position:fixed — no scrollY offset needed
     showFormatBar(rect.left + rect.width / 2 - 280, rect.top);
+=======
+    showFormatBar(rect.left + rect.width / 2, rect.top);
+>>>>>>> 5223e90d2a1039125410e70b603b403d916f4156
   });
 
   formatBar.addEventListener('mousedown', function(e) {
