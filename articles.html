@@ -901,6 +901,10 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase.js"></script>
   <script src="js/main.js"></script>
   <script>
   (function() {
@@ -1179,33 +1183,58 @@
     wireRows();
 
 
-    /* ── LIKE BUTTONS ───────────────────────────── */
-    function getLikeKey(id) { return 'portfolio__like__article__' + id; }
-    function getLikeCount(id) { try { return parseInt(localStorage.getItem(getLikeKey(id)) || '0'); } catch(e) { return 0; } }
-    function isLiked(id) { try { return localStorage.getItem(getLikeKey(id) + '__liked') === '1'; } catch(e) { return false; } }
-
+    /* ── LIKE BUTTONS — Firebase global likes ──────────────────
+       Likes are stored in Firebase Realtime Database at:
+         likes/article__<id>  →  { count: N, voters: { vid: true } }
+       Real-time: all visitors see the same count immediately.
+       One like per browser enforced by voter ID (localStorage)
+       and server-side ±1 validation rule.
+       Falls back to localStorage if Firebase is unavailable.
+    ──────────────────────────────────────────────────────── */
     function wireLikeBtn(btn) {
-      var id = btn.getAttribute('data-like-id');
+      var id      = btn.getAttribute('data-like-id');
+      var likeId  = 'article__' + id;          /* Firebase key namespace */
       var countEl = btn.querySelector('.like-count');
-      var count = getLikeCount(id);
-      var liked = isLiked(id);
-      countEl.textContent = count > 0 ? count : '';
-      btn.classList.toggle('liked', liked);
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var c = getLikeCount(id);
-        var wasLiked = isLiked(id);
-        if (wasLiked) {
-          c = Math.max(0, c - 1);
-          localStorage.setItem(getLikeKey(id) + '__liked', '0');
-        } else {
-          c++;
-          localStorage.setItem(getLikeKey(id) + '__liked', '1');
-        }
-        localStorage.setItem(getLikeKey(id), c);
-        countEl.textContent = c > 0 ? c : '';
-        btn.classList.toggle('liked', !wasLiked);
-      });
+
+      if (window.PF) {
+        /* ── Firebase path ── */
+        btn.setAttribute('disabled', 'disabled');
+
+        /* watchLike fires immediately on load then on every change */
+        PF.watchLike(likeId, function(count, isLiked) {
+          countEl.textContent = count > 0 ? count : '';
+          btn.classList.toggle('liked', isLiked);
+          btn.removeAttribute('disabled');
+        });
+
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          btn.setAttribute('disabled', 'disabled'); /* prevent double-tap */
+          PF.toggleLike(likeId).catch(function() {
+            btn.removeAttribute('disabled');        /* re-enable on error */
+          });
+          /* UI updates via watchLike callback — no manual DOM change needed */
+        });
+
+      } else {
+        /* ── localStorage fallback (Firebase unavailable) ── */
+        var key   = 'portfolio__like__article__' + id;
+        var count = parseInt(localStorage.getItem(key) || '0');
+        var liked = localStorage.getItem(key + '__liked') === '1';
+        countEl.textContent = count > 0 ? count : '';
+        btn.classList.toggle('liked', liked);
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          count = liked ? Math.max(0, count - 1) : count + 1;
+          liked = !liked;
+          try {
+            localStorage.setItem(key, count);
+            localStorage.setItem(key + '__liked', liked ? '1' : '0');
+          } catch(ex) {}
+          countEl.textContent = count > 0 ? count : '';
+          btn.classList.toggle('liked', liked);
+        });
+      }
     }
     document.querySelectorAll('.like-btn[data-like-id]').forEach(wireLikeBtn);
 
@@ -1245,11 +1274,6 @@
     document.addEventListener('keydown', function(e) { if (e.key==='Escape'&&overlay.classList.contains('open')) closeReader(); });
   })();
   </script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="js/firebase.js"></script>
-  <script src="js/main.js"></script>
   <script src="js/editor.js"></script>
 </body>
 </html>

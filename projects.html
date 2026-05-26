@@ -1117,6 +1117,10 @@
   </div>
 
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase.js"></script>
   <script src="js/main.js"></script>
 
   <script>
@@ -1396,30 +1400,56 @@
     });
 
 
-    /* ── LIKE BUTTONS ─────────────────── */
-    function getProjLikeKey(id) { return 'portfolio__like__project__' + id; }
-    function getProjLikeCount(id) { try { return parseInt(localStorage.getItem(getProjLikeKey(id)) || '0'); } catch(e){ return 0; } }
-    function isProjLiked(id) { try { return localStorage.getItem(getProjLikeKey(id)+'__liked')==='1'; } catch(e){ return false; } }
-
+    /* ── LIKE BUTTONS — Firebase global likes ──────────────────
+       Likes stored at: likes/project__<id>
+       Falls back to localStorage if Firebase unavailable.
+    ──────────────────────────────────────────────────────── */
     function wireProjLikeBtns() {
       document.querySelectorAll('.like-btn[data-like-id]').forEach(function(btn) {
-        if (btn._likeWired) return; btn._likeWired = true;
-        var id = btn.getAttribute('data-like-id');
+        if (btn._likeWired) return;
+        btn._likeWired = true;
+
+        var id     = btn.getAttribute('data-like-id');
+        var likeId = 'project__' + id;           /* Firebase key namespace */
         var countEl = btn.querySelector('.like-count');
-        var c = getProjLikeCount(id);
-        var liked = isProjLiked(id);
-        countEl.textContent = c > 0 ? c : '';
-        btn.classList.toggle('liked', liked);
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation(); e.preventDefault();
-          var cur = getProjLikeCount(id);
-          var wasLiked = isProjLiked(id);
-          cur = wasLiked ? Math.max(0, cur-1) : cur+1;
-          localStorage.setItem(getProjLikeKey(id)+'__liked', wasLiked?'0':'1');
-          localStorage.setItem(getProjLikeKey(id), cur);
-          countEl.textContent = cur > 0 ? cur : '';
-          btn.classList.toggle('liked', !wasLiked);
-        });
+
+        if (window.PF) {
+          /* ── Firebase path ── */
+          btn.setAttribute('disabled', 'disabled');
+
+          PF.watchLike(likeId, function(count, isLiked) {
+            countEl.textContent = count > 0 ? count : '';
+            btn.classList.toggle('liked', isLiked);
+            btn.removeAttribute('disabled');
+          });
+
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            btn.setAttribute('disabled', 'disabled');
+            PF.toggleLike(likeId).catch(function() {
+              btn.removeAttribute('disabled');
+            });
+          });
+
+        } else {
+          /* ── localStorage fallback ── */
+          var key   = 'portfolio__like__project__' + id;
+          var count = parseInt(localStorage.getItem(key) || '0');
+          var liked = localStorage.getItem(key + '__liked') === '1';
+          countEl.textContent = count > 0 ? count : '';
+          btn.classList.toggle('liked', liked);
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            count = liked ? Math.max(0, count - 1) : count + 1;
+            liked = !liked;
+            try {
+              localStorage.setItem(key, count);
+              localStorage.setItem(key + '__liked', liked ? '1' : '0');
+            } catch(ex) {}
+            countEl.textContent = count > 0 ? count : '';
+            btn.classList.toggle('liked', liked);
+          });
+        }
       });
     }
     wireProjLikeBtns();
@@ -1427,11 +1457,6 @@
   })();
   </script>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="js/firebase.js"></script>
-  <script src="js/main.js"></script>
   <script src="js/editor.js"></script>
 
 </body>
