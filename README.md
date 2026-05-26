@@ -128,7 +128,7 @@ The site has a built-in CMS. Every piece of visible text is editable directly in
 ### How to edit content
 
 1. Click the **🔒 OWNER** button (bottom-right of any page)
-2. Enter your passphrase
+2. Enter your passphrase (set via localStorage — see SECURITY.md)
 3. If your Firebase session has expired, a second sign-in prompt appears — enter your owner email and password (this is the second security layer protecting write access to the database)
 4. Click any text on the page — it becomes editable in-place
 5. A **Format Bar** appears when you select text — drag it anywhere on screen; position is remembered across page loads
@@ -139,7 +139,7 @@ The site has a built-in CMS. Every piece of visible text is editable directly in
 
 | Layer | What it controls | Technology |
 |---|---|---|
-| Passphrase (`blueprint2025`) | Shows/hides the editing UI | `sessionStorage` — expires when tab closes |
+| Passphrase (private — see SECURITY.md) | Shows/hides the editing UI | `sessionStorage` — expires when tab closes |
 | Firebase email/password | Grants write access to the database | Firebase Auth — persists across browser restarts |
 
 Both must be valid to save. If you forget one, the other still works as a fallback:
