@@ -180,12 +180,13 @@
     ════════════════════════════════════════════════════════ */
 
     /**
-     * Load all saved edits in one read.
+     * Load saved edits for one page in one read.
+     * pageName = window.location.pathname page slug (e.g. 'about', 'index')
      * callback(editsObject) where keys = edit-IDs, values = HTML strings.
      * Call on every page load before rendering.
      */
-    loadEdits: function (callback) {
-      db.ref('edits').once('value', function (snap) {
+    loadEdits: function (pageName, callback) {
+      db.ref('edits/' + pageName).once('value', function (snap) {
         callback(snap.val() || {});
       });
     },
@@ -350,6 +351,15 @@
     updateSubmission: function (key, status) {
       if (!auth.currentUser) return Promise.reject(new Error('Not signed in to Firebase'));
       return db.ref('submissions/' + key + '/status').set(status);
+    },
+
+    /**
+     * Delete all saved edits for one page (called by Reset button).
+     * pageName = page slug. Requires owner auth. Returns Promise.
+     */
+    clearPageEdits: function (pageName) {
+      if (!auth.currentUser) return Promise.reject(new Error('Not signed in to Firebase'));
+      return db.ref('edits/' + pageName).remove();
     }
 
   }; /* end window.PF */
