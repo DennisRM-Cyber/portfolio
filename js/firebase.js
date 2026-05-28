@@ -180,13 +180,12 @@
     ════════════════════════════════════════════════════════ */
 
     /**
-     * Load saved edits for one page in one read.
-     * pageName = window.location.pathname page slug (e.g. 'about', 'index')
+     * Load all saved edits in one read.
      * callback(editsObject) where keys = edit-IDs, values = HTML strings.
      * Call on every page load before rendering.
      */
-    loadEdits: function (pageName, callback) {
-      db.ref('edits/' + pageName).once('value', function (snap) {
+    loadEdits: function (callback) {
+      db.ref('edits').once('value', function (snap) {
         callback(snap.val() || {});
       });
     },
@@ -354,12 +353,88 @@
     },
 
     /**
-     * Delete all saved edits for one page (called by Reset button).
-     * pageName = page slug. Requires owner auth. Returns Promise.
+     * Delete all saved edits for one page (Reset button).
+     * Requires owner auth. Returns Promise.
      */
     clearPageEdits: function (pageName) {
       if (!auth.currentUser) return Promise.reject(new Error('Not signed in to Firebase'));
       return db.ref('edits/' + pageName).remove();
+    },
+
+
+    /* ════════════════════════════════════════════════════════
+       MEDIA COLLECTIONS
+       Images live in Cloudinary; URLs + captions live here.
+       Path: collections/<collId>/items/<pushKey>
+             → { url, caption, ts }
+    ════════════════════════════════════════════════════════ */
+
+    /** Subscribe to a collection — fires on load then on every change.
+     *  callback(itemsArray) sorted oldest-first, each item has ._key.
+     *  Returns unsubscribe function. */
+    watchCollection: function (collId, callback) {
+      var ref     = db.ref('collections/' + collId + '/items');
+      var handler = function (snap) {
+        var items = [];
+        snap.forEach(function (child) {
+          var item  = child.val();
+          item._key = child.key;
+          items.push(item);
+        });
+        items.sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+        callback(items);
+      };
+      ref.on('value', handler);
+      return function () { ref.off('value', handler); };
+    },
+
+    /** Add a Cloudinary URL to a collection. Owner auth required. Returns Promise. */
+    addCollectionItem: function (collId, url, caption) {
+      if (!auth.currentUser) return Promise.reject(new Error('Not signed in to Firebase'));
+      return db.ref('collections/' + collId + '/items').push({
+        url:     url,
+        caption: caption || '',
+        ts:      Date.now()
+      });
+    },
+
+    /** Remove an item by Firebase push key. Owner auth required. Returns Promise. */
+    removeCollectionItem: function (collId, itemKey) {
+      if (!auth.currentUser) return Promise.reject(new Error('Not signed in to Firebase'));
+      return db.ref('collections/' + collId + '/items/' + itemKey).remove();
+    },
+
+    /** Update an item caption. Owner auth required. Returns Promise. */
+    updateCollectionCaption: function (collId, itemKey, caption) {
+      if (!auth.currentUser) return Promise.reject(new Error('Not signed in to Firebase'));
+      return db.ref('collections/' + collId + '/items/' + itemKey + '/caption').set(caption);
+    },
+
+
+    /* ════════════════════════════════════════════════════════
+       PAGE VIEW COUNTER
+       Simple privacy-first analytics — your data, your DB.
+       Count-only increments; no IP, no fingerprint stored.
+       Path: pageviews/<pageName>  →  number
+    ════════════════════════════════════════════════════════ */
+
+    /** Increment the view count for a page. Fire-and-forget. */
+    trackPageView: function (pageName) {
+      db.ref('pageviews/' + pageName).transaction(function (current) {
+        return (current || 0) + 1;
+      });
+    },
+
+    /**
+     * Subscribe to all page view counts in real-time.
+     * callback(countsObject) — keys = page slugs, values = counts.
+     * Returns unsubscribe function.
+     */
+    watchPageViews: function (callback) {
+      var ref     = db.ref('pageviews');
+      var handler = function (snap) { callback(snap.val() || {}); };
+      ref.on('value', handler);
+      return function () { ref.off('value', handler); };
     }
 
   }; /* end window.PF */

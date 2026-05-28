@@ -1047,6 +1047,10 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="js/firebase.js"></script>
   <script src="js/main.js"></script>
 
   <script>
@@ -1056,45 +1060,62 @@
   (function() {
     'use strict';
 
-    /* ── COLLECTION STORAGE ─────────────────────────────────────── */
-    var COLL_PREFIX = 'portfolio__collection__';
+    /* ── CLOUDINARY CONFIG ──────────────────────────────────────────
+       Fill in both values once you have your Cloudinary account.
+       Cloud Name:    dashboard.cloudinary.com → top of page
+       Upload preset: Settings → Upload → Upload presets (Unsigned)
+    ─────────────────────────────────────────────────────────────── */
+    var CLD_CLOUD  = 'dqloeuu33';     
+    var CLD_PRESET = 'i1mylmri';  
 
+    /* ── IN-MEMORY COLLECTION CACHE ────────────────────────────────
+       Populated by Firebase real-time listeners on page load.
+       Synchronous reads everywhere use this — no async needed.
+       Items: { _key, url, caption, ts }
+    ─────────────────────────────────────────────────────────────── */
+    var collCache = { photo: [], design: [] };
+
+    /* ── CLOUDINARY UPLOAD ──────────────────────────────────────── */
+    function uploadToCloudinary(file, onSuccess, onError) {
+      if (!CLD_CLOUD || CLD_CLOUD === 'YOUR_CLOUD_NAME') {
+        onError(new Error('Cloudinary not configured — set CLD_CLOUD and CLD_PRESET in media.html'));
+        return;
+      }
+      var fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLD_PRESET);
+      fd.append('folder', 'portfolio');
+      fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/image/upload', {
+        method: 'POST', body: fd
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.secure_url) { onSuccess(d.secure_url); }
+        else { onError(new Error(d.error ? d.error.message : 'Upload failed')); }
+      })
+      .catch(onError);
+    }
+
+    /* ── COLLECTIONS (Firebase-backed) ──────────────────────────────
+       All reads are synchronous from collCache (updated by listeners).
+       All writes go to Firebase → listener fires → cache + UI update.
+    ─────────────────────────────────────────────────────────────── */
     var Collections = {
-      key: function(id) { return COLL_PREFIX + id; },
+      getItems: function(collId) { return collCache[collId] || []; },
 
-      load: function(id) {
-        try { return JSON.parse(localStorage.getItem(this.key(id)) || '{"items":[]}'); }
-        catch(e) { return { items: [] }; }
+      addItem: function(collId, url, caption) {
+        if (!window.PF) return Promise.reject(new Error('Firebase not loaded'));
+        return PF.addCollectionItem(collId, url, caption || '');
       },
 
-      save: function(id, data) {
-        try { localStorage.setItem(this.key(id), JSON.stringify(data)); return true; }
-        catch(e) { return false; }
+      removeItem: function(collId, itemKey) {
+        if (!window.PF) return Promise.reject(new Error('Firebase not loaded'));
+        return PF.removeCollectionItem(collId, itemKey);
       },
 
-      addItem: function(id, src, caption) {
-        var data = this.load(id);
-        var item = {
-          id: 'i' + Date.now() + Math.random().toString(36).slice(2,5),
-          src: src,
-          caption: caption || '',
-          ts: Date.now()
-        };
-        data.items.push(item);
-        this.save(id, data);
-        return item;
-      },
-
-      removeItem: function(collId, itemId) {
-        var data = this.load(collId);
-        data.items = data.items.filter(function(i) { return i.id !== itemId; });
-        this.save(collId, data);
-      },
-
-      updateCaption: function(collId, itemId, caption) {
-        var data = this.load(collId);
-        data.items.forEach(function(i) { if (i.id === itemId) i.caption = caption; });
-        this.save(collId, data);
+      updateCaption: function(collId, itemKey, caption) {
+        if (!window.PF) return Promise.reject(new Error('Firebase not loaded'));
+        return PF.updateCollectionCaption(collId, itemKey, caption);
       }
     };
 
@@ -1118,7 +1139,7 @@
     }
 
     function renderPreview(collId) {
-      var data     = Collections.load(collId);
+      var items    = Collections.getItems(collId);
       var slidesEl = document.getElementById('slides-' + collId);
       var countEl  = document.getElementById('count-' + collId);
       var emptyEl  = document.getElementById('empty-' + collId);
@@ -1127,7 +1148,7 @@
       stopSlideshow(collId);
       slidesEl.innerHTML = '';
 
-      var n    = data.items.length;
+      var n    = items.length;
       var noun = collId === 'photo' ? ' photo' : ' design';
       if (countEl) countEl.textContent = n + noun + (n !== 1 ? 's' : '');
 
@@ -1138,12 +1159,12 @@
       if (emptyEl) emptyEl.style.display = 'none';
 
       // Shuffle for variety on each load
-      var items = data.items.slice().sort(function() { return Math.random() - 0.5; });
-      items.forEach(function(item, idx) {
+      var shuffled = items.slice().sort(function() { return Math.random() - 0.5; });
+      shuffled.forEach(function(item, idx) {
         var slide = document.createElement('div');
         slide.className = 'collection-slide' + (idx === 0 ? ' active' : '');
         var img = document.createElement('img');
-        img.src = item.src;
+        img.src = item.url;                         /* Cloudinary URL */
         img.alt = item.caption || (collId + ' ' + (idx + 1));
         slide.appendChild(img);
         slidesEl.appendChild(slide);
@@ -1153,8 +1174,8 @@
 
     /* ── STATS UPDATE ───────────────────────────────────────────── */
     function updateStats() {
-      var photoN  = Collections.load('photo').items.length;
-      var designN = Collections.load('design').items.length;
+      var photoN  = Collections.getItems('photo').length;
+      var designN = Collections.getItems('design').length;
       var videoN  = document.querySelectorAll('.media-card[data-filter="video"]').length;
       var socialN = document.querySelectorAll('.media-card[data-filter="social"]').length;
       var sp = document.getElementById('stat-photo');
@@ -1167,9 +1188,16 @@
       if (ss) ss.textContent = socialN;
     }
 
-    /* ── ADD IMAGES TO COLLECTION ───────────────────────────────── */
+    /* ── ADD IMAGES TO COLLECTION ───────────────────────────────────
+       Flow: file picker → Cloudinary upload → Firebase save →
+             watchCollection fires → cache updates → UI re-renders.
+       No base64. No localStorage. Permanent Cloudinary URLs only.
+    ─────────────────────────────────────────────────────────────── */
     function addToCollection(collId) {
       if (!document.body.classList.contains('owner-unlocked')) return;
+      if (!window.PF || !PF.isOwner()) {
+        alert('Sign in to Firebase before uploading images.'); return;
+      }
 
       var input = document.createElement('input');
       input.type = 'file';
@@ -1183,34 +1211,56 @@
         document.body.removeChild(input);
         if (!files.length) return;
 
-        var done = 0, errors = [];
-        var SIZE_LIMIT = 4 * 1024 * 1024; // 4MB
+        var total  = files.length;
+        var done   = 0;
+        var errors = [];
+        var SIZE_LIMIT = 10 * 1024 * 1024; /* 10MB Cloudinary free limit */
+
+        /* Progress toast */
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+          'position:fixed;bottom:80px;left:50%;transform:translateX(-50%)',
+          'background:rgba(13,21,38,0.95);border:1px solid rgba(240,165,0,0.4)',
+          'color:#f0a500;font:700 12px/1 JetBrains Mono,monospace',
+          'padding:10px 20px;border-radius:6px;z-index:9999;pointer-events:none'
+        ].join(';');
+        document.body.appendChild(toast);
+
+        function updateToast() {
+          toast.textContent = 'UPLOADING ' + done + ' / ' + total + '\u2026';
+        }
+        updateToast();
+
+        function onDone() {
+          done++;
+          updateToast();
+          if (done === total) {
+            document.body.removeChild(toast);
+            /* UI updates driven by Firebase watchCollection — no manual call needed */
+            if (errors.length) alert('Issues:\n' + errors.join('\n'));
+          }
+        }
 
         files.forEach(function(file) {
           if (file.size > SIZE_LIMIT) {
-            errors.push(file.name + ' is too large (max 4 MB — resize first)');
-            if (++done === files.length) finish();
-            return;
+            errors.push(file.name + ' exceeds 10 MB — resize first');
+            onDone(); return;
           }
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            Collections.addItem(collId, e.target.result, '');
-            if (++done === files.length) finish();
-          };
-          reader.readAsDataURL(file);
+          uploadToCloudinary(file,
+            function(url) {
+              Collections.addItem(collId, url, '')
+                .then(onDone)
+                .catch(function(err) {
+                  errors.push(file.name + ': Firebase save failed (' + err.message + ')');
+                  onDone();
+                });
+            },
+            function(err) {
+              errors.push(file.name + ': ' + err.message);
+              onDone();
+            }
+          );
         });
-
-        function finish() {
-          renderPreview(collId);
-          updateStats();
-          // If gallery is open for this collection, re-render it
-          if (currentCollection === collId &&
-              document.getElementById('media-gallery').classList.contains('open')) {
-            renderGalleryGrid(collId);
-            updateGalleryCount(collId);
-          }
-          if (errors.length) alert('Skipped:\n' + errors.join('\n'));
-        }
       });
 
       input.click();
@@ -1238,7 +1288,7 @@
     var COLLECTION_ADDLABEL= { photo: '+ ADD PHOTOS', design: '+ ADD DESIGNS' };
 
     function updateGalleryCount(collId) {
-      var n = Collections.load(collId).items.length;
+      var n = Collections.getItems(collId).length;
       galleryCount.textContent = n + (n === 1 ? ' item' : ' items');
     }
 
@@ -1274,11 +1324,11 @@
     }
 
     function renderGalleryGrid(collId) {
-      var data     = Collections.load(collId);
+      var items    = Collections.getItems(collId);
       var isOwner  = document.body.classList.contains('owner-unlocked');
       galleryGrid.innerHTML = '';
 
-      if (!data.items.length) {
+      if (!items.length) {
         galleryGrid.innerHTML =
           '<div class="gallery-empty">' +
           '<span class="gallery-empty__icon">🖼</span>' +
@@ -1289,17 +1339,17 @@
         return;
       }
 
-      data.items.forEach(function(item, idx) {
+      items.forEach(function(item, idx) {
         var div = document.createElement('div');
         div.className = 'media-gallery__item fade-in visible';
-        div.setAttribute('data-item-id', item.id);
+        div.setAttribute('data-item-id', item._key);      /* Firebase push key */
 
         // Image wrapper
         var wrap = document.createElement('div');
         wrap.className = 'media-gallery__item-img-wrap';
 
         var img = document.createElement('img');
-        img.src = item.src;
+        img.src = item.url;                               /* Cloudinary URL */
         img.alt = item.caption || ('Image ' + (idx + 1));
         img.className = 'media-gallery__item-img';
         img.loading = 'lazy';
@@ -1320,11 +1370,18 @@
             del.addEventListener('click', function(e) {
               e.stopPropagation();
               if (!confirm('Remove this image from the collection?')) return;
-              Collections.removeItem(collId, capturedItem.id);
-              renderGalleryGrid(collId);
-              renderPreview(collId);
-              updateGalleryCount(collId);
-              updateStats();
+              del.disabled = true;
+              Collections.removeItem(collId, capturedItem._key)
+                .then(function() {
+                  /* watchCollection listener re-renders preview + stats.
+                     Re-render gallery grid immediately for instant feedback. */
+                  renderGalleryGrid(collId);
+                  updateGalleryCount(collId);
+                })
+                .catch(function(err) {
+                  del.disabled = false;
+                  alert('Could not remove image: ' + err.message);
+                });
             });
           })(item);
           wrap.appendChild(del);
@@ -1341,11 +1398,10 @@
           (function(capturedItem) {
             cap.addEventListener('blur', function() {
               var text = cap.textContent.trim();
-              Collections.updateCaption(collId, capturedItem.id, text);
-              capturedItem.caption = text; // update local reference too
+              capturedItem.caption = text;                /* update local reference */
+              Collections.updateCaption(collId, capturedItem._key, text);
             });
           })(item);
-          // Hint
           var hint = document.createElement('div');
           hint.className = 'media-gallery__item-caption-hint';
           hint.textContent = 'CLICK TO ADD NOTE';
@@ -1360,24 +1416,24 @@
     }
 
     function openFullscreen(collId, idx) {
-      var data = Collections.load(collId);
-      if (!data.items[idx]) return;
+      var items   = Collections.getItems(collId);
+      if (!items[idx]) return;
       currentFsIndex = idx;
-      var item = data.items[idx];
+      var item    = items[idx];
       var isOwner = document.body.classList.contains('owner-unlocked');
 
-      galleryFsImg.src = item.src;
+      galleryFsImg.src = item.url;                       /* Cloudinary URL */
       galleryFsImg.alt = item.caption || '';
       galleryFsCap.textContent = item.caption || '';
-      galleryFsCtr.textContent = (idx + 1) + ' / ' + data.items.length;
+      galleryFsCtr.textContent = (idx + 1) + ' / ' + items.length;
 
-      // Allow caption editing in fullscreen too
       if (isOwner) {
         galleryFsCap.setAttribute('contenteditable', 'true');
         (function(capturedItem) {
           galleryFsCap.onblur = function() {
             var text = galleryFsCap.textContent.trim();
-            Collections.updateCaption(collId, capturedItem.id, text);
+            capturedItem.caption = text;
+            Collections.updateCaption(collId, capturedItem._key, text);
           };
         })(item);
       } else {
@@ -1386,7 +1442,7 @@
       }
 
       galleryPrev.disabled = (idx === 0);
-      galleryNext.disabled = (idx === data.items.length - 1);
+      galleryNext.disabled = (idx === items.length - 1);
 
       galleryGrid.style.display = 'none';
       galleryFs.style.display   = '';
@@ -1394,9 +1450,9 @@
 
     function navigateFullscreen(dir) {
       if (!currentCollection) return;
-      var data = Collections.load(currentCollection);
+      var items  = Collections.getItems(currentCollection);
       var newIdx = currentFsIndex + dir;
-      if (newIdx < 0 || newIdx >= data.items.length) return;
+      if (newIdx < 0 || newIdx >= items.length) return;
       openFullscreen(currentCollection, newIdx);
     }
 
@@ -1613,10 +1669,32 @@
       if (Math.abs(diff) > 50) navigateFullscreen(diff > 0 ? 1 : -1);
     }, { passive: true });
 
-    /* ── INIT ───────────────────────────────────────────────────── */
-    renderPreview('photo');
-    renderPreview('design');
-    updateStats();
+    /* ── INIT — Firebase real-time listeners ────────────────────────
+       Each listener fires immediately on page load (populates cache),
+       then again on every change (new upload, delete, caption edit).
+       Preview cards and stats update automatically.
+    ─────────────────────────────────────────────────────────────── */
+    if (window.PF) {
+      ['photo', 'design'].forEach(function(collId) {
+        PF.watchCollection(collId, function(items) {
+          collCache[collId] = items;
+          renderPreview(collId);
+          updateStats();
+          /* Refresh gallery grid if it's open for this collection */
+          if (currentCollection === collId &&
+              galleryEl.classList.contains('open') &&
+              galleryGrid.style.display !== 'none') {
+            renderGalleryGrid(collId);
+            updateGalleryCount(collId);
+          }
+        });
+      });
+    } else {
+      /* Firebase not loaded — show empty collections */
+      renderPreview('photo');
+      renderPreview('design');
+      updateStats();
+    }
 
     // Show gallery add-button when owner unlocks (or on session-restore)
     function syncGalleryAddBtn() {
@@ -1635,11 +1713,6 @@
   })();
   </script>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="js/firebase.js"></script>
-  <script src="js/main.js"></script>
   <script src="js/editor.js"></script>
 </body>
 </html>

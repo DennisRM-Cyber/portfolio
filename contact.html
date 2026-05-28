@@ -398,11 +398,8 @@
 
           <!-- EmailJS setup notice — only visible when owner is unlocked -->
           <div class="emailjs-notice">
-            ⚙ OWNER SETUP: Replace YOUR_SERVICE_ID, YOUR_TEMPLATE_ID and YOUR_PUBLIC_KEY
-            in the script below with your EmailJS credentials.
-            Sign up free at emailjs.com → Email Services → connect Gmail →
-            Email Templates → create template using {{from_name}}, {{from_email}},
-            {{subject}}, {{message}} variables.
+            ✓ EmailJS configured — contact form and recommendation submissions are live.
+            Service: service_vi1q55p · Templates: template_uxbhn4y / template_kob3bmp
           </div>
 
           <form id="contact-form" novalidate>
@@ -463,57 +460,48 @@
           <!-- Social Links -->
           <div class="social-grid">
 
-            <a href="https://linkedin.com/in/YOUR_LINKEDIN_USERNAME" target="_blank" rel="noopener"
+            <a href="https://www.linkedin.com/in/dennismwangi9653" target="_blank" rel="noopener"
                class="social-card social-linkedin fade-in" data-edit-id="ct-linkedin">
               <div class="social-card__icon">💼</div>
               <div class="social-card__info">
                 <div class="social-card__name">LINKEDIN</div>
-                <div class="social-card__handle">Rubui Mwangi</div>
+                <div class="social-card__handle">Dennis Mwangi</div>
               </div>
             </a>
 
-            <a href="https://github.com/YOUR_GITHUB" target="_blank" rel="noopener"
+            <a href="https://github.com/DennisRM-Cyber" target="_blank" rel="noopener"
                class="social-card social-github fade-in">
               <div class="social-card__icon">⌥</div>
               <div class="social-card__info">
                 <div class="social-card__name">GITHUB</div>
-                <div class="social-card__handle" data-edit-id="ct-github">Add your handle</div>
+                <div class="social-card__handle" data-edit-id="ct-github">DennisRM-Cyber</div>
               </div>
             </a>
 
-            <a href="https://twitter.com/YOUR_TWITTER" target="_blank" rel="noopener"
-               class="social-card social-twitter fade-in">
-              <div class="social-card__icon">✕</div>
-              <div class="social-card__info">
-                <div class="social-card__name">TWITTER / X</div>
-                <div class="social-card__handle" data-edit-id="ct-twitter">Add your handle</div>
-              </div>
-            </a>
-
-            <a href="https://instagram.com/YOUR_INSTAGRAM" target="_blank" rel="noopener"
+            <a href="https://www.instagram.com/dennisrm_afrofocus/" target="_blank" rel="noopener"
                class="social-card social-instagram fade-in">
               <div class="social-card__icon">📸</div>
               <div class="social-card__info">
                 <div class="social-card__name">INSTAGRAM</div>
-                <div class="social-card__handle" data-edit-id="ct-instagram">Add your handle</div>
+                <div class="social-card__handle" data-edit-id="ct-instagram">@dennisrm_afrofocus</div>
               </div>
             </a>
 
-            <a href="https://tiktok.com/@YOUR_TIKTOK" target="_blank" rel="noopener"
+            <a href="https://www.tiktok.com/@dennisrm_afrofocus" target="_blank" rel="noopener"
                class="social-card social-tiktok fade-in">
               <div class="social-card__icon">🎵</div>
               <div class="social-card__info">
                 <div class="social-card__name">TIKTOK</div>
-                <div class="social-card__handle" data-edit-id="ct-tiktok">Add your handle</div>
+                <div class="social-card__handle" data-edit-id="ct-tiktok">@dennisrm_afrofocus</div>
               </div>
             </a>
 
-            <a href="https://youtube.com/@YOUR_YOUTUBE" target="_blank" rel="noopener"
+            <a href="https://www.youtube.com/channel/UClnMQgs-PuVYSVcQSJ-Uusw" target="_blank" rel="noopener"
                class="social-card social-youtube fade-in">
               <div class="social-card__icon">▶</div>
               <div class="social-card__info">
                 <div class="social-card__name">YOUTUBE</div>
-                <div class="social-card__handle" data-edit-id="ct-youtube">Add your handle</div>
+                <div class="social-card__handle" data-edit-id="ct-youtube">Dennis RM</div>
               </div>
             </a>
 
@@ -645,10 +633,10 @@
        EMAILJS CONFIG — replace these with your IDs
        from https://emailjs.com/account
     ═══════════════════════════════════════════════ */
-    var EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';
-    var EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';
-    var EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';      // for contact form
-    var EMAILJS_COMMENT_TPL = 'YOUR_COMMENT_TEMPLATE'; // for comment submissions
+    var EMAILJS_PUBLIC_KEY  = '3Abkped4k4aDGVID1';
+    var EMAILJS_SERVICE_ID  = 'service_vi1q55p';
+    var EMAILJS_TEMPLATE_ID = 'template_uxbhn4y';      // contact form
+    var EMAILJS_COMMENT_TPL = 'template_kob3bmp';      // recommendation submissions
 
     // Initialise EmailJS
     if (typeof emailjs !== 'undefined') emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
@@ -867,11 +855,6 @@
 
   })();
   </script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="js/firebase.js"></script>
-  <script src="js/main.js"></script>
   <script src="js/editor.js"></script>
 </body>
 </html>

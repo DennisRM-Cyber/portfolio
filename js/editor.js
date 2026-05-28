@@ -341,89 +341,45 @@
   var pageName = window.location.pathname.split('/').pop().replace('.html','') || 'index';
   function storageKey(id) { return 'portfolio__edit__' + pageName + '__' + id; }
 
-  /* ── saveChanges ─────────────────────────────────────────────
-     Writes to two places on every save:
-       1. Firebase Realtime DB  — primary, cross-device, survives crash
-       2. localStorage          — backup, same-device, survives Firebase outage
-     Dynamic cards go to localStorage only until step 3d.
-     Button states:
-       SAVING…        — Firebase write in flight
-       SAVED ✓        — Firebase confirmed (green)
-       SAVED LOCALLY  — Firebase unavailable, localStorage only (amber)
-  ─────────────────────────────────────────────────────────── */
   function saveChanges() {
-    var fbMap = {};
-
     getEditables().forEach(function(el) {
       var id = el.getAttribute('data-edit-id');
-      if (!id) return;
-      var html = el.innerHTML;
-      try { localStorage.setItem(storageKey(id), html); } catch(e) {}
-      fbMap[pageName + '/' + id] = html;    /* Firebase nested key: edits/pageName/editId */
+      if (id) localStorage.setItem(storageKey(id), el.innerHTML);
     });
-
-    /* Dynamic cards — localStorage until step 3d */
     var dynamic = [];
     document.querySelectorAll('.new-card').forEach(function(c) { dynamic.push(c.outerHTML); });
-    try { localStorage.setItem(storageKey('__dynamic__'), JSON.stringify(dynamic)); } catch(e) {}
-
-    if (window.PF && PF.isOwner()) {
-      btnSave.textContent = 'SAVING\u2026';
-      btnSave.disabled    = true;
-
-      PF.saveAllEdits(fbMap)
-        .then(function() {
-          btnSave.textContent      = 'SAVED \u2713';
-          btnSave.style.background = '#4ade80';
-          btnSave.disabled         = false;
-          setTimeout(function() {
-            btnSave.textContent      = 'SAVE CHANGES';
-            btnSave.style.background = '';
-          }, 1800);
-        })
-        .catch(function(err) {
-          /* Firebase write failed — localStorage copy already written above */
-          console.warn('[Editor] Firebase save failed:', err.message);
-          btnSave.textContent      = 'SAVED LOCALLY \u26a0';
-          btnSave.style.background = '#f59e0b';
-          btnSave.disabled         = false;
-          setTimeout(function() {
-            btnSave.textContent      = 'SAVE CHANGES';
-            btnSave.style.background = '';
-          }, 2800);
-        });
-    } else {
-      /* Not signed in to Firebase — localStorage only */
-      btnSave.textContent      = window.PF ? 'SAVED LOCALLY \u26a0' : 'SAVED \u2713';
-      btnSave.style.background = window.PF ? '#f59e0b' : '#4ade80';
-      setTimeout(function() {
-        btnSave.textContent      = 'SAVE CHANGES';
-        btnSave.style.background = '';
-      }, 1800);
-    }
+    localStorage.setItem(storageKey('__dynamic__'), JSON.stringify(dynamic));
+    btnSave.textContent = 'SAVED \u2713';
+    btnSave.style.background = '#4ade80';
+    setTimeout(function() { btnSave.textContent = 'SAVE CHANGES'; btnSave.style.background = ''; }, 1800);
   }
 
-  /* ── restoreDynamicCards ─────────────────────────────────────
-     Reconstructs dynamically added cards from localStorage.
-     Called after text edits are applied, regardless of whether
-     Firebase or localStorage provided those edits.
-  ─────────────────────────────────────────────────────────── */
-  function restoreDynamicCards() {
+  function loadSavedChanges() {
+    // 1. Restore text edits (data-edit-id fields)
+    getEditables().forEach(function(el) {
+      var id = el.getAttribute('data-edit-id');
+      if (id) { var s = localStorage.getItem(storageKey(id)); if (s !== null) el.innerHTML = s; }
+    });
+
+    // 2. Restore dynamically added cards (exp, nav, media, skill, cert)
+    //    These were saved by saveChanges() → __dynamic__ key but never reloaded.
     try {
-      var dynJSON  = localStorage.getItem(storageKey('__dynamic__'));
+      var dynJSON = localStorage.getItem(storageKey('__dynamic__'));
       if (!dynJSON) return;
       var dynCards = JSON.parse(dynJSON);
       if (!Array.isArray(dynCards) || !dynCards.length) return;
 
       dynCards.forEach(function(html) {
-        var tmp  = document.createElement('div');
+        var tmp = document.createElement('div');
         tmp.innerHTML = html;
         var card = tmp.firstElementChild;
         if (!card) return;
 
+        // Find the right sibling to insert before based on card class
         var anchor = null;
         if (card.classList.contains('exp-card') && !card.classList.contains('exp-card--add')) {
           anchor = document.querySelector('.exp-card--add');
+          // prefer exp-grid--bottom for proper layout
           if (!anchor) anchor = document.querySelector('.exp-grid--bottom .exp-card--add');
         } else if (card.classList.contains('nav-card')) {
           anchor = document.querySelector('.card--add');
@@ -442,88 +398,33 @@
         }
       });
 
+      // Notify page-level scripts that dynamic cards have been reinjected
+      // (e.g. media.html re-wires click handlers; projects.html re-wires doc viewers)
       setTimeout(function() {
         document.dispatchEvent(new CustomEvent('dynamicCardsRestored'));
+        // Re-wire add cards in case newly inserted cards have add-card children
         wireAddCards();
         if (document.body.classList.contains('owner-unlocked')) {
           injectAllDeleteBtns();
           setTimeout(injectUploadTriggers, 60);
         }
       }, 80);
-    } catch(e) { /* Silent — malformed JSON or missing elements are non-fatal */ }
-  }
-
-  /* ── loadSavedChanges ────────────────────────────────────────
-     Firebase is the source of truth for text edits.
-     For any field Firebase has no value yet (e.g. edits made
-     before Firebase was connected, or while offline), the
-     localStorage value is used as a fallback.
-     Dynamic cards always come from localStorage.
-  ─────────────────────────────────────────────────────────── */
-  function loadSavedChanges() {
-    if (window.PF) {
-      PF.loadEdits(pageName, function(edits) {
-        getEditables().forEach(function(el) {
-          var id = el.getAttribute('data-edit-id');
-          if (!id) return;
-          if (edits[id] !== undefined && edits[id] !== null) {
-            el.innerHTML = edits[id];                           /* Firebase — source of truth */
-          } else {
-            var ls = localStorage.getItem(storageKey(id));
-            if (ls !== null) el.innerHTML = ls;                 /* localStorage fallback */
-          }
-        });
-        restoreDynamicCards();
-      });
-    } else {
-      /* Firebase unavailable — pure localStorage */
-      getEditables().forEach(function(el) {
-        var id = el.getAttribute('data-edit-id');
-        if (id) { var s = localStorage.getItem(storageKey(id)); if (s !== null) el.innerHTML = s; }
-      });
-      restoreDynamicCards();
+    } catch(e) {
+      // Silent — malformed JSON or missing elements are non-fatal
     }
   }
 
   btnSave.addEventListener('click', saveChanges);
-
   btnReset.addEventListener('click', function() {
-    if (!confirm('Reset all edits on this page to defaults?')) return;
-    /* Clear localStorage */
+    if (!confirm('Reset all edits on this page?')) return;
     getEditables().forEach(function(el) {
       var id = el.getAttribute('data-edit-id');
-      if (id) { try { localStorage.removeItem(storageKey(id)); } catch(e) {} }
+      if (id) localStorage.removeItem(storageKey(id));
     });
-    try { localStorage.removeItem(storageKey('__dynamic__')); } catch(e) {}
-    /* Clear Firebase edits for this page, then reload */
-    if (window.PF && PF.isOwner()) {
-      PF.clearPageEdits(pageName)
-        .then(function()  { window.location.reload(); })
-        .catch(function() { window.location.reload(); });
-    } else {
-      window.location.reload();
-    }
+    localStorage.removeItem(storageKey('__dynamic__'));
+    window.location.reload();
   });
-
-  /* On tab close — sync localStorage always completes.
-     Firebase save is best-effort (async, may not finish).
-     localStorage above is the guaranteed safety net.       */
-  window.addEventListener('beforeunload', function() {
-    if (!editMode) return;
-    getEditables().forEach(function(el) {
-      var id = el.getAttribute('data-edit-id');
-      if (id) { try { localStorage.setItem(storageKey(id), el.innerHTML); } catch(e) {} }
-    });
-    if (window.PF && PF.isOwner()) {
-      var fbMap = {};
-      getEditables().forEach(function(el) {
-        var id = el.getAttribute('data-edit-id');
-        if (id) fbMap[pageName + '/' + id] = el.innerHTML;
-      });
-      PF.saveAllEdits(fbMap); /* fire-and-forget — localStorage is the real backup */
-    }
-  });
-
+  window.addEventListener('beforeunload', function() { if (editMode) saveChanges(); });
   setTimeout(loadSavedChanges, 80);
 
 
@@ -1033,6 +934,7 @@
     initSlideableBars();
     wireAddCards();
     setTimeout(injectUploadTriggers, 100);
+    document.dispatchEvent(new CustomEvent('ownerUnlocked'));
     // Firebase second layer: if Firebase session has expired, prompt to re-authenticate
     if (window.PF && !PF.isOwner()) setTimeout(showFbSignIn, 400);
   }
@@ -1043,6 +945,7 @@
     toolbar.style.display = 'none';
     disableEditMode();
     lockBtn.innerHTML = '<span class="lock-btn__icon">\uD83D\uDD12</span><span class="lock-btn__text">OWNER</span>';
+    document.dispatchEvent(new CustomEvent('ownerLocked'));
     // Firebase: sign out so write access is revoked immediately
     if (window.PF) PF.signOut().catch(function() {});
   }
@@ -1070,6 +973,7 @@
         initSlideableBars();
         wireAddCards();
         setTimeout(injectUploadTriggers, 100);
+        document.dispatchEvent(new CustomEvent('ownerUnlocked'));
       }
     });
   }
