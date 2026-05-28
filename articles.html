@@ -3,8 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- ── SEO ──────────────────────────────────────────────── -->
   <title>Articles — Rubui Mwangi</title>
-  <meta name="description" content="Technical articles, build log, field experience reports and proposals by Rubui Mwangi — Electrical & Electronics Engineer." />
+  <meta name="description" content="Technical articles and build logs by Rubui Mwangi — IoT project documentation, engineering notes, portfolio build series, and career reflections." />
+  <meta name="keywords"    content="electrical engineer, electronics engineer, JKUAT, Nairobi Kenya, power systems, IoT, Arduino, ESP32, Firebase, AutoCAD, embedded systems, fresh graduate, articles, build log, technical writing, IoT documentation" />
+  <meta name="author"      content="Rubui Mwangi" />
+  <meta name="robots"      content="index, follow" />
+  <link rel="canonical"    href="https://rubuimwangi.github.io/portfolio/articles.html" />
+
+  <!-- Open Graph — LinkedIn, WhatsApp, Facebook previews -->
+  <meta property="og:type"         content="website" />
+  <meta property="og:site_name"    content="Rubui Mwangi — Portfolio" />
+  <meta property="og:title"        content="Articles — Rubui Mwangi" />
+  <meta property="og:description"  content="Technical articles and build logs by Rubui Mwangi — IoT project documentation, engineering notes, portfolio build series, and career reflections." />
+  <meta property="og:url"          content="https://rubuimwangi.github.io/portfolio/articles.html" />
+  <meta property="og:image"        content="https://rubuimwangi.github.io/portfolio/assets/images/og-preview.jpg" />
+  <meta property="og:image:width"  content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale"       content="en_GB" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Articles — Rubui Mwangi" />
+  <meta name="twitter:description" content="Technical articles and build logs by Rubui Mwangi — IoT project documentation, engineering notes, portfolio build series, and career reflections." />
+  <meta name="twitter:image"       content="https://rubuimwangi.github.io/portfolio/assets/images/og-preview.jpg" />
+  <!-- ────────────────────────────────────────────────────── -->
   <link rel="stylesheet" href="css/style.css" />
   <style>
     .articles-hero { padding: 56px 0 40px; }
@@ -901,10 +924,6 @@
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="js/firebase.js"></script>
   <script src="js/main.js"></script>
   <script>
   (function() {
@@ -929,28 +948,10 @@
 
     function artKey(id) { return 'portfolio__article__' + id; }
 
-    /* loadArticleContent — async, Firebase-first.
-       Priority: Firebase → localStorage → hardcoded default.
-       callback(content, title)                              */
-    function loadArticleContent(id, callback) {
-      var lsFallback = function() {
-        var ls = null; try { ls = localStorage.getItem(artKey(id)); } catch(e) {}
-        callback(
-          ls !== null ? ls : (articles[id] ? articles[id].content : ''),
-          articles[id] ? articles[id].title : ''
-        );
-      };
-      if (window.PF) {
-        PF.loadArticle(id, function(data) {
-          if (data && data.content) {
-            callback(data.content, data.title || (articles[id] ? articles[id].title : ''));
-          } else {
-            lsFallback(); /* Firebase has nothing yet — use localStorage/default */
-          }
-        });
-      } else {
-        lsFallback();   /* Firebase unavailable */
-      }
+    function getArticleContent(id) {
+      var saved = null;
+      try { saved = localStorage.getItem(artKey(id)); } catch(e) {}
+      return saved !== null ? saved : (articles[id] ? articles[id].content : '');
     }
 
     function openReader(id) {
@@ -959,7 +960,7 @@
       readerEditMode = false;
       overlay.classList.remove('edit-mode');
       readerTitle.textContent = a.title;
-      /* Render metadata immediately; body fills in once Firebase responds */
+      var content = getArticleContent(id);
       readerContent.innerHTML =
         '<div class="art-label">' + a.label + '</div>' +
         '<div class="art-title" id="art-editable-title">' + a.title + '</div>' +
@@ -970,7 +971,7 @@
           '<span class="art-meta-dot"></span>' +
           '<span class="art-meta-item">' + a.readTime + '</span>' +
         '</div>' +
-        '<div class="art-body" id="art-editable-body"><p style="opacity:0.4;font-style:italic;">Loading\u2026</p></div>' +
+        '<div class="art-body" id="art-editable-body">' + content + '</div>' +
         '<hr class="art-end-rule" />' +
         '<div class="art-end-footer">\u2014 Rubui Mwangi \u00b7 portfolio.ee \u2014</div>';
       overlay.classList.add('open');
@@ -983,15 +984,6 @@
         editToggle.style.display = 'none'; saveBtn.style.display = 'none';
       }
       updateEditBtn();
-      /* Async body load — Firebase → localStorage → hardcoded default */
-      loadArticleContent(id, function(content, resolvedTitle) {
-        var bodyEl  = document.getElementById('art-editable-body');
-        var titleEl = document.getElementById('art-editable-title');
-        if (bodyEl)  bodyEl.innerHTML    = content;
-        if (titleEl) titleEl.textContent = resolvedTitle;
-        readerTitle.textContent = resolvedTitle;
-        if (articles[id]) articles[id].title = resolvedTitle; /* sync in-memory */
-      });
     }
 
     function closeReader() {
@@ -1033,12 +1025,8 @@
       var bodyEl  = document.getElementById('art-editable-body');
       if (!bodyEl) return;
       var newContent = bodyEl.innerHTML;
-      var newTitle   = titleEl ? titleEl.textContent.trim() : articles[currentArticleId].title;
-
-      /* Always write to localStorage as backup */
+      var newTitle   = titleEl ? titleEl.textContent : articles[currentArticleId].title;
       try { localStorage.setItem(artKey(currentArticleId), newContent); } catch(e) {}
-
-      /* Update in-memory object and article-row title in the list */
       if (articles[currentArticleId]) {
         articles[currentArticleId].content = newContent;
         articles[currentArticleId].title   = newTitle;
@@ -1046,28 +1034,9 @@
         var row = document.querySelector('[data-article-id="' + currentArticleId + '"] .article-row__title');
         if (row) row.textContent = newTitle;
       }
-
-      if (window.PF && PF.isOwner()) {
-        saveBtn.textContent = 'SAVING\u2026';
-        saveBtn.disabled    = true;
-        PF.saveArticle(currentArticleId, newContent, newTitle)
-          .then(function() {
-            saveBtn.textContent = '\u2713 SAVED';
-            saveBtn.classList.add('saved');
-            saveBtn.disabled    = false;
-            setTimeout(function() { saveBtn.textContent = '\uD83D\uDCBE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
-          })
-          .catch(function(err) {
-            console.warn('[Articles] Firebase save failed:', err.message);
-            saveBtn.textContent = 'SAVED LOCALLY \u26a0';
-            saveBtn.disabled    = false;
-            setTimeout(function() { saveBtn.textContent = '\uD83D\uDCBE SAVE'; }, 2500);
-          });
-      } else {
-        saveBtn.textContent = '\u2713 SAVED';
-        saveBtn.classList.add('saved');
-        setTimeout(function() { saveBtn.textContent = '\uD83D\uDCBE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
-      }
+      saveBtn.textContent = '\u2713 SAVED';
+      saveBtn.classList.add('saved');
+      setTimeout(function() { saveBtn.textContent = '\U0001F4BE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
     }
 
     readerClose.addEventListener('click', closeReader);
@@ -1233,43 +1202,33 @@
     wireRows();
 
 
-    /* ── LIKE BUTTONS — Firebase global likes ──────────────────
-       Stored at: likes/article__<id>  →  { count, voters }
-       Real-time: all visitors see the same count instantly.
-       Falls back to localStorage if Firebase unavailable.
-    ──────────────────────────────────────────────────────── */
-    function wireLikeBtn(btn) {
-      var id      = btn.getAttribute('data-like-id');
-      var likeId  = 'article__' + id;
-      var countEl = btn.querySelector('.like-count');
+    /* ── LIKE BUTTONS ───────────────────────────── */
+    function getLikeKey(id) { return 'portfolio__like__article__' + id; }
+    function getLikeCount(id) { try { return parseInt(localStorage.getItem(getLikeKey(id)) || '0'); } catch(e) { return 0; } }
+    function isLiked(id) { try { return localStorage.getItem(getLikeKey(id) + '__liked') === '1'; } catch(e) { return false; } }
 
-      if (window.PF) {
-        btn.setAttribute('disabled', 'disabled');
-        PF.watchLike(likeId, function(count, isLiked) {
-          countEl.textContent = count > 0 ? count : '';
-          btn.classList.toggle('liked', isLiked);
-          btn.removeAttribute('disabled');
-        });
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          btn.setAttribute('disabled', 'disabled');
-          PF.toggleLike(likeId).catch(function() { btn.removeAttribute('disabled'); });
-        });
-      } else {
-        var key   = 'portfolio__like__article__' + id;
-        var count = parseInt(localStorage.getItem(key) || '0');
-        var liked = localStorage.getItem(key + '__liked') === '1';
-        countEl.textContent = count > 0 ? count : '';
-        btn.classList.toggle('liked', liked);
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          count = liked ? Math.max(0, count - 1) : count + 1;
-          liked = !liked;
-          try { localStorage.setItem(key, count); localStorage.setItem(key + '__liked', liked ? '1' : '0'); } catch(ex) {}
-          countEl.textContent = count > 0 ? count : '';
-          btn.classList.toggle('liked', liked);
-        });
-      }
+    function wireLikeBtn(btn) {
+      var id = btn.getAttribute('data-like-id');
+      var countEl = btn.querySelector('.like-count');
+      var count = getLikeCount(id);
+      var liked = isLiked(id);
+      countEl.textContent = count > 0 ? count : '';
+      btn.classList.toggle('liked', liked);
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var c = getLikeCount(id);
+        var wasLiked = isLiked(id);
+        if (wasLiked) {
+          c = Math.max(0, c - 1);
+          localStorage.setItem(getLikeKey(id) + '__liked', '0');
+        } else {
+          c++;
+          localStorage.setItem(getLikeKey(id) + '__liked', '1');
+        }
+        localStorage.setItem(getLikeKey(id), c);
+        countEl.textContent = c > 0 ? c : '';
+        btn.classList.toggle('liked', !wasLiked);
+      });
     }
     document.querySelectorAll('.like-btn[data-like-id]').forEach(wireLikeBtn);
 

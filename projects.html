@@ -3,8 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- ── SEO ──────────────────────────────────────────────── -->
   <title>Projects — Rubui Mwangi</title>
-  <meta name="description" content="Technical projects by Rubui Mwangi — IoT fault detection, AutoCAD electrical design, embedded systems and hobby electronics." />
+  <meta name="description" content="Engineering projects by Rubui Mwangi — IoT power line fault detection, Arduino and ESP32 firmware, real-time Firebase dashboards, AutoCAD electrical layouts, and academic work." />
+  <meta name="keywords"    content="electrical engineer, electronics engineer, JKUAT, Nairobi Kenya, power systems, IoT, Arduino, ESP32, Firebase, AutoCAD, embedded systems, fresh graduate, projects, fault detection, firmware, dashboard, C++" />
+  <meta name="author"      content="Rubui Mwangi" />
+  <meta name="robots"      content="index, follow" />
+  <link rel="canonical"    href="https://rubuimwangi.github.io/portfolio/projects.html" />
+
+  <!-- Open Graph — LinkedIn, WhatsApp, Facebook previews -->
+  <meta property="og:type"         content="website" />
+  <meta property="og:site_name"    content="Rubui Mwangi — Portfolio" />
+  <meta property="og:title"        content="Projects — Rubui Mwangi" />
+  <meta property="og:description"  content="Engineering projects by Rubui Mwangi — IoT power line fault detection, Arduino and ESP32 firmware, real-time Firebase dashboards, AutoCAD electrical layouts, and academic work." />
+  <meta property="og:url"          content="https://rubuimwangi.github.io/portfolio/projects.html" />
+  <meta property="og:image"        content="https://rubuimwangi.github.io/portfolio/assets/images/og-preview.jpg" />
+  <meta property="og:image:width"  content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale"       content="en_GB" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Projects — Rubui Mwangi" />
+  <meta name="twitter:description" content="Engineering projects by Rubui Mwangi — IoT power line fault detection, Arduino and ESP32 firmware, real-time Firebase dashboards, AutoCAD electrical layouts, and academic work." />
+  <meta name="twitter:image"       content="https://rubuimwangi.github.io/portfolio/assets/images/og-preview.jpg" />
+  <!-- ────────────────────────────────────────────────────── -->
   <link rel="stylesheet" href="css/style.css" />
   <style>
     /* ═══════════════════════════════════════════════
@@ -1117,10 +1140,6 @@
   </div>
 
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <script src="js/firebase.js"></script>
   <script src="js/main.js"></script>
 
   <script>
@@ -1400,56 +1419,30 @@
     });
 
 
-    /* ── LIKE BUTTONS — Firebase global likes ──────────────────
-       Likes stored at: likes/project__<id>
-       Falls back to localStorage if Firebase unavailable.
-    ──────────────────────────────────────────────────────── */
+    /* ── LIKE BUTTONS ─────────────────── */
+    function getProjLikeKey(id) { return 'portfolio__like__project__' + id; }
+    function getProjLikeCount(id) { try { return parseInt(localStorage.getItem(getProjLikeKey(id)) || '0'); } catch(e){ return 0; } }
+    function isProjLiked(id) { try { return localStorage.getItem(getProjLikeKey(id)+'__liked')==='1'; } catch(e){ return false; } }
+
     function wireProjLikeBtns() {
       document.querySelectorAll('.like-btn[data-like-id]').forEach(function(btn) {
-        if (btn._likeWired) return;
-        btn._likeWired = true;
-
-        var id     = btn.getAttribute('data-like-id');
-        var likeId = 'project__' + id;           /* Firebase key namespace */
+        if (btn._likeWired) return; btn._likeWired = true;
+        var id = btn.getAttribute('data-like-id');
         var countEl = btn.querySelector('.like-count');
-
-        if (window.PF) {
-          /* ── Firebase path ── */
-          btn.setAttribute('disabled', 'disabled');
-
-          PF.watchLike(likeId, function(count, isLiked) {
-            countEl.textContent = count > 0 ? count : '';
-            btn.classList.toggle('liked', isLiked);
-            btn.removeAttribute('disabled');
-          });
-
-          btn.addEventListener('click', function(e) {
-            e.stopPropagation(); e.preventDefault();
-            btn.setAttribute('disabled', 'disabled');
-            PF.toggleLike(likeId).catch(function() {
-              btn.removeAttribute('disabled');
-            });
-          });
-
-        } else {
-          /* ── localStorage fallback ── */
-          var key   = 'portfolio__like__project__' + id;
-          var count = parseInt(localStorage.getItem(key) || '0');
-          var liked = localStorage.getItem(key + '__liked') === '1';
-          countEl.textContent = count > 0 ? count : '';
-          btn.classList.toggle('liked', liked);
-          btn.addEventListener('click', function(e) {
-            e.stopPropagation(); e.preventDefault();
-            count = liked ? Math.max(0, count - 1) : count + 1;
-            liked = !liked;
-            try {
-              localStorage.setItem(key, count);
-              localStorage.setItem(key + '__liked', liked ? '1' : '0');
-            } catch(ex) {}
-            countEl.textContent = count > 0 ? count : '';
-            btn.classList.toggle('liked', liked);
-          });
-        }
+        var c = getProjLikeCount(id);
+        var liked = isProjLiked(id);
+        countEl.textContent = c > 0 ? c : '';
+        btn.classList.toggle('liked', liked);
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation(); e.preventDefault();
+          var cur = getProjLikeCount(id);
+          var wasLiked = isProjLiked(id);
+          cur = wasLiked ? Math.max(0, cur-1) : cur+1;
+          localStorage.setItem(getProjLikeKey(id)+'__liked', wasLiked?'0':'1');
+          localStorage.setItem(getProjLikeKey(id), cur);
+          countEl.textContent = cur > 0 ? cur : '';
+          btn.classList.toggle('liked', !wasLiked);
+        });
       });
     }
     wireProjLikeBtns();
