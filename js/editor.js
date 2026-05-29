@@ -895,7 +895,11 @@
     execFmt('hiliteColor', this.value);
   });
   document.addEventListener('selectionchange', function() {
-    if (!editMode) return;
+    /* Show format bar whenever owner is unlocked — not only when editMode is
+       manually enabled. If the owner selects text in a data-edit-id element
+       while unlocked but before clicking ENABLE EDITING, we auto-enable edit
+       mode so the bar is immediately functional and the element is editable. */
+    if (!document.body.classList.contains('owner-unlocked')) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) {
       setTimeout(function() {
@@ -910,6 +914,9 @@
       node = node.parentNode;
     }
     if (!inEdit) return;
+    /* Auto-enable edit mode on first text selection so elements become
+       contenteditable and formatting commands take effect immediately. */
+    if (!editMode) enableEditMode();
     savedRange = sel.getRangeAt(0).cloneRange();
     var rect = sel.getRangeAt(0).getBoundingClientRect();
     showFormatBar(rect.left + rect.width / 2, rect.top);

@@ -898,7 +898,7 @@
                 <span class="media-card__tag" data-edit-id="v1-t1">Premiere Pro</span>
                 <span class="media-card__tag" data-edit-id="v1-t2">Colour Grade</span>
               </div>
-              <a href="https://youtube.com/dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ SUBSCRIBE</a>
+              <a href="https://www.youtube.com/channel/UClnMQgs-PuVYSVcQSJ-Uusw" target="_blank" rel="noopener" class="follow-btn">+ SUBSCRIBE</a>
             </div>
           </div>
         </div>
@@ -958,33 +958,36 @@
                 <span class="media-card__tag" data-edit-id="s1-t1">TikTok</span>
                 <span class="media-card__tag" data-edit-id="s1-t2">Reels</span>
               </div>
-              <a href="https://tiktok.com/@dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
+              <a href="https://www.tiktok.com/@dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
             </div>
           </div>
         </div>
 
-        <!-- Instagram post -->
+        <!-- Instagram — photo AND video -->
         <div class="media-card fade-in" data-type="social" data-filter="social"
-             data-media-type="photo"
+             data-media-type="instagram"
              data-media-src="assets/images/social-post-1.jpg"
-             data-media-title="Instagram Post #1">
+             data-media-title="Instagram Post #1"
+             data-media-portrait="false">
           <div class="media-card__thumb media-card__thumb--1x1">
             <div class="media-card__placeholder">
               <div class="media-card__placeholder-icon">📸</div>
-              <div class="media-card__placeholder-label">INSTAGRAM POST</div>
+              <div class="media-card__placeholder-label">INSTAGRAM</div>
             </div>
+            <!-- play overlay — visible only when src is a video -->
+            <div class="media-card__play"><div class="media-card__play-btn">▶</div></div>
             <span class="media-card__platform platform--instagram">INSTAGRAM</span>
             <span class="media-card__type type--social">SOCIAL</span>
           </div>
           <div class="media-card__body">
             <div class="media-card__title" data-edit-id="s2-title">Instagram Post — #1</div>
-            <div class="media-card__desc" data-edit-id="s2-desc">What's the story behind this post? Add context here.</div>
+            <div class="media-card__desc" data-edit-id="s2-desc">What's the story behind this post? Add context here. Works for both photos and videos.</div>
             <div class="media-card__footer">
               <div class="media-card__tags">
                 <span class="media-card__tag" data-edit-id="s2-t1">Instagram</span>
                 <span class="media-card__tag" data-edit-id="s2-t2">Content</span>
               </div>
-              <a href="https://instagram.com/dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
+              <a href="https://www.instagram.com/dennisrm_afrofocus/" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
             </div>
           </div>
         </div>
@@ -993,6 +996,12 @@
         <button class="media-add-card owner-only" id="btn-add-media" title="Add a new video or social card">
           <div class="media-add-card__icon">+</div>
           <div class="media-add-card__label">ADD VIDEO / SOCIAL</div>
+        </button>
+
+        <!-- ADD YOUTUBE LINK — owner-only, prompts for URL -->
+        <button class="media-add-card owner-only" id="btn-add-youtube" title="Embed a YouTube video by URL">
+          <div class="media-add-card__icon">▶</div>
+          <div class="media-add-card__label">ADD YOUTUBE LINK</div>
         </button>
 
       </div><!-- end media-grid -->
@@ -1568,8 +1577,9 @@
           if (e.target.closest('.card-delete-btn')) return;
           var type = card.getAttribute('data-media-type');
           var src  = card.getAttribute('data-media-src');
+
           if (type === 'photo') {
-            // Photo in a social card — open lightbox with image
+            // Static photo lightbox
             videoOverlayTitle.textContent = card.getAttribute('data-media-title') || '';
             videoOverlayInner.innerHTML   = '';
             var img = document.createElement('img');
@@ -1579,6 +1589,34 @@
             videoOverlayCap.textContent = card.getAttribute('data-media-title') || '';
             videoOverlay.classList.add('open');
             document.body.style.overflow = 'hidden';
+
+          } else if (type === 'instagram') {
+            /* Instagram card supports both photos and videos.
+               If src ends in .mp4/.mov/.webm → local video player.
+               If src is a YouTube/embed URL → embed iframe.
+               Otherwise → photo lightbox (jpg/png/webp). */
+            var srcLower = (src || '').toLowerCase();
+            var isVideo  = /\.(mp4|mov|webm)(\?|$)/.test(srcLower);
+            var isYt     = /youtube\.com|youtu\.be/.test(srcLower);
+            if (isYt) {
+              openVideoOverlay('youtube', src, card.getAttribute('data-media-title'),
+                card.getAttribute('data-media-portrait') === 'true');
+            } else if (isVideo) {
+              openVideoOverlay('local', src, card.getAttribute('data-media-title'),
+                card.getAttribute('data-media-portrait') === 'true');
+            } else {
+              // Photo or placeholder — show in lightbox
+              videoOverlayTitle.textContent = card.getAttribute('data-media-title') || '';
+              videoOverlayInner.innerHTML   = '';
+              var img2 = document.createElement('img');
+              img2.src = src || ''; img2.alt = videoOverlayTitle.textContent;
+              img2.style.cssText = 'max-width:90vw;max-height:80vh;border-radius:12px;display:block;margin-top:56px;object-fit:contain;';
+              videoOverlayInner.appendChild(img2);
+              videoOverlayCap.textContent = card.getAttribute('data-media-title') || '';
+              videoOverlay.classList.add('open');
+              document.body.style.overflow = 'hidden';
+            }
+
           } else {
             openVideoOverlay(type, src, card.getAttribute('data-media-title'),
               card.getAttribute('data-media-portrait') === 'true');
@@ -1592,6 +1630,7 @@
 
     /* ── ADD MEDIA BUTTON (video/social) ────────────────────────── */
     var addMediaBtn  = document.getElementById('btn-add-media');
+    var addYtBtn     = document.getElementById('btn-add-youtube');
     var addCounter   = 0;
 
     function makeMediaCardHTML(uid) {
@@ -1620,6 +1659,57 @@
       ].join('\n');
     }
 
+    /* makeYtCardHTML — creates a YouTube embed card from a URL + title */
+    function makeYtCardHTML(uid, embedUrl, title, portrait) {
+      var aspect = portrait ? '9x16' : '16x9';
+      var safeTitle = (title || 'YouTube Video').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      return [
+        '<div class="media-card new-card fade-in visible" data-type="video" data-filter="video"',
+        '  data-media-type="youtube"',
+        '  data-media-src="' + embedUrl + '"',
+        '  data-media-title="' + safeTitle + '"',
+        '  data-media-portrait="' + (portrait ? 'true' : 'false') + '"',
+        '  data-new-id="' + uid + '">',
+        '  <div class="media-card__thumb media-card__thumb--' + aspect + '">',
+        '    <div class="media-card__placeholder">',
+        '      <div class="media-card__placeholder-icon">▶</div>',
+        '      <div class="media-card__placeholder-label">YOUTUBE VIDEO</div>',
+        '    </div>',
+        '    <div class="media-card__play"><div class="media-card__play-btn">▶</div></div>',
+        '    <span class="media-card__platform platform--youtube">YOUTUBE</span>',
+        '    <span class="media-card__type type--video">VIDEO</span>',
+        '  </div>',
+        '  <div class="media-card__body">',
+        '    <div class="media-card__title" contenteditable="false">' + safeTitle + '</div>',
+        '    <div class="media-card__desc" contenteditable="false">Add a description for this video.</div>',
+        '    <div class="media-card__footer">',
+        '      <div class="media-card__tags">',
+        '        <span class="media-card__tag" contenteditable="false">YouTube</span>',
+        '      </div>',
+        '      <a href="https://www.youtube.com/channel/UClnMQgs-PuVYSVcQSJ-Uusw" target="_blank" rel="noopener" class="follow-btn">+ SUBSCRIBE</a>',
+        '    </div>',
+        '  </div>',
+        '</div>'
+      ].join('\n');
+    }
+
+    /* Helper — convert any YouTube watch/share/short URL to embed URL */
+    function toYtEmbedUrl(raw) {
+      raw = raw.trim();
+      // Already an embed URL
+      if (/youtube\.com\/embed\//.test(raw)) return raw;
+      // youtu.be/ID
+      var m = raw.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+      if (m) return 'https://www.youtube.com/embed/' + m[1];
+      // youtube.com/watch?v=ID  or  /shorts/ID
+      m = raw.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+      if (m) return 'https://www.youtube.com/embed/' + m[1];
+      m = raw.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
+      if (m) return 'https://www.youtube.com/embed/' + m[1];
+      return null; // not a recognised YouTube URL
+    }
+
+    /* ADD VIDEO / SOCIAL — blank card */
     if (addMediaBtn) {
       addMediaBtn.addEventListener('click', function(e) {
         e.preventDefault();
@@ -1632,7 +1722,6 @@
         addMediaBtn.parentNode.insertBefore(card, addMediaBtn);
         wireMediaCards();
         updateStats();
-        // Enter edit mode and focus title
         if (typeof enableEditMode === 'function') enableEditMode();
         var t = card.querySelector('.media-card__title');
         if (t) {
@@ -1645,6 +1734,46 @@
             window.getSelection().addRange(r);
           }, 80);
         }
+      });
+    }
+
+    /* ADD YOUTUBE LINK — prompt for URL, auto-create card */
+    if (addYtBtn) {
+      addYtBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!document.body.classList.contains('owner-unlocked')) return;
+
+        var raw = window.prompt(
+          'Paste the YouTube URL:\n\n' +
+          'Works with any of these formats:\n' +
+          '• https://www.youtube.com/watch?v=XXXXXXXXXXX\n' +
+          '• https://youtu.be/XXXXXXXXXXX\n' +
+          '• https://www.youtube.com/shorts/XXXXXXXXXXX\n' +
+          '• https://www.youtube.com/embed/XXXXXXXXXXX'
+        );
+        if (!raw || !raw.trim()) return;
+
+        var embedUrl = toYtEmbedUrl(raw);
+        if (!embedUrl) {
+          alert('Could not recognise that as a YouTube URL.\nTry copying the URL directly from your browser address bar while watching the video.');
+          return;
+        }
+
+        var title   = window.prompt('Video title (shown on the card):', 'My Video') || 'My Video';
+        var portrait = window.confirm(
+          'Is this a vertical / portrait video?\n(YouTube Shorts, vertical edits)\n\nOK = portrait  ·  Cancel = landscape'
+        );
+
+        addCounter++;
+        var id  = 'media-yt-' + addCounter;
+        var tmp = document.createElement('div');
+        tmp.innerHTML = makeYtCardHTML(id, embedUrl, title, portrait);
+        var card = tmp.firstElementChild;
+        /* Insert before the first add-button */
+        var anchor = addMediaBtn || addYtBtn;
+        anchor.parentNode.insertBefore(card, anchor);
+        wireMediaCards();
+        updateStats();
       });
     }
 
