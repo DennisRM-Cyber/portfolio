@@ -895,10 +895,11 @@
     execFmt('hiliteColor', this.value);
   });
   document.addEventListener('selectionchange', function() {
-    /* Show format bar whenever owner is unlocked — not only when editMode is
-       manually enabled. If the owner selects text in a data-edit-id element
-       while unlocked but before clicking ENABLE EDITING, we auto-enable edit
-       mode so the bar is immediately functional and the element is editable. */
+    /* Show format bar whenever the owner is unlocked and text is selected
+       inside any contenteditable element — regardless of which code path
+       enabled editing (the global EDIT MODE toggle, the article reader
+       toggle, or any future editor). The inEdit walker below ensures the
+       format bar never fires on non-editable text. */
     if (!document.body.classList.contains('owner-unlocked')) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) {
@@ -914,9 +915,6 @@
       node = node.parentNode;
     }
     if (!inEdit) return;
-    /* Auto-enable edit mode on first text selection so elements become
-       contenteditable and formatting commands take effect immediately. */
-    if (!editMode) enableEditMode();
     savedRange = sel.getRangeAt(0).cloneRange();
     var rect = sel.getRangeAt(0).getBoundingClientRect();
     showFormatBar(rect.left + rect.width / 2, rect.top);
