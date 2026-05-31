@@ -7,7 +7,7 @@
 (function initEditor() {
 
   /* ── CONFIG ─────────────────────────────────────────────── */
-  var OWNER_PASSPHRASE = (function() { try { return localStorage.getItem('portfolio__passphrase') || ''; } catch(e) { return ''; } }());
+  var OWNER_PASSPHRASE = 'blueprint2025';
   var SESSION_KEY      = 'portfolio__owner__unlocked';
   var SETTINGS_KEY     = 'portfolio__settings';
 
