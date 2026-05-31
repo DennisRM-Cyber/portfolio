@@ -898,7 +898,7 @@
                 <span class="media-card__tag" data-edit-id="v1-t1">Premiere Pro</span>
                 <span class="media-card__tag" data-edit-id="v1-t2">Colour Grade</span>
               </div>
-              <a href="https://youtube.com/dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ SUBSCRIBE</a>
+              <a href="https://www.youtube.com/channel/UClnMQgs-PuVYSVcQSJ-Uusw" target="_blank" rel="noopener" class="follow-btn">+ SUBSCRIBE</a>
             </div>
           </div>
         </div>
@@ -958,33 +958,35 @@
                 <span class="media-card__tag" data-edit-id="s1-t1">TikTok</span>
                 <span class="media-card__tag" data-edit-id="s1-t2">Reels</span>
               </div>
-              <a href="https://tiktok.com/@dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
+              <a href="https://www.tiktok.com/@dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
             </div>
           </div>
         </div>
 
-        <!-- Instagram post -->
+        <!-- Instagram post / Reel — supports both photo and video content -->
         <div class="media-card fade-in" data-type="social" data-filter="social"
-             data-media-type="photo"
-             data-media-src="assets/images/social-post-1.jpg"
-             data-media-title="Instagram Post #1">
-          <div class="media-card__thumb media-card__thumb--1x1">
+             data-media-type="youtube"
+             data-media-src="https://www.youtube.com/embed/YOUR_REEL_ID"
+             data-media-title="Instagram Reel #1"
+             data-media-portrait="true">
+          <div class="media-card__thumb media-card__thumb--9x16">
             <div class="media-card__placeholder">
               <div class="media-card__placeholder-icon">📸</div>
-              <div class="media-card__placeholder-label">INSTAGRAM POST</div>
+              <div class="media-card__placeholder-label">INSTAGRAM POST / REEL</div>
             </div>
+            <div class="media-card__play"><div class="media-card__play-btn">▶</div></div>
             <span class="media-card__platform platform--instagram">INSTAGRAM</span>
             <span class="media-card__type type--social">SOCIAL</span>
           </div>
           <div class="media-card__body">
-            <div class="media-card__title" data-edit-id="s2-title">Instagram Post — #1</div>
-            <div class="media-card__desc" data-edit-id="s2-desc">What's the story behind this post? Add context here.</div>
+            <div class="media-card__title" data-edit-id="s2-title">Instagram — Post / Reel #1</div>
+            <div class="media-card__desc" data-edit-id="s2-desc">Photos and Reels from the field. Follow for more engineering content and behind the scenes.</div>
             <div class="media-card__footer">
               <div class="media-card__tags">
                 <span class="media-card__tag" data-edit-id="s2-t1">Instagram</span>
-                <span class="media-card__tag" data-edit-id="s2-t2">Content</span>
+                <span class="media-card__tag" data-edit-id="s2-t2">Reels</span>
               </div>
-              <a href="https://instagram.com/dennisrm_afrofocus" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
+              <a href="https://www.instagram.com/dennisrm_afrofocus/" target="_blank" rel="noopener" class="follow-btn">+ FOLLOW</a>
             </div>
           </div>
         </div>
@@ -993,6 +995,13 @@
         <button class="media-add-card owner-only" id="btn-add-media" title="Add a new video or social card">
           <div class="media-add-card__icon">+</div>
           <div class="media-add-card__label">ADD VIDEO / SOCIAL</div>
+        </button>
+
+        <!-- EMBED YOUTUBE — owner-only quick-add button -->
+        <button class="media-add-card owner-only" id="btn-embed-youtube" title="Embed a YouTube video or Reel" style="border-color:rgba(255,0,0,0.3);">
+          <div class="media-add-card__icon" style="color:rgba(255,80,80,0.8);">▶</div>
+          <div class="media-add-card__label">EMBED YOUTUBE</div>
+          <div style="font-size:10px;color:rgba(240,165,0,0.5);margin-top:4px;font-family:JetBrains Mono,monospace;">paste URL to embed</div>
         </button>
 
       </div><!-- end media-grid -->
@@ -1224,7 +1233,7 @@
 
       var input = document.createElement('input');
       input.type = 'file';
-      input.accept = 'image/jpeg,image/png,image/webp,image/gif';
+      input.accept = 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm';
       input.multiple = true;
       input.style.display = 'none';
       document.body.appendChild(input);
@@ -1589,6 +1598,138 @@
     wireMediaCards();
     // Expose globally for dynamic card restore
     window.__wireMediaCards = wireMediaCards;
+
+    /* ── YOUTUBE EMBED BUTTON ────────────────────────────────────
+       Owner pastes a YouTube URL → modal extracts video ID →
+       inserts a wired media card into the grid instantly.
+    ─────────────────────────────────────────────────────────────── */
+    var ytModal = null;
+
+    function buildYtModal() {
+      if (ytModal) return;
+      ytModal = document.createElement('div');
+      ytModal.className = 'lock-overlay';
+      ytModal.setAttribute('role', 'dialog');
+      ytModal.setAttribute('aria-modal', 'true');
+      var iStyle = 'width:100%;box-sizing:border-box;margin-top:8px;padding:10px 14px;' +
+                   'background:rgba(13,21,38,0.9);color:#e8eaf0;' +
+                   'border:1px solid rgba(240,165,0,0.2);border-radius:6px;font-size:13px;font-family:inherit;';
+      ytModal.innerHTML = [
+        '<div class="lock-modal" style="max-width:460px;">',
+          '<div class="lock-modal__label">// embed youtube</div>',
+          '<div class="lock-modal__title">Add a YouTube video</div>',
+          '<div class="lock-modal__hint">Paste any YouTube URL — video, Short, or Reel.</div>',
+          '<input id="yt-url"   class="lock-modal__input" type="url"  placeholder="https://youtube.com/watch?v=..." />',
+          '<input id="yt-title" style="' + iStyle + '" type="text" placeholder="Card title" maxlength="100" />',
+          '<select id="yt-type"  style="' + iStyle + '">',
+            '<option value="video">Video edit / technical content</option>',
+            '<option value="social">Social media / Reel / Short</option>',
+          '</select>',
+          '<select id="yt-ratio" style="' + iStyle + '">',
+            '<option value="16x9">16:9 — landscape</option>',
+            '<option value="9x16">9:16 — portrait (Shorts / Reels)</option>',
+            '<option value="1x1">1:1 — square</option>',
+          '</select>',
+          '<div class="lock-modal__actions">',
+            '<button class="lock-modal__submit" id="yt-embed-btn">EMBED</button>',
+            '<button class="lock-modal__cancel" id="yt-cancel-btn">CANCEL</button>',
+          '</div>',
+          '<div class="lock-modal__error" id="yt-error"></div>',
+        '</div>'
+      ].join('');
+      document.body.appendChild(ytModal);
+
+      var elUrl    = document.getElementById('yt-url');
+      var elTitle  = document.getElementById('yt-title');
+      var elType   = document.getElementById('yt-type');
+      var elRatio  = document.getElementById('yt-ratio');
+      var elEmbed  = document.getElementById('yt-embed-btn');
+      var elCancel = document.getElementById('yt-cancel-btn');
+      var elError  = document.getElementById('yt-error');
+
+      function extractId(url) {
+        var m = url.match(/(?:v=|\/embed\/|\/shorts\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        return m ? m[1] : null;
+      }
+
+      function doEmbed() {
+        var url   = elUrl.value.trim();
+        var title = elTitle.value.trim() || 'YouTube Video';
+        var type  = elType.value;
+        var ratio = elRatio.value;
+        var vid   = extractId(url);
+        if (!vid) {
+          elError.textContent = 'Could not find a YouTube video ID. Paste the full link.';
+          elError.classList.add('visible'); return;
+        }
+        var src        = 'https://www.youtube.com/embed/' + vid;
+        var isPortrait = ratio === '9x16';
+        var filter     = type === 'video' ? 'video' : 'social';
+        var typeLabel  = type === 'video' ? 'EDIT' : 'SOCIAL';
+        var typeClass  = type === 'video' ? 'type--video' : 'type--social';
+        var platform   = type === 'video'
+          ? '<span class="media-card__platform platform--local">VIDEO</span>'
+          : '<span class="media-card__platform platform--youtube">YOUTUBE</span>';
+
+        var card = document.createElement('div');
+        card.className = 'media-card new-card fade-in visible';
+        card.setAttribute('data-type',           filter);
+        card.setAttribute('data-filter',         filter);
+        card.setAttribute('data-media-type',     'youtube');
+        card.setAttribute('data-media-src',      src);
+        card.setAttribute('data-media-title',    title);
+        card.setAttribute('data-media-portrait', String(isPortrait));
+        card.innerHTML = [
+          '<div class="media-card__thumb media-card__thumb--' + ratio + '">',
+            '<div class="media-card__placeholder">',
+              '<div class="media-card__placeholder-icon">\u25b6</div>',
+              '<div class="media-card__placeholder-label">' + title + '</div>',
+            '</div>',
+            '<div class="media-card__play"><div class="media-card__play-btn">\u25b6</div></div>',
+            platform,
+            '<span class="media-card__type ' + typeClass + '">' + typeLabel + '</span>',
+          '</div>',
+          '<div class="media-card__body">',
+            '<div class="media-card__title" contenteditable="true">' + title + '</div>',
+            '<div class="media-card__desc" contenteditable="true">Add a description for this video.</div>',
+            '<div class="media-card__footer">',
+              '<div class="media-card__tags">',
+                '<span class="media-card__tag" contenteditable="true">YouTube</span>',
+              '</div>',
+            '</div>',
+          '</div>'
+        ].join('');
+
+        var grid   = document.querySelector('.media-grid');
+        var addBtn = document.getElementById('btn-add-media');
+        if (grid && addBtn) { grid.insertBefore(card, addBtn); }
+        else if (grid) { grid.appendChild(card); }
+
+        wireMediaCards(); /* wire the new card's lightbox click */
+
+        ytModal.classList.remove('visible');
+        elUrl.value = ''; elTitle.value = '';
+        elError.classList.remove('visible');
+      }
+
+      elEmbed.addEventListener('click', doEmbed);
+      elUrl.addEventListener('keydown', function(e) { if (e.key === 'Enter') doEmbed(); });
+      elCancel.addEventListener('click', function() { ytModal.classList.remove('visible'); });
+    }
+
+    var ytBtn = document.getElementById('btn-embed-youtube');
+    if (ytBtn) {
+      ytBtn.addEventListener('click', function() {
+        if (!document.body.classList.contains('owner-unlocked')) return;
+        buildYtModal();
+        var u = document.getElementById('yt-url');
+        var e = document.getElementById('yt-error');
+        if (u) u.value = '';
+        if (e) e.classList.remove('visible');
+        ytModal.classList.add('visible');
+        setTimeout(function() { if (u) u.focus(); }, 100);
+      });
+    }
 
     /* ── ADD MEDIA BUTTON (video/social) ────────────────────────── */
     var addMediaBtn  = document.getElementById('btn-add-media');
