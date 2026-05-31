@@ -934,9 +934,6 @@
     initSlideableBars();
     wireAddCards();
     setTimeout(injectUploadTriggers, 100);
-    document.dispatchEvent(new CustomEvent('ownerUnlocked'));
-    // Firebase second layer: if Firebase session has expired, prompt to re-authenticate
-    if (window.PF && !PF.isOwner()) setTimeout(showFbSignIn, 400);
   }
 
   function lock() {
@@ -945,133 +942,13 @@
     toolbar.style.display = 'none';
     disableEditMode();
     lockBtn.innerHTML = '<span class="lock-btn__icon">\uD83D\uDD12</span><span class="lock-btn__text">OWNER</span>';
-    document.dispatchEvent(new CustomEvent('ownerLocked'));
-    // Firebase: sign out so write access is revoked immediately
-    if (window.PF) PF.signOut().catch(function() {});
   }
 
   if (sessionStorage.getItem(SESSION_KEY) === '1') unlock();
 
-  /* ── Firebase auth state listener ───────────────────────────
-     Second-chance auth: if the owner navigates to a new page,
-     Firebase restores the auth session automatically (LOCAL
-     persistence). This listener catches that moment and
-     re-activates the owner UI without requiring the passphrase
-     to be re-typed — as long as the sessionStorage key is set
-     (meaning the passphrase was entered correctly this session).
-  ────────────────────────────────────────────────────────── */
-  if (window.PF) {
-    PF.onAuth(function (user) {
-      if (user &&
-          !document.body.classList.contains('owner-unlocked') &&
-          sessionStorage.getItem(SESSION_KEY) === '1') {
-        /* Both conditions met: Firebase confirmed + passphrase was correct */
-        document.body.classList.add('owner-unlocked');
-        toolbar.style.display = '';
-        lockBtn.innerHTML = '<span class="lock-btn__icon">\uD83D\uDD13</span><span class="lock-btn__text">LOCK</span>';
-        injectAllDeleteBtns();
-        initSlideableBars();
-        wireAddCards();
-        setTimeout(injectUploadTriggers, 100);
-        document.dispatchEvent(new CustomEvent('ownerUnlocked'));
-      }
-    });
-  }
-
 
   /* ══════════════════════════════════════════════════════════
-     PART 9 — FIREBASE SIGN-IN OVERLAY
-     Appears after passphrase unlock if the Firebase session
-     has expired. Separate from the passphrase overlay so the
-     two auth layers stay independent.
-  ══════════════════════════════════════════════════════════ */
-
-  var _fbOverlay = null;
-
-  function buildFbOverlay() {
-    if (_fbOverlay) return;
-    _fbOverlay = document.createElement('div');
-    _fbOverlay.id        = 'fb-auth-overlay';
-    _fbOverlay.className = 'lock-overlay';
-    _fbOverlay.setAttribute('role',       'dialog');
-    _fbOverlay.setAttribute('aria-modal', 'true');
-    _fbOverlay.setAttribute('aria-label', 'Firebase sign-in');
-    _fbOverlay.innerHTML = [
-      '<div class="lock-modal">',
-        '<div class="lock-modal__label">// firebase auth</div>',
-        '<div class="lock-modal__title">Re-authenticate to save</div>',
-        '<div class="lock-modal__hint">',
-          'Your Firebase session has expired. Sign in with your owner email and password ',
-          'to re-enable content saving. Press Skip to use the editor UI without writing to Firebase.',
-        '</div>',
-        '<input class="lock-modal__input" id="fb-email"    type="email"    placeholder="owner email"    autocomplete="email" />',
-        '<input class="lock-modal__input" id="fb-password" type="password" placeholder="password"       autocomplete="current-password" style="margin-top:8px;" />',
-        '<div class="lock-modal__actions">',
-          '<button class="lock-modal__submit" id="fb-signin-btn">SIGN IN</button>',
-          '<button class="lock-modal__cancel" id="fb-skip-btn">SKIP (view-only)</button>',
-        '</div>',
-        '<div class="lock-modal__error" id="fb-err"></div>',
-      '</div>'
-    ].join('');
-    document.body.appendChild(_fbOverlay);
-
-    var fbEmail   = document.getElementById('fb-email');
-    var fbPass    = document.getElementById('fb-password');
-    var fbSignBtn = document.getElementById('fb-signin-btn');
-    var fbSkipBtn = document.getElementById('fb-skip-btn');
-    var fbErr     = document.getElementById('fb-err');
-
-    function attemptFbSignIn() {
-      var email = fbEmail.value.trim();
-      var pass  = fbPass.value;
-      if (!email || !pass) {
-        fbErr.textContent = 'Enter your owner email and password.';
-        fbErr.classList.add('visible'); return;
-      }
-      fbSignBtn.disabled    = true;
-      fbSignBtn.textContent = 'SIGNING IN\u2026';
-      fbErr.classList.remove('visible');
-
-      PF.signIn(email, pass).then(function () {
-        _fbOverlay.classList.remove('visible');
-        fbPass.value          = '';
-        fbSignBtn.disabled    = false;
-        fbSignBtn.textContent = 'SIGN IN';
-      }).catch(function (err) {
-        var msg = (err.code === 'auth/wrong-password' ||
-                   err.code === 'auth/user-not-found'  ||
-                   err.code === 'auth/invalid-credential')
-          ? 'Incorrect email or password.'
-          : 'Sign-in failed. Check your connection and try again.';
-        fbErr.textContent = msg;
-        fbErr.classList.add('visible');
-        fbSignBtn.disabled    = false;
-        fbSignBtn.textContent = 'SIGN IN';
-        fbPass.value = '';
-        fbPass.focus();
-      });
-    }
-
-    fbSignBtn.addEventListener('click', attemptFbSignIn);
-    fbPass.addEventListener('keydown', function (e) { if (e.key === 'Enter') attemptFbSignIn(); });
-    fbSkipBtn.addEventListener('click', function () { _fbOverlay.classList.remove('visible'); });
-  }
-
-  function showFbSignIn() {
-    buildFbOverlay();
-    var em = document.getElementById('fb-email');
-    var pw = document.getElementById('fb-password');
-    var er = document.getElementById('fb-err');
-    if (em) em.value = '';
-    if (pw) pw.value = '';
-    if (er) er.classList.remove('visible');
-    _fbOverlay.classList.add('visible');
-    setTimeout(function () { if (em) em.focus(); }, 100);
-  }
-
-
-  /* ══════════════════════════════════════════════════════════
-     PART 11 — KEYBOARD SHORTCUTS
+     PART 9 — KEYBOARD SHORTCUTS
   ══════════════════════════════════════════════════════════ */
 
   document.addEventListener('keydown', function(e) {
