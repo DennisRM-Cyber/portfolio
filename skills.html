@@ -344,6 +344,46 @@
     .cert-add-card__label { font-size: 9px; letter-spacing: 0.18em; color: var(--text-muted); transition: color 0.2s; }
     .cert-add-card:hover .cert-add-card__label { color: var(--amber); }
 
+    /* ── CERT CARD — CLICKABLE + OWNER UPLOAD ──────────────── */
+    /* Cert cards with a doc attached are clickable by all */
+    .cert-card[data-cert-doc] {
+      cursor: pointer;
+    }
+    .cert-card[data-cert-doc]:hover {
+      border-color: rgba(240,165,0,0.55);
+      transform: translateY(-2px);
+    }
+    /* Small "open doc" indicator on cards that have a file */
+    .cert-card__doc-hint {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      color: rgba(240,165,0,0.5);
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cert-card[data-cert-doc] .cert-card__doc-hint { color: rgba(240,165,0,0.7); }
+
+    /* Per-cert upload button — owner only */
+    .cert-upload-btn {
+      display: none;
+      align-items: center; gap: 5px;
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.13em; font-weight: 700;
+      padding: 6px 11px; border-radius: 8px;
+      border: 1px solid rgba(240,165,0,0.32);
+      background: rgba(240,165,0,0.05);
+      color: var(--amber); cursor: pointer;
+      white-space: nowrap; transition: all 0.18s;
+      margin-top: 8px;
+    }
+    .cert-upload-btn:hover { background: rgba(240,165,0,0.15); border-color: var(--amber); }
+    body.owner-unlocked .cert-upload-btn { display: inline-flex !important; }
+
+    /* Cert doc viewer overlay (reuses doc-viewer styles from projects — inject same overlay) */
+
     /* ── RESPONSIVE ────────────────────────────── */
     @media (max-width: 600px) {
       .skill-grid { grid-template-columns: 1fr; }
@@ -771,36 +811,44 @@
         </div>
         <div class="certs-grid">
 
-          <div class="cert-card fade-in">
+          <div class="cert-card fade-in" data-cert-id="cert1">
             <div class="cert-card__icon">🎓</div>
-            <div>
+            <div style="flex:1;">
               <div class="cert-card__name" data-edit-id="cert1-name">BSc Electrical &amp; Electronics Engineering</div>
               <div class="cert-card__issuer" data-edit-id="cert1-issuer">JKUAT · Graduated December 2025</div>
+              <div class="cert-card__doc-hint" id="cert1-hint">📄 click to view document</div>
+              <button class="cert-upload-btn owner-only" data-cert-upload="cert1" type="button" title="Upload PDF or DOCX for this certification">↑ UPLOAD DOC</button>
             </div>
           </div>
 
-          <div class="cert-card fade-in">
+          <div class="cert-card fade-in" data-cert-id="cert2">
             <div class="cert-card__icon">🏭</div>
-            <div>
+            <div style="flex:1;">
               <div class="cert-card__name" data-edit-id="cert2-name">Industrial Attachment Certificate — Kenya Power</div>
               <div class="cert-card__issuer" data-edit-id="cert2-issuer">KPLC · 2022 &amp; 2024 · Kiambu &amp; Gatundu</div>
+              <div class="cert-card__doc-hint" id="cert2-hint">📄 click to view document</div>
+              <button class="cert-upload-btn owner-only" data-cert-upload="cert2" type="button" title="Upload PDF or DOCX for this certification">↑ UPLOAD DOC</button>
             </div>
           </div>
 
-          <div class="cert-card fade-in">
+          <div class="cert-card fade-in" data-cert-id="cert3">
             <div class="cert-card__icon">🏛️</div>
-            <div>
+            <div style="flex:1;">
               <div class="cert-card__name" data-edit-id="cert3-name">Industrial Attachment Certificate — Ministry of Lands</div>
               <div class="cert-card__issuer" data-edit-id="cert3-issuer">Electrical Dept. · 2023 · Hill Plaza, Nairobi</div>
+              <div class="cert-card__doc-hint" id="cert3-hint">📄 click to view document</div>
+              <button class="cert-upload-btn owner-only" data-cert-upload="cert3" type="button" title="Upload PDF or DOCX for this certification">↑ UPLOAD DOC</button>
             </div>
           </div>
 
           <!-- Placeholder for future certs -->
-          <div class="cert-card fade-in" style="border-style:dashed; opacity:0.5;">
+          <div class="cert-card fade-in" style="border-style:dashed; opacity:0.5;" data-cert-id="cert4">
             <div class="cert-card__icon">📋</div>
-            <div>
+            <div style="flex:1;">
               <div class="cert-card__name" data-edit-id="cert4-name">Professional Certification</div>
               <div class="cert-card__issuer" data-edit-id="cert4-issuer">Coming soon — add when earned</div>
+              <div class="cert-card__doc-hint" id="cert4-hint">📄 click to view document</div>
+              <button class="cert-upload-btn owner-only" data-cert-upload="cert4" type="button" title="Upload PDF or DOCX for this certification">↑ UPLOAD DOC</button>
             </div>
           </div>
 
@@ -824,6 +872,27 @@
       <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span>OPEN TO OPPORTUNITIES</span>
     </div>
   </footer>
+
+  <!-- ═══════════════════════════════════════════
+       IN-PAGE DOCUMENT VIEWER (cert docs)
+  ═══════════════════════════════════════════ -->
+  <div class="doc-viewer-overlay" id="cert-doc-viewer" role="dialog" aria-modal="true" aria-label="Certification document viewer"
+       style="position:fixed;inset:0;z-index:600;background:rgba(10,16,36,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);opacity:0;pointer-events:none;transition:opacity 0.22s;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid rgba(240,165,0,0.18);background:rgba(5,9,22,0.98);flex-shrink:0;gap:16px;">
+      <span id="cert-doc-title" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Document</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <a id="cert-doc-download" download style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;padding:7px 14px;border-radius:8px;border:1px solid rgba(240,165,0,0.25);background:transparent;color:var(--amber);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;text-decoration:none;">⬇ DOWNLOAD</a>
+        <button id="cert-doc-close" type="button" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;padding:7px 14px;border-radius:8px;border:1px solid rgba(248,113,113,0.3);background:transparent;color:#f87171;cursor:pointer;transition:all 0.15s;">✕ CLOSE</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow:hidden;position:relative;">
+      <div id="cert-doc-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,9,22,0.97);font-family:var(--font-mono);color:var(--text-muted);font-size:10px;letter-spacing:0.16em;transition:opacity 0.3s;">
+        <div style="width:28px;height:28px;border:2px solid rgba(240,165,0,0.2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+        <span>LOADING DOCUMENT…</span>
+      </div>
+      <iframe id="cert-doc-frame" title="Certification document" style="width:100%;height:100%;border:none;background:#f5f5f0;"></iframe>
+    </div>
+  </div>
 
   <!-- OWNER LOCK OVERLAY — must be before editor.js -->
   <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
@@ -946,15 +1015,290 @@
     wireAddSkillBtns();
 
 
+    /* ── CERT DOCUMENT VIEWER ────────────────────────── */
+    var certViewer   = document.getElementById('cert-doc-viewer');
+    var certFrame    = document.getElementById('cert-doc-frame');
+    var certTitle    = document.getElementById('cert-doc-title');
+    var certLoading  = document.getElementById('cert-doc-loading');
+    var certClose    = document.getElementById('cert-doc-close');
+    var certDownload = document.getElementById('cert-doc-download');
+
+    function openCertViewer(src, title, docType) {
+      certTitle.textContent = title || 'Document';
+      certLoading.style.opacity = '1';
+      certLoading.style.pointerEvents = 'all';
+      certDownload.href = src;
+      certDownload.setAttribute('download', '');
+      var viewerSrc;
+      if (!docType || docType === 'pdf') {
+        viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1';
+      } else {
+        /* DOCX via Google Docs viewer */
+        viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
+      }
+      certFrame.src = '';
+      setTimeout(function() { certFrame.src = viewerSrc; }, 80);
+      certViewer.style.opacity = '1';
+      certViewer.style.pointerEvents = 'all';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCertViewer() {
+      certViewer.style.opacity = '0';
+      certViewer.style.pointerEvents = 'none';
+      document.body.style.overflow = '';
+      setTimeout(function() { certFrame.src = ''; }, 300);
+    }
+
+    if (certFrame) {
+      certFrame.addEventListener('load', function() {
+        certLoading.style.opacity = '0';
+        certLoading.style.pointerEvents = 'none';
+      });
+    }
+    if (certClose) certClose.addEventListener('click', closeCertViewer);
+    if (certViewer) {
+      certViewer.addEventListener('click', function(e) {
+        if (e.target === certViewer) closeCertViewer();
+      });
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && certViewer && certViewer.style.opacity === '1') closeCertViewer();
+    });
+
+
+    /* ── CERT CLOUDINARY + FIREBASE UPLOAD SYSTEM ───── */
+    var CLD_CLOUD_C  = 'dqloeuu33';
+    var CLD_PRESET_C = 'i1mylmri';
+
+    function uploadCertDocToCloudinary(file, onSuccess, onError) {
+      var fd = new FormData();
+      fd.append('file',          file);
+      fd.append('upload_preset', CLD_PRESET_C);
+      fd.append('folder',        'portfolio/certs');
+      fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD_C + '/raw/upload', {
+        method: 'POST', body: fd
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.secure_url) { onSuccess(d.secure_url); }
+        else { onError(new Error(d.error ? d.error.message : 'Upload failed')); }
+      })
+      .catch(onError);
+    }
+
+    function requireCertFirebaseAuth(onAuthenticated) {
+      var existing = document.getElementById('fb-signin-modal');
+      if (existing) existing.remove();
+      var modal = document.createElement('div');
+      modal.id = 'fb-signin-modal';
+      modal.style.cssText = [
+        'position:fixed;inset:0;z-index:10000',
+        'background:rgba(3,6,14,0.88)',
+        'backdrop-filter:blur(18px)',
+        'display:flex;align-items:center;justify-content:center',
+        'animation:fbModalIn 0.18s ease'
+      ].join(';');
+      modal.innerHTML = [
+        '<style>',
+        '@keyframes fbModalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}',
+        '#fb-signin-modal .fb-box{background:rgba(14,20,44,0.98);border:1px solid rgba(240,165,0,0.28);border-radius:16px;padding:32px 36px 28px;width:min(400px,90vw);box-shadow:0 32px 80px rgba(0,0,0,0.7);}',
+        '#fb-signin-modal .fb-label{font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.18em;color:rgba(240,165,0,0.55);margin-bottom:8px;}',
+        '#fb-signin-modal .fb-title{font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:#f0f4ff;margin-bottom:6px;}',
+        '#fb-signin-modal .fb-hint{font-size:12px;color:rgba(180,190,220,0.65);line-height:1.6;margin-bottom:24px;}',
+        '#fb-signin-modal .fb-field{margin-bottom:14px;}',
+        '#fb-signin-modal .fb-field label{display:block;font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.15em;color:rgba(240,165,0,0.6);margin-bottom:5px;}',
+        '#fb-signin-modal .fb-input{width:100%;box-sizing:border-box;background:rgba(8,14,30,0.9);border:1px solid rgba(240,165,0,0.2);border-radius:8px;padding:10px 14px;color:#f0f4ff;font-family:JetBrains Mono,monospace;font-size:13px;outline:none;transition:border-color 0.18s;}',
+        '#fb-signin-modal .fb-input:focus{border-color:rgba(240,165,0,0.6);}',
+        '#fb-signin-modal .fb-input.error{border-color:#f87171!important;}',
+        '#fb-signin-modal .fb-error{font-family:JetBrains Mono,monospace;font-size:9px;color:#f87171;min-height:16px;margin-bottom:18px;letter-spacing:0.08em;}',
+        '#fb-signin-modal .fb-actions{display:flex;gap:10px;}',
+        '#fb-signin-modal .fb-btn-sign{flex:1;padding:12px;border-radius:10px;background:var(--amber,#f0a500);border:none;color:#0d1526;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;letter-spacing:0.14em;cursor:pointer;transition:opacity 0.18s;}',
+        '#fb-signin-modal .fb-btn-sign:hover{opacity:0.88;}',
+        '#fb-signin-modal .fb-btn-sign:disabled{opacity:0.4;cursor:default;}',
+        '#fb-signin-modal .fb-btn-cancel{padding:12px 18px;border-radius:10px;background:transparent;border:1px solid rgba(248,113,113,0.35);color:#f87171;font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.12em;cursor:pointer;transition:background 0.15s;}',
+        '#fb-signin-modal .fb-btn-cancel:hover{background:rgba(248,113,113,0.1);}',
+        '</style>',
+        '<div class="fb-box">',
+        '<div class="fb-label">// firebase auth</div>',
+        '<div class="fb-title">Sign in to upload</div>',
+        '<div class="fb-hint">Enter your Firebase owner credentials to upload certification documents.</div>',
+        '<div class="fb-field"><label for="fb-email">EMAIL</label>',
+        '<input class="fb-input" id="fb-email" type="email" placeholder="owner@email.com" autocomplete="email" /></div>',
+        '<div class="fb-field"><label for="fb-pass">PASSWORD</label>',
+        '<input class="fb-input" id="fb-pass" type="password" placeholder="Firebase password" autocomplete="current-password" /></div>',
+        '<div class="fb-error" id="fb-error"></div>',
+        '<div class="fb-actions">',
+        '<button class="fb-btn-sign" id="fb-sign-btn">SIGN IN &amp; UPLOAD</button>',
+        '<button class="fb-btn-cancel" id="fb-cancel-btn">CANCEL</button>',
+        '</div></div>'
+      ].join('');
+      document.body.appendChild(modal);
+      var emailEl   = modal.querySelector('#fb-email');
+      var passEl    = modal.querySelector('#fb-pass');
+      var errorEl   = modal.querySelector('#fb-error');
+      var signBtn   = modal.querySelector('#fb-sign-btn');
+      var cancelBtn = modal.querySelector('#fb-cancel-btn');
+      setTimeout(function() { emailEl.focus(); }, 80);
+      function closeModal() {
+        modal.style.animation = 'fbModalIn 0.15s ease reverse';
+        setTimeout(function() { if (modal.parentNode) modal.remove(); }, 140);
+      }
+      function setError(msg) {
+        errorEl.textContent = msg;
+        emailEl.classList.toggle('error', !!msg);
+        passEl.classList.toggle('error', !!msg);
+      }
+      function doSignIn() {
+        var email = emailEl.value.trim();
+        var pass  = passEl.value;
+        if (!email || !pass) { setError('Both fields are required.'); return; }
+        setError('');
+        signBtn.disabled    = true;
+        signBtn.textContent = 'SIGNING IN…';
+        PF.signIn(email, pass)
+          .then(function() { closeModal(); onAuthenticated(); })
+          .catch(function(err) {
+            signBtn.disabled    = false;
+            signBtn.textContent = 'SIGN IN & UPLOAD';
+            var msg = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
+              ? 'Incorrect email or password.'
+              : err.code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.'
+              : err.code === 'auth/network-request-failed' ? 'Network error. Check your connection.'
+              : (err.message || 'Sign-in failed.');
+            setError(msg);
+            passEl.value = ''; passEl.focus();
+          });
+      }
+      signBtn.addEventListener('click', doSignIn);
+      passEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignIn(); });
+      cancelBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+      document.addEventListener('keydown', function escClose(e) {
+        if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escClose); }
+      });
+    }
+
+    /* Apply a saved cert doc URL: update data-cert-doc attribute,
+       hint text, and wire the card click */
+    function applyCertUrl(certId, url, docType) {
+      var card = document.querySelector('.cert-card[data-cert-id="' + certId + '"]');
+      if (!card) return;
+      card.setAttribute('data-cert-doc', url);
+      card.setAttribute('data-cert-doc-type', docType || 'pdf');
+      var hint = card.querySelector('.cert-card__doc-hint');
+      if (hint) hint.textContent = '📄 click to open document';
+      wireCertCardClick(card);
+    }
+
+    function wireCertCardClick(card) {
+      if (card._certClickWired) return;
+      card._certClickWired = true;
+      card.addEventListener('click', function(e) {
+        /* Don't open viewer when clicking the upload btn */
+        if (e.target.closest('.cert-upload-btn') || e.target.closest('.new-card__delete')) return;
+        var url = card.getAttribute('data-cert-doc');
+        if (!url) return;
+        var docType = card.getAttribute('data-cert-doc-type') || 'pdf';
+        var nameEl = card.querySelector('.cert-card__name');
+        var title  = nameEl ? nameEl.textContent : 'Certificate';
+        openCertViewer(url, title, docType);
+      });
+    }
+
+    /* Load all saved cert doc URLs on page load */
+    function loadSavedCertUrls() {
+      if (!window.PF) return;
+      PF.loadEdits(function(edits) {
+        Object.keys(edits).forEach(function(key) {
+          /* Keys: cert-doc-cert1-pdf, cert-doc-cert2-docx, etc. */
+          var m = key.match(/^cert-doc-(cert\d+)-(pdf|docx)$/);
+          if (!m) return;
+          var certId  = m[1];
+          var docType = m[2];
+          var url     = edits[key];
+          if (url && typeof url === 'string' && url.indexOf('http') === 0) {
+            applyCertUrl(certId, url, docType);
+          }
+        });
+      });
+    }
+    loadSavedCertUrls();
+
+    /* Wire upload buttons */
+    function wireCertUploadBtns() {
+      document.querySelectorAll('.cert-upload-btn[data-cert-upload]').forEach(function(btn) {
+        if (btn._certUploadWired) return;
+        btn._certUploadWired = true;
+        btn.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          if (!document.body.classList.contains('owner-unlocked')) return;
+          var certId = btn.getAttribute('data-cert-upload');
+          if (!window.PF || !PF.isOwner()) {
+            requireCertFirebaseAuth(function() { btn.click(); });
+            return;
+          }
+          var input = document.createElement('input');
+          input.type    = 'file';
+          input.accept  = '.pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+          input.style.display = 'none';
+          document.body.appendChild(input);
+          input.addEventListener('change', function() {
+            var file = input.files[0];
+            document.body.removeChild(input);
+            if (!file) return;
+            if (file.size > 25 * 1024 * 1024) {
+              alert(file.name + ' exceeds 25 MB — please compress and try again.');
+              return;
+            }
+            var docType = file.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'docx';
+            var toast = document.createElement('div');
+            toast.style.cssText = [
+              'position:fixed;bottom:80px;left:50%;transform:translateX(-50%)',
+              'background:rgba(13,21,38,0.95);border:1px solid rgba(240,165,0,0.4)',
+              'color:#f0a500;font:700 12px/1 JetBrains Mono,monospace',
+              'padding:10px 20px;border-radius:6px;z-index:9999;pointer-events:none'
+            ].join(';');
+            toast.textContent = 'UPLOADING CERTIFICATE…';
+            document.body.appendChild(toast);
+            uploadCertDocToCloudinary(file,
+              function(url) {
+                var firebaseKey = 'cert-doc-' + certId + '-' + docType;
+                PF.saveEdit(firebaseKey, url)
+                  .then(function() {
+                    document.body.removeChild(toast);
+                    applyCertUrl(certId, url, docType);
+                  })
+                  .catch(function(err) {
+                    document.body.removeChild(toast);
+                    applyCertUrl(certId, url, docType);
+                    alert('Certificate uploaded but Firebase save failed: ' + err.message + '\nThe link will work this session but may not persist.');
+                  });
+              },
+              function(err) {
+                document.body.removeChild(toast);
+                alert('Upload failed: ' + err.message);
+              }
+            );
+          });
+          input.click();
+        });
+      });
+    }
+    wireCertUploadBtns();
+
+
     /* ── ADD CERT CARD ───────────────────────────────── */
     function makeCertCardHTML(uid) {
       return [
-        '<div class="cert-card new-card fade-in visible" data-new-id="' + uid + '">',
-        '  <button class="new-card__delete owner-only" title="Delete" aria-label="Delete cert">✕</button>',
+        '<div class="cert-card new-card fade-in visible" data-new-id="' + uid + '" data-cert-id="' + uid + '">',
+        '  <button class="new-card__delete owner-only" title="Delete" aria-label="Delete cert" type="button">✕</button>',
         '  <div class="cert-card__icon" contenteditable="false">📋</div>',
-        '  <div>',
+        '  <div style="flex:1;">',
         '    <div class="cert-card__name" contenteditable="false">Certification Name</div>',
         '    <div class="cert-card__issuer" contenteditable="false">Issuing Organisation · Year</div>',
+        '    <div class="cert-card__doc-hint">📄 upload a document to enable viewing</div>',
+        '    <button class="cert-upload-btn owner-only" data-cert-upload="' + uid + '" type="button" title="Upload PDF or DOCX for this certification">↑ UPLOAD DOC</button>',
         '  </div>',
         '</div>'
       ].join('\n');
@@ -965,6 +1309,11 @@
       addCertBtn.addEventListener('click', function(e) {
         e.preventDefault();
         if (!document.body.classList.contains('owner-unlocked')) return;
+        /* Require Firebase auth before adding a new cert */
+        if (!window.PF || !PF.isOwner()) {
+          requireCertFirebaseAuth(function() { addCertBtn.click(); });
+          return;
+        }
         var id = 'cert-' + Date.now();
         var tmp = document.createElement('div');
         tmp.innerHTML = makeCertCardHTML(id);
@@ -978,6 +1327,9 @@
             if (window.confirm('Remove this certification?')) card.remove();
           });
         }
+        /* Wire upload btn on the new card */
+        wireCertUploadBtns();
+
         var nameEl = card.querySelector('.cert-card__name');
         if (nameEl) {
           nameEl.setAttribute('contenteditable', 'true');

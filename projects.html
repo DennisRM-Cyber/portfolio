@@ -994,9 +994,16 @@
                 <span class="card-tag" data-edit-id="h1-t1">Arduino</span>
                 <span class="card-tag" data-edit-id="h1-t2">Electronics</span>
               </div>
-              <div class="card-actions">
-                <a href="#" class="card-btn card-btn--primary">
+              <div class="card-actions" data-doc-id="h1">
+                <button class="card-btn card-btn--primary"
+                        data-doc-src="#"
+                        data-doc-type="pdf"
+                        data-doc-slot="pdf"
+                        data-doc-title="Hobby Project Document">
                   <span class="card-btn__icon">📄</span> VIEW PROJECT
+                </button>
+                <a href="#" class="card-btn" data-doc-slot="pdf">
+                  <span class="card-btn__icon">⬇</span> DOWNLOAD
                 </a>
                 <a href="#" class="card-btn">
                   <span class="card-btn__icon">⌥</span> GITHUB
@@ -1272,8 +1279,11 @@
         btn._docWired = true;
         btn.addEventListener('click', function(e) {
           e.preventDefault();
+          var src = btn.getAttribute('data-doc-src');
+          /* Skip placeholder or empty src */
+          if (!src || src === '#') return;
           openDocViewer(
-            btn.getAttribute('data-doc-src'),
+            src,
             btn.getAttribute('data-doc-type') || 'pdf',
             btn.getAttribute('data-doc-title') || 'Document'
           );

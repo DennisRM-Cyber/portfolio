@@ -129,7 +129,7 @@
 
           <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
             <a href="#" id="cv-download-btn" data-doc-slot="cv" class="btn btn--primary">DOWNLOAD CV</a>
-            <button class="cv-upload-btn owner-only" id="cv-upload-btn" title="Upload your CV from your computer">↑ UPLOAD CV</button>
+            <button class="cv-upload-btn owner-only" id="cv-upload-btn" type="button" title="Upload your CV from your computer">↑ UPLOAD CV</button>
             <a href="contact.html" class="btn btn--ghost">GET IN TOUCH</a>
           </div>
         </div>
@@ -773,8 +773,25 @@ The link will work this session but may not persist.');
     }
 
     if (uploadBtn) {
-      uploadBtn.addEventListener('click', triggerCvUpload);
+      uploadBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();  /* prevent editor.js from intercepting */
+        triggerCvUpload();
+      });
     }
+
+    /* Re-wire if the button is revealed after editor.js runs */
+    document.addEventListener('ownerUnlocked', function() {
+      var btn = document.getElementById('cv-upload-btn');
+      if (btn && !btn._cvUploadWired) {
+        btn._cvUploadWired = true;
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          triggerCvUpload();
+        });
+      }
+    });
 
   })();
   </script>
