@@ -74,7 +74,7 @@
 
   <nav class="nav">
     <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
+      <a href="index.html" class="nav__logo"></span>Portfolio.EE<span> _</span></a>
       <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -96,13 +96,13 @@
       <!-- ABOUT HERO -->
       <div class="about-hero">
         <div class="about-hero__content">
-          <p class="hero__label" data-edit-id="about-hero-label">// about</p>
+          <p class="hero__label" data-edit-id="about-hero-label"> About</p>
           <h1 class="hero__title" style="font-size: clamp(32px, 4vw, 52px); margin-bottom: 32px;">
             <span data-edit-id="hero-name">Rubui Mwangi</span>
           </h1>
 
           <div class="achievement-banner fade-in">
-            <div class="achievement-banner__label" data-edit-id="banner-label">// strongest proof point</div>
+            <div class="achievement-banner__label" data-edit-id="banner-label">strongest proof point</div>
             <p class="achievement-banner__text" data-edit-id="banner-text">
               Built a real-time <em>IoT fault detection system</em> end-to-end — Arduino and ESP32 sensors talking to Firebase, data flowing to a dashboard I designed and coded myself. Hardware to cloud, no team. That's the project I'm most proud of.
             </p>
@@ -115,7 +115,7 @@
             </div>
             <div class="stats__item fade-in" style="padding: 16px 18px;">
               <div class="stats__label" style="margin-bottom: 4px;">University</div>
-              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700; line-height: 1.3;" data-edit-id="fact-uni">JKUAT — Graduated Dec 2025</div>
+              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700; line-height: 1.3;" data-edit-id="fact-uni">JKUAT - Graduated Dec 2025</div>
             </div>
             <div class="stats__item fade-in" style="padding: 16px 18px;">
               <div class="stats__label" style="margin-bottom: 4px;">Location</div>
@@ -129,7 +129,7 @@
 
           <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
             <a href="#" id="cv-download-btn" data-doc-slot="cv" class="btn btn--primary">DOWNLOAD CV</a>
-            <button class="cv-upload-btn owner-only" id="cv-upload-btn" type="button" title="Upload your CV from your computer">↑ UPLOAD CV</button>
+            <button class="cv-upload-btn owner-only" id="cv-upload-btn" type="button" title="Upload your CV from your computer"> UPLOAD CV</button>
             <a href="contact.html" class="btn btn--ghost">GET IN TOUCH</a>
           </div>
         </div>
@@ -143,10 +143,10 @@
                  src=""
                  alt="Rubui Mwangi"
                  style="display:none;width:100%;height:100%;object-fit:cover;border-radius:inherit;" />
-              <div class="about-hero__placeholder" id="profile-placeholder">
-              <div class="about-hero__placeholder-icon">◻</div>
-              <div class="about-hero__placeholder-text">PHOTO<br>COMING SOON</div>
-            </div>
+               <div class="about-hero__placeholder" id="profile-placeholder">
+               <div class="about-hero__placeholder-icon">◻</div>
+               <div class="about-hero__placeholder-text">PHOTO<br>COMING SOON</div>
+             </div>
             <!-- Upload button — visible only when owner-unlocked -->
             <button class="profile-upload-btn owner-only" id="profile-upload-btn"
                     title="Upload profile photo">
@@ -164,7 +164,7 @@
 
       <!-- EXPERIENCE -->
       <div class="section-divider fade-in">
-        <span class="section-divider__label" data-edit-id="exp-section-label">// 01 — professional experience</span>
+        <span class="section-divider__label" data-edit-id="exp-section-label"> 01 — professional experience</span>
         <div class="section-divider__line"></div>
       </div>
 
@@ -216,7 +216,7 @@
 
       <!-- EDUCATION -->
       <div class="section-divider fade-in">
-        <span class="section-divider__label" data-edit-id="edu-section-label">// 02 — education</span>
+        <span class="section-divider__label" data-edit-id="edu-section-label"> 02 — education</span>
         <div class="section-divider__line"></div>
       </div>
 
@@ -242,13 +242,13 @@
 
       <!-- FINAL YEAR PROJECT -->
       <div class="section-divider fade-in">
-        <span class="section-divider__label" data-edit-id="proj-section-label">// 03 — final year project</span>
+        <span class="section-divider__label" data-edit-id="proj-section-label"> 03 — final year project</span>
         <div class="section-divider__line"></div>
       </div>
 
       <div class="project-highlight fade-in">
         <div>
-          <div class="project-highlight__label" data-edit-id="proj-label">// KEY PROJECT — DEC 2024 – 2025</div>
+          <div class="project-highlight__label" data-edit-id="proj-label"> KEY PROJECT — DEC 2024 – 2025</div>
           <div class="project-highlight__title" data-edit-id="proj-title">Power Line Fault Detection &amp; Alert System</div>
           <p class="project-highlight__desc" data-edit-id="proj-desc">
             Designed and built an IoT-based real-time monitoring system that detects faults on power lines, transmits live sensor data to a Firebase cloud database, and visualises metrics on a custom web dashboard accessible remotely. Independently managed the full project lifecycle — from hardware prototyping and firmware development to cloud integration and front-end delivery.
@@ -280,7 +280,7 @@
   <!-- Passphrase lock overlay — MUST be before editor.js -->
   <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
     <div class="lock-modal">
-      <div class="lock-modal__label">// owner access</div>
+      <div class="lock-modal__label"> owner access</div>
       <div class="lock-modal__title">Unlock editing</div>
       <div class="lock-modal__hint">Enter your passphrase to reveal add/edit controls and enable content editing.</div>
       <input class="lock-modal__input" id="lock-input" type="password" placeholder="passphrase" autocomplete="off" />
@@ -758,8 +758,7 @@
               .catch(function (err) {
                 document.body.removeChild(toast);
                 applyCvUrl(url);
-                alert('CV uploaded but Firebase save failed: ' + err.message + '
-The link will work this session but may not persist.');
+                alert('CV uploaded but Firebase save failed: ' + err.message + 'The link will work this session but may not persist.');
               });
           },
           function (err) {

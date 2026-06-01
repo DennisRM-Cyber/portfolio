@@ -3,7 +3,7 @@
 Personal portfolio site. Built from scratch in HTML, CSS, and JavaScript. No frameworks, no build tools.
 
 **Live site:** [dennisrm-cyber.github.io/portfolio](https://dennisrm-cyber.github.io/portfolio)
-**Status:** Phase 5 complete. Production ready.
+
 
 ---
 
