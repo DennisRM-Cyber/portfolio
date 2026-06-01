@@ -430,6 +430,21 @@
     }
     .project-add-card:hover .project-add-card__label { color: var(--amber); }
 
+    /* ── UPLOAD DOC BUTTON (owner-only, per card) ──────────────── */
+    .upload-doc-btn {
+      display: none;
+      align-items: center; gap: 5px;
+      font-family: var(--font-mono); font-size: 8px;
+      letter-spacing: 0.13em; font-weight: 700;
+      padding: 7px 12px; border-radius: 8px;
+      border: 1px solid rgba(240,165,0,0.32);
+      background: rgba(240,165,0,0.05);
+      color: var(--amber); cursor: pointer;
+      white-space: nowrap; transition: all 0.18s;
+    }
+    .upload-doc-btn:hover { background: rgba(240,165,0,0.15); border-color: var(--amber); }
+    body.owner-unlocked .upload-doc-btn { display: inline-flex !important; }
+
     /* ── IN-PAGE DOCUMENT VIEWER ───────────────── */
     .doc-viewer-overlay {
       position: fixed;
@@ -746,28 +761,23 @@
                 <span class="card-tag" data-edit-id="fyp-t8">JKUAT FYP</span>
               </div>
 
-              <div class="card-actions">
-                <!--
-                  READ PAPER: set data-doc-src to your PDF path, e.g.:
-                  data-doc-src="assets/docs/fault-detection-paper.pdf"
-                  data-doc-type="pdf"
-                  OR for Word:
-                  data-doc-src="assets/docs/fault-detection-paper.docx"
-                  data-doc-type="docx"
-                -->
+              <div class="card-actions" data-doc-id="fyp">
                 <button class="card-btn card-btn--primary"
                         data-doc-src="assets/docs/fault-detection-paper.pdf"
                         data-doc-type="pdf"
+                        data-doc-slot="pdf"
                         data-doc-title="Power Line Fault Detection — Project Paper (52 pages)">
                   <span class="card-btn__icon">📄</span> READ PAPER
                 </button>
                 <a href="assets/docs/fault-detection-paper.pdf"
                    download
+                   data-doc-slot="pdf"
                    class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD PDF
                 </a>
                 <a href="assets/docs/fault-detection-paper.docx"
                    download
+                   data-doc-slot="docx"
                    class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DOCX
                 </a>
@@ -834,17 +844,18 @@
                 <span class="card-tag" data-edit-id="ac1-t3">Load Calculation</span>
                 <span class="card-tag" data-edit-id="ac1-t4">Ministry of Lands</span>
               </div>
-              <div class="card-actions">
+              <div class="card-actions" data-doc-id="ac1">
                 <button class="card-btn card-btn--primary"
                         data-doc-src="assets/docs/electrical-layout-gov.pdf"
                         data-doc-type="pdf"
+                        data-doc-slot="pdf"
                         data-doc-title="Electrical Layout — Government Building">
                   <span class="card-btn__icon">📄</span> VIEW DRAWING
                 </button>
-                <a href="assets/docs/electrical-layout-gov.pdf" download class="card-btn">
+                <a href="assets/docs/electrical-layout-gov.pdf" download data-doc-slot="pdf" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD PDF
                 </a>
-                <a href="assets/docs/electrical-layout-gov.dwg" download class="card-btn">
+                <a href="assets/docs/electrical-layout-gov.dwg" download data-doc-slot="dwg" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DWG
                 </a>
                 <button class="like-btn" data-like-id="proj-ac1" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
@@ -876,17 +887,18 @@
                 <span class="card-tag" data-edit-id="ac2-t3">Lux Calculation</span>
                 <span class="card-tag" data-edit-id="ac2-t4">IEE Regs</span>
               </div>
-              <div class="card-actions">
+              <div class="card-actions" data-doc-id="ac2">
                 <button class="card-btn card-btn--primary"
                         data-doc-src="assets/docs/lighting-design.pdf"
                         data-doc-type="pdf"
+                        data-doc-slot="pdf"
                         data-doc-title="Interior Lighting Design — Commercial Space">
                   <span class="card-btn__icon">📄</span> VIEW DRAWING
                 </button>
-                <a href="assets/docs/lighting-design.pdf" download class="card-btn">
+                <a href="assets/docs/lighting-design.pdf" download data-doc-slot="pdf" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD PDF
                 </a>
-                <a href="assets/docs/lighting-design.dwg" download class="card-btn">
+                <a href="assets/docs/lighting-design.dwg" download data-doc-slot="dwg" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DWG
                 </a>
                 <button class="like-btn" data-like-id="proj-ac2" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
@@ -918,17 +930,18 @@
                 <span class="card-tag" data-edit-id="ac3-t3">BOQ</span>
                 <span class="card-tag" data-edit-id="ac3-t4">Safety Systems</span>
               </div>
-              <div class="card-actions">
+              <div class="card-actions" data-doc-id="ac3">
                 <button class="card-btn card-btn--primary"
                         data-doc-src="assets/docs/fire-detection.pdf"
                         data-doc-type="pdf"
+                        data-doc-slot="pdf"
                         data-doc-title="Fire Detection System Design">
                   <span class="card-btn__icon">📄</span> VIEW DRAWING
                 </button>
-                <a href="assets/docs/fire-detection.pdf" download class="card-btn">
+                <a href="assets/docs/fire-detection.pdf" download data-doc-slot="pdf" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD PDF
                 </a>
-                <a href="assets/docs/fire-detection.dwg" download class="card-btn">
+                <a href="assets/docs/fire-detection.dwg" download data-doc-slot="dwg" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DWG
                 </a>
                 <button class="like-btn" data-like-id="proj-ac3" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
@@ -1045,17 +1058,18 @@
                 <span class="card-tag" data-edit-id="rp1-t4">IoT</span>
                 <span class="card-tag" data-edit-id="rp1-t5">Power Systems</span>
               </div>
-              <div class="card-actions">
+              <div class="card-actions" data-doc-id="rp1">
                 <button class="card-btn card-btn--primary"
                         data-doc-src="assets/docs/fault-detection-paper.pdf"
                         data-doc-type="pdf"
+                        data-doc-slot="pdf"
                         data-doc-title="Power Line Fault Detection — FYP Report (52 pages)">
                   <span class="card-btn__icon">📖</span> READ IN PAGE
                 </button>
-                <a href="assets/docs/fault-detection-paper.pdf" download class="card-btn">
+                <a href="assets/docs/fault-detection-paper.pdf" download data-doc-slot="pdf" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD PDF
                 </a>
-                <a href="assets/docs/fault-detection-paper.docx" download class="card-btn">
+                <a href="assets/docs/fault-detection-paper.docx" download data-doc-slot="docx" class="card-btn">
                   <span class="card-btn__icon">⬇</span> DOWNLOAD DOCX
                 </a>
                 <button class="like-btn" data-like-id="proj-rp1" title="Like this project"><span class="like-heart">♥</span><span class="like-count"></span></button>
@@ -1450,6 +1464,295 @@
       });
     }
     wireProjLikeBtns();
+
+  })();
+  </script>
+
+
+  <script>
+  /* ================================================================
+     PROJECTS PAGE — DOCUMENT UPLOAD SYSTEM
+     Allows the owner to upload PDFs, DOCX, DWG files from the OS
+     file explorer directly to Cloudinary (raw upload), saves the
+     permanent URL to Firebase under edits/doc-CARDID-SLOT, and
+     updates all matching buttons on that card live.
+
+     On every page load: reads saved URLs from Firebase and patches
+     all data-doc-src / download href values so visitors always get
+     the real files.
+
+     Nothing else in this file is touched.
+  ================================================================ */
+  (function () {
+    'use strict';
+
+    var CLD_CLOUD  = 'dqloeuu33';
+    var CLD_PRESET = 'i1mylmri';
+
+    /* ── CLOUDINARY RAW UPLOAD (PDFs, DOCX, DWG, any file) ─────── */
+    function uploadRawToCloudinary(file, onSuccess, onError) {
+      var fd = new FormData();
+      fd.append('file',           file);
+      fd.append('upload_preset',  CLD_PRESET);
+      fd.append('folder',         'portfolio/docs');
+      /* Use the /raw/upload endpoint — works for all non-image files */
+      fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/raw/upload', {
+        method: 'POST', body: fd
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.secure_url) { onSuccess(d.secure_url); }
+        else { onError(new Error(d.error ? d.error.message : 'Upload failed')); }
+      })
+      .catch(onError);
+    }
+
+    /* ── UPDATE ALL MATCHING BUTTONS ON A CARD ──────────────────── */
+    function applyDocUrl(docId, slot, url) {
+      /* slot = 'pdf' | 'docx' | 'dwg' */
+      var actions = document.querySelector('.card-actions[data-doc-id="' + docId + '"]');
+      if (!actions) return;
+      actions.querySelectorAll('[data-doc-slot="' + slot + '"]').forEach(function (el) {
+        if (el.hasAttribute('data-doc-src')) {
+          el.setAttribute('data-doc-src', url);
+          /* Re-wire the doc viewer click since the src changed */
+          el._docWired = false;
+        }
+        if (el.hasAttribute('href')) {
+          el.setAttribute('href', url);
+        }
+      });
+      /* Re-run wireDocBtns so the viewer picks up the new URL */
+      if (typeof wireDocBtns === 'function') wireDocBtns();
+    }
+
+    /* ── LOAD ALL SAVED DOC URLS FROM FIREBASE ON PAGE LOAD ─────── */
+    function loadSavedDocUrls() {
+      if (!window.PF) return;
+      PF.loadEdits(function (edits) {
+        Object.keys(edits).forEach(function (key) {
+          /* Keys look like: doc-fyp-pdf, doc-ac1-dwg, etc. */
+          var m = key.match(/^doc-([a-z0-9]+)-([a-z]+)$/);
+          if (!m) return;
+          var docId = m[1];
+          var slot  = m[2];
+          var url   = edits[key];
+          if (url && typeof url === 'string' && url.indexOf('http') === 0) {
+            applyDocUrl(docId, slot, url);
+          }
+        });
+      });
+    }
+    loadSavedDocUrls();
+
+    /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
+    function requireFirebaseAuth(onAuthenticated) {
+      var existing = document.getElementById('fb-signin-modal');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'fb-signin-modal';
+      modal.style.cssText = [
+        'position:fixed;inset:0;z-index:10000',
+        'background:rgba(3,6,14,0.88)',
+        'backdrop-filter:blur(18px)',
+        'display:flex;align-items:center;justify-content:center',
+        'animation:fbModalIn 0.18s ease'
+      ].join(';');
+
+      modal.innerHTML = [
+        '<style>',
+        '@keyframes fbModalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}',
+        '#fb-signin-modal .fb-box{background:rgba(14,20,44,0.98);border:1px solid rgba(240,165,0,0.28);border-radius:16px;padding:32px 36px 28px;width:min(400px,90vw);box-shadow:0 32px 80px rgba(0,0,0,0.7);}',
+        '#fb-signin-modal .fb-label{font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.18em;color:rgba(240,165,0,0.55);margin-bottom:8px;}',
+        '#fb-signin-modal .fb-title{font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:#f0f4ff;margin-bottom:6px;}',
+        '#fb-signin-modal .fb-hint{font-size:12px;color:rgba(180,190,220,0.65);line-height:1.6;margin-bottom:24px;}',
+        '#fb-signin-modal .fb-field{margin-bottom:14px;}',
+        '#fb-signin-modal .fb-field label{display:block;font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.15em;color:rgba(240,165,0,0.6);margin-bottom:5px;}',
+        '#fb-signin-modal .fb-input{width:100%;box-sizing:border-box;background:rgba(8,14,30,0.9);border:1px solid rgba(240,165,0,0.2);border-radius:8px;padding:10px 14px;color:#f0f4ff;font-family:JetBrains Mono,monospace;font-size:13px;outline:none;transition:border-color 0.18s;}',
+        '#fb-signin-modal .fb-input:focus{border-color:rgba(240,165,0,0.6);}',
+        '#fb-signin-modal .fb-input.error{border-color:#f87171!important;}',
+        '#fb-signin-modal .fb-error{font-family:JetBrains Mono,monospace;font-size:9px;color:#f87171;min-height:16px;margin-bottom:18px;letter-spacing:0.08em;}',
+        '#fb-signin-modal .fb-actions{display:flex;gap:10px;}',
+        '#fb-signin-modal .fb-btn-sign{flex:1;padding:12px;border-radius:10px;background:var(--amber,#f0a500);border:none;color:#0d1526;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;letter-spacing:0.14em;cursor:pointer;transition:opacity 0.18s;}',
+        '#fb-signin-modal .fb-btn-sign:hover{opacity:0.88;}',
+        '#fb-signin-modal .fb-btn-sign:disabled{opacity:0.4;cursor:default;}',
+        '#fb-signin-modal .fb-btn-cancel{padding:12px 18px;border-radius:10px;background:transparent;border:1px solid rgba(248,113,113,0.35);color:#f87171;font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.12em;cursor:pointer;transition:background 0.15s;}',
+        '#fb-signin-modal .fb-btn-cancel:hover{background:rgba(248,113,113,0.1);}',
+        '</style>',
+        '<div class="fb-box">',
+        '<div class="fb-label">// firebase auth</div>',
+        '<div class="fb-title">Sign in to upload</div>',
+        '<div class="fb-hint">Enter your Firebase owner credentials to upload documents.</div>',
+        '<div class="fb-field"><label for="fb-email">EMAIL</label>',
+        '<input class="fb-input" id="fb-email" type="email" placeholder="owner@email.com" autocomplete="email" /></div>',
+        '<div class="fb-field"><label for="fb-pass">PASSWORD</label>',
+        '<input class="fb-input" id="fb-pass" type="password" placeholder="Firebase password" autocomplete="current-password" /></div>',
+        '<div class="fb-error" id="fb-error"></div>',
+        '<div class="fb-actions">',
+        '<button class="fb-btn-sign" id="fb-sign-btn">SIGN IN &amp; UPLOAD</button>',
+        '<button class="fb-btn-cancel" id="fb-cancel-btn">CANCEL</button>',
+        '</div></div>'
+      ].join('');
+
+      document.body.appendChild(modal);
+
+      var emailEl   = modal.querySelector('#fb-email');
+      var passEl    = modal.querySelector('#fb-pass');
+      var errorEl   = modal.querySelector('#fb-error');
+      var signBtn   = modal.querySelector('#fb-sign-btn');
+      var cancelBtn = modal.querySelector('#fb-cancel-btn');
+
+      setTimeout(function () { emailEl.focus(); }, 80);
+
+      function closeModal() {
+        modal.style.animation = 'fbModalIn 0.15s ease reverse';
+        setTimeout(function () { if (modal.parentNode) modal.remove(); }, 140);
+      }
+      function setError(msg) {
+        errorEl.textContent = msg;
+        emailEl.classList.toggle('error', !!msg);
+        passEl.classList.toggle('error',  !!msg);
+      }
+      function doSignIn() {
+        var email = emailEl.value.trim();
+        var pass  = passEl.value;
+        if (!email || !pass) { setError('Both fields are required.'); return; }
+        setError('');
+        signBtn.disabled    = true;
+        signBtn.textContent = 'SIGNING IN…';
+        PF.signIn(email, pass)
+          .then(function () { closeModal(); onAuthenticated(); })
+          .catch(function (err) {
+            signBtn.disabled    = false;
+            signBtn.textContent = 'SIGN IN & UPLOAD';
+            var msg = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
+              ? 'Incorrect email or password.'
+              : err.code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.'
+              : err.code === 'auth/network-request-failed' ? 'Network error. Check your connection.'
+              : (err.message || 'Sign-in failed.');
+            setError(msg);
+            passEl.value = ''; passEl.focus();
+          });
+      }
+      signBtn.addEventListener('click', doSignIn);
+      passEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSignIn(); });
+      cancelBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+      document.addEventListener('keydown', function escClose(e) {
+        if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escClose); }
+      });
+    }
+
+    /* ── TRIGGER UPLOAD FOR ONE SLOT ON ONE CARD ────────────────── */
+    function triggerDocUpload(docId, slot, acceptTypes, labelText) {
+      if (!document.body.classList.contains('owner-unlocked')) return;
+
+      if (!window.PF || !PF.isOwner()) {
+        requireFirebaseAuth(function () { triggerDocUpload(docId, slot, acceptTypes, labelText); });
+        return;
+      }
+
+      var input = document.createElement('input');
+      input.type    = 'file';
+      input.accept  = acceptTypes;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+
+      input.addEventListener('change', function () {
+        var file = input.files[0];
+        document.body.removeChild(input);
+        if (!file) return;
+
+        var SIZE_LIMIT = 25 * 1024 * 1024; /* 25 MB — Cloudinary raw free limit */
+        if (file.size > SIZE_LIMIT) {
+          alert(file.name + ' exceeds 25 MB — please compress and try again.');
+          return;
+        }
+
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+          'position:fixed;bottom:80px;left:50%;transform:translateX(-50%)',
+          'background:rgba(13,21,38,0.95);border:1px solid rgba(240,165,0,0.4)',
+          'color:#f0a500;font:700 12px/1 JetBrains Mono,monospace',
+          'padding:10px 20px;border-radius:6px;z-index:9999;pointer-events:none'
+        ].join(';');
+        toast.textContent = 'UPLOADING ' + labelText + '…';
+        document.body.appendChild(toast);
+
+        uploadRawToCloudinary(file,
+          function (url) {
+            var firebaseKey = 'doc-' + docId + '-' + slot;
+            PF.saveEdit(firebaseKey, url)
+              .then(function () {
+                document.body.removeChild(toast);
+                applyDocUrl(docId, slot, url);
+              })
+              .catch(function (err) {
+                document.body.removeChild(toast);
+                /* Still apply locally so the current session works */
+                applyDocUrl(docId, slot, url);
+                alert('File uploaded but Firebase save failed: ' + err.message + '
+The link will work this session but may not persist.');
+              });
+          },
+          function (err) {
+            document.body.removeChild(toast);
+            alert('Upload failed: ' + err.message);
+          }
+        );
+      });
+
+      input.click();
+    }
+
+    /* ── INJECT UPLOAD BUTTONS INTO EACH TAGGED CARD ────────────── */
+    /* Each .card-actions[data-doc-id] gets upload buttons for every
+       slot present in that card. We detect slots from data-doc-slot
+       attributes that are already on the existing buttons.           */
+    function injectUploadButtons() {
+      document.querySelectorAll('.card-actions[data-doc-id]').forEach(function (actions) {
+        if (actions._uploadInjected) return;
+        actions._uploadInjected = true;
+
+        var docId = actions.getAttribute('data-doc-id');
+
+        /* Collect all unique slots present on this card */
+        var slots = {};
+        actions.querySelectorAll('[data-doc-slot]').forEach(function (el) {
+          slots[el.getAttribute('data-doc-slot')] = true;
+        });
+
+        /* For each slot, add one upload button */
+        Object.keys(slots).forEach(function (slot) {
+          var slotUpper  = slot.toUpperCase();
+          var acceptMap  = {
+            pdf:  '.pdf,application/pdf',
+            docx: '.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            dwg:  '.dwg,.dxf'
+          };
+          var accept = acceptMap[slot] || '*/*';
+
+          var btn = document.createElement('button');
+          btn.className   = 'upload-doc-btn';
+          btn.type        = 'button';
+          btn.title       = 'Upload ' + slotUpper + ' file from your computer';
+          btn.innerHTML   = '↑ UPLOAD ' + slotUpper;
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            triggerDocUpload(docId, slot, accept, slotUpper);
+          });
+          actions.appendChild(btn);
+        });
+      });
+    }
+
+    injectUploadButtons();
+
+    /* Re-inject if editor.js restores dynamic cards */
+    document.addEventListener('dynamicCardsRestored', function () {
+      injectUploadButtons();
+    });
 
   })();
   </script>
