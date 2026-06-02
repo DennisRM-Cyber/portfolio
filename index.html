@@ -1,19 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!--
-    index.html — Homepage
-    Portfolio: [Your Name] — Electrical Engineer
-    
-    LEARNING NOTE:
-    Every HTML file starts with these meta tags. They tell the
-    browser and search engines about your page. You only need
-    to change the <title> and <meta name="description"> per page.
-  -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- ── SEO ──────────────────────────────────────────────── -->
-  <title>Rubui Mwangi — Electrical & Electronics Engineer</title>
+  <title>Rubui Mwangi . Electrical & Electronics Engineer</title>
   <meta name="description" content="Portfolio of Rubui Mwangi, a graduate Electrical & Electronics Engineer from JKUAT. Kenya Power attaché, IoT systems builder, AutoCAD designer. Open to internship opportunities in Nairobi, Kenya." />
   <meta name="keywords"    content="electrical engineer, electronics engineer, JKUAT, Nairobi Kenya, power systems, IoT, Arduino, ESP32, Firebase, AutoCAD, embedded systems, fresh graduate, portfolio, Kenya Power, fault detection" />
   <meta name="author"      content="Rubui Mwangi" />
@@ -33,7 +24,7 @@
 
   <!-- Twitter / X Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="Rubui Mwangi — Electrical & Electronics Engineer" />
+  <meta name="twitter:title"       content="Rubui Mwangi . Electrical & Electronics Engineer" />
   <meta name="twitter:description" content="Portfolio of Rubui Mwangi, a graduate Electrical & Electronics Engineer from JKUAT. Kenya Power attaché, IoT systems builder, AutoCAD designer. Open to internship opportunities in Nairobi, Kenya." />
   <meta name="twitter:image"       content="https://dennisrm-cyber.github.io/portfolio/assets/images/og-preview.jpg" />
   <!-- ────────────────────────────────────────────────────── -->
@@ -71,30 +62,16 @@
 </head>
 
 <body class="page-frame">
-  <!--
-    LEARNING NOTE — page-frame class:
-    This triggers the decorative corner marks you see in the
-    CSS (the amber L-shapes in each corner of the browser window).
-    Add it to every page's <body>.
-  -->
+ 
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       NAVIGATION
-       Shared across all pages. When you update this block,
-       copy the change to every .html file.
-       (In a future enhancement, JS could inject this automatically.)
-  ════════════════════════════════════════════════════════════ -->
+ 
   <nav class="nav">
     <div class="container nav__inner">
 
       <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>
 
-      <!--
-        LEARNING NOTE — aria-label:
-        Screen readers announce this button as "Toggle navigation".
-        Always add aria labels to icon-only buttons.
-      -->
+      
       <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span>
         <span></span>
@@ -115,11 +92,7 @@
   </nav>
 
 
-  <!-- ═══════════════════════════════════════════════════════
-       HERO SECTION
-       First thing a visitor sees. The circuit-trace SVG is
-       purely decorative — it sits behind the text.
-  ════════════════════════════════════════════════════════════ -->
+  
   <header class="hero">
 
     <!-- Animated circuit board (right side of hero) -->
@@ -375,14 +348,7 @@
     </div>
 
     <div class="container">
-      <!--
-        LEARNING NOTE — semantic HTML:
-        <header> wraps the hero. <h1> is the most important heading
-        on the page — use it once per page. <p> is a paragraph.
-        Semantic tags help search engines and screen readers.
-      -->
-
-      <!-- The // prefix is your site's visual voice — engineering notation -->
+      
       <p class="hero__label" data-i18n="hero.label" data-edit-id="hero-label"> Electrical & Electronics Engineer — class of 2025</p>
 
       <h1 class="hero__title">
@@ -408,21 +374,6 @@
       </div>
     </div>
   </header>
-
-
-  <!-- ═══════════════════════════════════════════════════════
-       SCROLL SURFACE
-       This frosted panel sits above the fixed grid background.
-       The hero floats freely over the raw blueprint grid.
-       From here downward, content is encased in this dark
-       translucent surface — rounded top corners, amber border,
-       inner glow. The grid shows through at the sides.
-       
-       LEARNING NOTE — why margin on the sides?
-       The scroll-surface has margin: 0 48px so the blueprint
-       grid is always visible peeking at the left and right edges.
-       This reinforces the "panel sitting on a grid" illusion.
-  ════════════════════════════════════════════════════════════ -->
   <div class="scroll-surface">
     <div class="container">
 
@@ -506,12 +457,6 @@
 
     </div><!-- end .container -->
   </div><!-- end .scroll-surface -->
-
-
-  <!-- ═══════════════════════════════════════════════════════
-       FOOTER
-       Shared across all pages. Copy this block to every file.
-  ════════════════════════════════════════════════════════════ -->
   <footer class="footer">
     <div class="container footer__inner">
 
@@ -524,16 +469,6 @@
     </div>
   </footer>
 
-
-  <!--
-    LEARNING NOTE — scripts at the bottom:
-    We load JavaScript at the very end of <body>, not in <head>.
-    This means the browser renders the HTML first (so the page
-    appears fast), then loads the script. The script looks for
-    elements in the DOM — those elements must exist before the
-    script runs, which is guaranteed by placing it here.
-  -->
-  <!-- Passphrase lock overlay — MUST be before editor.js -->
   <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
     <div class="lock-modal">
       <div class="lock-modal__label"> owner access</div>
