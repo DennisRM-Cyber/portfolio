@@ -1087,96 +1087,19 @@
       .catch(onError);
     }
 
-    function requireCertFirebaseAuth(onAuthenticated) {
-      var existing = document.getElementById('fb-signin-modal');
-      if (existing) existing.remove();
-      var modal = document.createElement('div');
-      modal.id = 'fb-signin-modal';
-      modal.style.cssText = [
-        'position:fixed;inset:0;z-index:10000',
-        'background:rgba(3,6,14,0.88)',
-        'backdrop-filter:blur(18px)',
-        'display:flex;align-items:center;justify-content:center',
-        'animation:fbModalIn 0.18s ease'
-      ].join(';');
-      modal.innerHTML = [
-        '<style>',
-        '@keyframes fbModalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}',
-        '#fb-signin-modal .fb-box{background:rgba(14,20,44,0.98);border:1px solid rgba(240,165,0,0.28);border-radius:16px;padding:32px 36px 28px;width:min(400px,90vw);box-shadow:0 32px 80px rgba(0,0,0,0.7);}',
-        '#fb-signin-modal .fb-label{font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.18em;color:rgba(240,165,0,0.55);margin-bottom:8px;}',
-        '#fb-signin-modal .fb-title{font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:#f0f4ff;margin-bottom:6px;}',
-        '#fb-signin-modal .fb-hint{font-size:12px;color:rgba(180,190,220,0.65);line-height:1.6;margin-bottom:24px;}',
-        '#fb-signin-modal .fb-field{margin-bottom:14px;}',
-        '#fb-signin-modal .fb-field label{display:block;font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.15em;color:rgba(240,165,0,0.6);margin-bottom:5px;}',
-        '#fb-signin-modal .fb-input{width:100%;box-sizing:border-box;background:rgba(8,14,30,0.9);border:1px solid rgba(240,165,0,0.2);border-radius:8px;padding:10px 14px;color:#f0f4ff;font-family:JetBrains Mono,monospace;font-size:13px;outline:none;transition:border-color 0.18s;}',
-        '#fb-signin-modal .fb-input:focus{border-color:rgba(240,165,0,0.6);}',
-        '#fb-signin-modal .fb-input.error{border-color:#f87171!important;}',
-        '#fb-signin-modal .fb-error{font-family:JetBrains Mono,monospace;font-size:9px;color:#f87171;min-height:16px;margin-bottom:18px;letter-spacing:0.08em;}',
-        '#fb-signin-modal .fb-actions{display:flex;gap:10px;}',
-        '#fb-signin-modal .fb-btn-sign{flex:1;padding:12px;border-radius:10px;background:var(--amber,#f0a500);border:none;color:#0d1526;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;letter-spacing:0.14em;cursor:pointer;transition:opacity 0.18s;}',
-        '#fb-signin-modal .fb-btn-sign:hover{opacity:0.88;}',
-        '#fb-signin-modal .fb-btn-sign:disabled{opacity:0.4;cursor:default;}',
-        '#fb-signin-modal .fb-btn-cancel{padding:12px 18px;border-radius:10px;background:transparent;border:1px solid rgba(248,113,113,0.35);color:#f87171;font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.12em;cursor:pointer;transition:background 0.15s;}',
-        '#fb-signin-modal .fb-btn-cancel:hover{background:rgba(248,113,113,0.1);}',
-        '</style>',
-        '<div class="fb-box">',
-        '<div class="fb-label">// firebase auth</div>',
-        '<div class="fb-title">Sign in to upload</div>',
-        '<div class="fb-hint">Enter your Firebase owner credentials to upload certification documents.</div>',
-        '<div class="fb-field"><label for="fb-email">EMAIL</label>',
-        '<input class="fb-input" id="fb-email" type="email" placeholder="owner@email.com" autocomplete="email" /></div>',
-        '<div class="fb-field"><label for="fb-pass">PASSWORD</label>',
-        '<input class="fb-input" id="fb-pass" type="password" placeholder="Firebase password" autocomplete="current-password" /></div>',
-        '<div class="fb-error" id="fb-error"></div>',
-        '<div class="fb-actions">',
-        '<button class="fb-btn-sign" id="fb-sign-btn">SIGN IN &amp; UPLOAD</button>',
-        '<button class="fb-btn-cancel" id="fb-cancel-btn">CANCEL</button>',
-        '</div></div>'
-      ].join('');
-      document.body.appendChild(modal);
-      var emailEl   = modal.querySelector('#fb-email');
-      var passEl    = modal.querySelector('#fb-pass');
-      var errorEl   = modal.querySelector('#fb-error');
-      var signBtn   = modal.querySelector('#fb-sign-btn');
-      var cancelBtn = modal.querySelector('#fb-cancel-btn');
-      setTimeout(function() { emailEl.focus(); }, 80);
-      function closeModal() {
-        modal.style.animation = 'fbModalIn 0.15s ease reverse';
-        setTimeout(function() { if (modal.parentNode) modal.remove(); }, 140);
+    /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
+        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
+    /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
+       defined once in firebase.js, eliminating duplication.         */
+        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
+    /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
+       defined once in firebase.js, eliminating duplication.         */
+    function requireFirebaseAuth(onAuthenticated) {
+      if (window.PF && typeof PF.requireFirebaseAuth === 'function') {
+        PF.requireFirebaseAuth(onAuthenticated, function() {/* cancelled */});
+      } else {
+        console.warn('[about] PF.requireFirebaseAuth not available');
       }
-      function setError(msg) {
-        errorEl.textContent = msg;
-        emailEl.classList.toggle('error', !!msg);
-        passEl.classList.toggle('error', !!msg);
-      }
-      function doSignIn() {
-        var email = emailEl.value.trim();
-        var pass  = passEl.value;
-        if (!email || !pass) { setError('Both fields are required.'); return; }
-        setError('');
-        signBtn.disabled    = true;
-        signBtn.textContent = 'SIGNING IN…';
-        PF.signIn(email, pass)
-          .then(function() { closeModal(); onAuthenticated(); })
-          .catch(function(err) {
-            signBtn.disabled    = false;
-            signBtn.textContent = 'SIGN IN & UPLOAD';
-            var msg = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
-              ? 'Incorrect email or password.'
-              : err.code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.'
-              : err.code === 'auth/network-request-failed' ? 'Network error. Check your connection.'
-              : (err.message || 'Sign-in failed.');
-            setError(msg);
-            passEl.value = ''; passEl.focus();
-          });
-      }
-      signBtn.addEventListener('click', doSignIn);
-      passEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignIn(); });
-      cancelBtn.addEventListener('click', closeModal);
-      modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
-      document.addEventListener('keydown', function escClose(e) {
-        if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escClose); }
-      });
     }
 
     /* Apply a saved cert doc URL: update data-cert-doc attribute,
