@@ -675,23 +675,9 @@
 </head>
 <body class="page-frame">
 
-  <nav class="nav">
-    <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>
-      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav__links">
-        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
-        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
-        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
-        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
-        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
-        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
-        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
-      </ul>
-    </div>
-  </nav>
+  
+  <!-- nav injected by main.js -->
+
 
   <div class="scroll-surface">
     <div class="container">
@@ -930,6 +916,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-e0jCNBMnPnCkKbOtQmfCVbCmrZQBs6tKwAKfHaGFgOCLEKv7e4ggYd0e4RpIlgQ62l5p0hPOE1+KVJAb2Jzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -958,10 +945,44 @@
 
     function artKey(id) { return 'portfolio__article__' + id; }
 
-    function getArticleContent(id) {
+    /* ── LOCAL CACHE: instant content on open, overridden by Firebase ─ */
+    function getCachedContent(id) {
       var saved = null;
       try { saved = localStorage.getItem(artKey(id)); } catch(e) {}
       return saved !== null ? saved : (articles[id] ? articles[id].content : '');
+    }
+
+    /* ── FIREBASE ARTICLE LOADER ─────────────────────────────────────── 
+       Called each time a reader opens. Fires a one-time read from
+       Firebase. If a saved version exists it replaces the cached/default
+       content already showing. The reader stays open — no flicker.      */
+    function loadArticleFromFirebase(id) {
+      if (!window.PF || typeof PF.loadArticle !== 'function') return;
+      PF.loadArticle(id, function(data) {
+        if (!data) return;            /* nothing saved yet — keep default */
+        /* Update in-memory object so subsequent opens use this version */
+        if (articles[id]) {
+          if (data.content) articles[id].content = data.content;
+          if (data.title)   articles[id].title   = data.title;
+        }
+        /* If the reader is still open for this article, patch the DOM    */
+        if (currentArticleId === id) {
+          var bodyEl  = document.getElementById('art-editable-body');
+          var titleEl = document.getElementById('art-editable-title');
+          /* Only patch when NOT actively editing — don't overwrite work  */
+          if (!readerEditMode) {
+            if (bodyEl  && data.content) bodyEl.innerHTML     = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(data.content) : data.content;
+            if (titleEl && data.title)   titleEl.textContent  = data.title;
+            if (data.title) {
+              readerTitle.textContent = data.title;
+              var row = document.querySelector('[data-article-id="' + id + '"] .article-row__title');
+              if (row) row.textContent = data.title;
+            }
+          }
+          /* Also update the localStorage cache with the Firebase version */
+          try { localStorage.setItem(artKey(id), data.content || ''); } catch(e) {}
+        }
+      });
     }
 
     function openReader(id) {
@@ -970,7 +991,8 @@
       readerEditMode = false;
       overlay.classList.remove('edit-mode');
       readerTitle.textContent = a.title;
-      var content = getArticleContent(id);
+      /* Phase 1: render instantly from cache / hardcoded default */
+      var content = getCachedContent(id);
       readerContent.innerHTML =
         '<div class="art-label">' + a.label + '</div>' +
         '<div class="art-title" id="art-editable-title">' + a.title + '</div>' +
@@ -981,7 +1003,7 @@
           '<span class="art-meta-dot"></span>' +
           '<span class="art-meta-item">' + a.readTime + '</span>' +
         '</div>' +
-        '<div class="art-body" id="art-editable-body">' + content + '</div>' +
+        '<div class="art-body" id="art-editable-body">' + (typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(content) : content) + '</div>' +
         '<hr class="art-end-rule" />' +
         '<div class="art-end-footer">\u2014 Rubui Mwangi \u00b7 portfolio.ee \u2014</div>';
       overlay.classList.add('open');
@@ -994,6 +1016,8 @@
         editToggle.style.display = 'none'; saveBtn.style.display = 'none';
       }
       updateEditBtn();
+      /* Phase 2: async Firebase read — silently patches if newer version exists */
+      loadArticleFromFirebase(id);
     }
 
     function closeReader() {
@@ -1035,8 +1059,9 @@
       var bodyEl  = document.getElementById('art-editable-body');
       if (!bodyEl) return;
       var newContent = bodyEl.innerHTML;
-      var newTitle   = titleEl ? titleEl.textContent : articles[currentArticleId].title;
-      try { localStorage.setItem(artKey(currentArticleId), newContent); } catch(e) {}
+      var newTitle   = titleEl ? titleEl.textContent.trim() : articles[currentArticleId].title;
+
+      /* Update in-memory object and UI immediately */
       if (articles[currentArticleId]) {
         articles[currentArticleId].content = newContent;
         articles[currentArticleId].title   = newTitle;
@@ -1044,9 +1069,49 @@
         var row = document.querySelector('[data-article-id="' + currentArticleId + '"] .article-row__title');
         if (row) row.textContent = newTitle;
       }
-      saveBtn.textContent = '\u2713 SAVED';
-      saveBtn.classList.add('saved');
-      setTimeout(function() { saveBtn.textContent = '\U0001F4BE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
+
+      /* Phase 1: cache instantly to localStorage so a refresh shows it */
+      try { localStorage.setItem(artKey(currentArticleId), newContent); } catch(e) {}
+
+      /* Phase 2: persist to Firebase so ALL devices see it ─────────── */
+      var id = currentArticleId;          /* capture — may change if reader closed */
+
+      function doFirebaseSave() {
+        saveBtn.textContent = '⏳ SAVING…';
+        PF.saveArticle(id, newContent, newTitle)
+          .then(function() {
+            saveBtn.textContent = '✓ SAVED';
+            saveBtn.classList.add('saved');
+            setTimeout(function() { saveBtn.textContent = '💾 SAVE'; saveBtn.classList.remove('saved'); }, 2000);
+          })
+          .catch(function(err) {
+            console.warn('[articles] Firebase save failed:', err.message);
+            saveBtn.textContent = '💾 SAVE';
+            saveBtn.classList.remove('saved');
+            alert('Firebase save failed: ' + err.message + '\nYour edit is saved locally and will show on this device.');
+          });
+      }
+
+      if (window.PF && typeof PF.saveArticle === 'function') {
+        if (PF.isOwner()) {
+          doFirebaseSave();
+        } else {
+          /* Not signed in yet — prompt Firebase auth then retry */
+          PF.ensureOwnerSignIn()
+            .then(function() { doFirebaseSave(); })
+            .catch(function() {
+              /* Cancelled sign-in — local save already done, just update button */
+              saveBtn.textContent = '✓ SAVED (local)';
+              saveBtn.classList.add('saved');
+              setTimeout(function() { saveBtn.textContent = '💾 SAVE'; saveBtn.classList.remove('saved'); }, 2500);
+            });
+        }
+      } else {
+        /* Firebase not loaded — local only */
+        saveBtn.textContent = '✓ SAVED';
+        saveBtn.classList.add('saved');
+        setTimeout(function() { saveBtn.textContent = '💾 SAVE'; saveBtn.classList.remove('saved'); }, 2000);
+      }
     }
 
     readerClose.addEventListener('click', closeReader);
@@ -1212,33 +1277,60 @@
     wireRows();
 
 
-    /* ── LIKE BUTTONS ───────────────────────────── */
-    function getLikeKey(id) { return 'portfolio__like__article__' + id; }
-    function getLikeCount(id) { try { return parseInt(localStorage.getItem(getLikeKey(id)) || '0'); } catch(e) { return 0; } }
-    function isLiked(id) { try { return localStorage.getItem(getLikeKey(id) + '__liked') === '1'; } catch(e) { return false; } }
+    /* ── LIKE BUTTONS (Firebase real-time) ─────────────────────────
+       PF.watchLike  → real-time listener: fires on load and on any
+                        change from any device. callback(count, isLiked)
+       PF.toggleLike → atomic transaction: ±1, one vote per browser.
+       Falls back to localStorage if Firebase isn't loaded.            */
+
+    var _likeUnsubs = [];   /* keep unsubscribe fns so we can clean up */
 
     function wireLikeBtn(btn) {
-      var id = btn.getAttribute('data-like-id');
+      var id      = btn.getAttribute('data-like-id');
       var countEl = btn.querySelector('.like-count');
-      var count = getLikeCount(id);
-      var liked = isLiked(id);
-      countEl.textContent = count > 0 ? count : '';
-      btn.classList.toggle('liked', liked);
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var c = getLikeCount(id);
-        var wasLiked = isLiked(id);
-        if (wasLiked) {
-          c = Math.max(0, c - 1);
-          localStorage.setItem(getLikeKey(id) + '__liked', '0');
-        } else {
-          c++;
-          localStorage.setItem(getLikeKey(id) + '__liked', '1');
-        }
-        localStorage.setItem(getLikeKey(id), c);
-        countEl.textContent = c > 0 ? c : '';
-        btn.classList.toggle('liked', !wasLiked);
-      });
+
+      if (window.PF && typeof PF.watchLike === 'function') {
+        /* ── Firebase path ── */
+        var unsub = PF.watchLike(id, function(count, isLiked) {
+          countEl.textContent = count > 0 ? count : '';
+          btn.classList.toggle('liked', isLiked);
+        });
+        _likeUnsubs.push(unsub);
+
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          /* Optimistic UI: flip immediately, Firebase confirms async */
+          var wasLiked = btn.classList.contains('liked');
+          btn.classList.toggle('liked', !wasLiked);
+          var cur = parseInt(countEl.textContent) || 0;
+          var next = wasLiked ? Math.max(0, cur - 1) : cur + 1;
+          countEl.textContent = next > 0 ? next : '';
+          PF.toggleLike(id).catch(function() {
+            /* Roll back optimistic update on error */
+            btn.classList.toggle('liked', wasLiked);
+            countEl.textContent = cur > 0 ? cur : '';
+          });
+        });
+
+      } else {
+        /* ── localStorage fallback (Firebase not loaded) ── */
+        var lsKey   = 'portfolio__like__article__' + id;
+        var likedKey = lsKey + '__liked';
+        var count   = parseInt(localStorage.getItem(lsKey) || '0');
+        var liked   = localStorage.getItem(likedKey) === '1';
+        countEl.textContent = count > 0 ? count : '';
+        btn.classList.toggle('liked', liked);
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var c = parseInt(localStorage.getItem(lsKey) || '0');
+          var wasLiked = localStorage.getItem(likedKey) === '1';
+          if (wasLiked) { c = Math.max(0, c - 1); localStorage.setItem(likedKey, '0'); }
+          else          { c++;                     localStorage.setItem(likedKey, '1'); }
+          localStorage.setItem(lsKey, c);
+          countEl.textContent = c > 0 ? c : '';
+          btn.classList.toggle('liked', !wasLiked);
+        });
+      }
     }
     document.querySelectorAll('.like-btn[data-like-id]').forEach(wireLikeBtn);
 

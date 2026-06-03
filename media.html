@@ -719,25 +719,8 @@
   </style>
 </head>
 <body class="page-frame">
+  <!-- nav injected by main.js -->
 
-  <!-- NAV -->
-  <nav class="nav">
-    <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>
-      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav__links">
-        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
-        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
-        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
-        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
-        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
-        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
-        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
-      </ul>
-    </div>
-  </nav>
 
   <div class="scroll-surface">
     <div class="container">
@@ -1072,6 +1055,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-e0jCNBMnPnCkKbOtQmfCVbCmrZQBs6tKwAKfHaGFgOCLEKv7e4ggYd0e4RpIlgQ62l5p0hPOE1+KVJAb2Jzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1212,20 +1196,30 @@
       if (sv) sv.textContent = videoN;
       if (ss) ss.textContent = socialN;
     }
-     /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-    /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
-       defined once in firebase.js, eliminating duplication.         */
-        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-    /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
-       defined once in firebase.js, eliminating duplication.         */
+        /* ── FIREBASE SIGN-IN MODAL — thin wrapper ─────────────────── */
     function requireFirebaseAuth(onAuthenticated) {
       if (window.PF && typeof PF.requireFirebaseAuth === 'function') {
         PF.requireFirebaseAuth(onAuthenticated, function() {/* cancelled */});
       } else {
-        console.warn('[about] PF.requireFirebaseAuth not available');
+        console.warn('[media] PF.requireFirebaseAuth not available');
       }
-    
+    }
+
+    /* ── ADD TO COLLECTION — opens OS file picker, uploads to Cloudinary ── */
+    function addToCollection(collId) {
+      if (!document.body.classList.contains('owner-unlocked')) return;
+      if (!window.PF || !PF.isOwner()) {
+        requireFirebaseAuth(function() { addToCollection(collId); });
+        return;
+      }
+
+      var input = document.createElement('input');
+      input.type     = 'file';
+      input.accept   = 'image/jpeg,image/png,image/webp,image/gif';
+      input.multiple = true;
+      input.style.display = 'none';
+      document.body.appendChild(input);
+
       input.addEventListener('change', function() {
         var files = Array.prototype.slice.call(input.files);
         document.body.removeChild(input);
@@ -1234,7 +1228,7 @@
         var total  = files.length;
         var done   = 0;
         var errors = [];
-        var SIZE_LIMIT = 10 * 1024 * 1024; /* 10MB Cloudinary free limit */
+        var SIZE_LIMIT = 10 * 1024 * 1024; /* 10 MB Cloudinary free limit */
 
         /* Progress toast */
         var toast = document.createElement('div');

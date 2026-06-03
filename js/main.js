@@ -9,6 +9,47 @@
    ============================================================ */
 
 
+
+/* ── 0. NAV INJECTION ─────────────────────────────────────────
+   Single source of truth for the navigation bar.
+   If the page has no <nav class="nav"> yet, this function
+   creates and inserts one before the first <body> child,
+   keeping every page's nav in sync with a single edit here.
+
+   Backward-compatible: pages that already ship a hardcoded nav
+   are untouched (the check at the top returns early).
+──────────────────────────────────────────────────────────────── */
+(function injectNav() {
+  if (document.querySelector('nav.nav')) return; /* already present */
+
+  var NAV_HTML = [
+    '<nav class="nav">',
+    '  <div class="container nav__inner">',
+    '    <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>',
+    '    <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">',
+    '      <span></span><span></span><span></span>',
+    '    </button>',
+    '    <ul class="nav__links">',
+    '      <li><a href="index.html"    data-i18n="nav.home">home</a></li>',
+    '      <li><a href="about.html"    data-i18n="nav.about">about</a></li>',
+    '      <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>',
+    '      <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>',
+    '      <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>',
+    '      <li><a href="media.html"    data-i18n="nav.media">media</a></li>',
+    '      <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>',
+    '    </ul>',
+    '  </div>',
+    '</nav>'
+  ].join('\n');
+
+  var tmp = document.createElement('div');
+  tmp.innerHTML = NAV_HTML;
+  var navEl = tmp.firstElementChild;
+
+  /* Insert as the very first child of <body> */
+  document.body.insertBefore(navEl, document.body.firstChild);
+})();
+
 /* ── 1. ACTIVE NAV LINK ───────────────────────────────────── 
    The browser knows what page it's on via window.location.
    We compare that to each nav link's href and add the

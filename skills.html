@@ -393,25 +393,8 @@
 </head>
 
 <body class="page-frame">
+  <!-- nav injected by main.js -->
 
-  <!-- NAV -->
-  <nav class="nav">
-    <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>
-      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav__links">
-        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
-        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
-        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
-        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
-        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
-        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
-        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
-      </ul>
-    </div>
-  </nav>
 
   <div class="scroll-surface">
     <div class="container">
@@ -909,6 +892,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-e0jCNBMnPnCkKbOtQmfCVbCmrZQBs6tKwAKfHaGFgOCLEKv7e4ggYd0e4RpIlgQ62l5p0hPOE1+KVJAb2Jzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1087,18 +1071,12 @@
       .catch(onError);
     }
 
-    /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-    /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
-       defined once in firebase.js, eliminating duplication.         */
-        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-    /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
-       defined once in firebase.js, eliminating duplication.         */
+    /* ── FIREBASE SIGN-IN MODAL — thin wrapper ─────────────────── */
     function requireFirebaseAuth(onAuthenticated) {
       if (window.PF && typeof PF.requireFirebaseAuth === 'function') {
         PF.requireFirebaseAuth(onAuthenticated, function() {/* cancelled */});
       } else {
-        console.warn('[about] PF.requireFirebaseAuth not available');
+        console.warn('[skills] PF.requireFirebaseAuth not available');
       }
     }
 
@@ -1129,21 +1107,31 @@
       });
     }
 
-    /* Load all saved cert doc URLs on page load */
+    /* Load all saved cert doc URLs — watchEdits gives zero-flash on repeat visits
+       (fires from the in-memory Firebase cache before the network responds).     */
+    var _certUnsub = null;
     function loadSavedCertUrls() {
-      if (!window.PF) return;
-      PF.loadEdits(function(edits) {
-        Object.keys(edits).forEach(function(key) {
-          /* Keys: cert-doc-cert1-pdf, cert-doc-cert2-docx, etc. */
-          var m = key.match(/^cert-doc-(cert\d+)-(pdf|docx)$/);
-          if (!m) return;
-          var certId  = m[1];
-          var docType = m[2];
-          var url     = edits[key];
-          if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-            applyCertUrl(certId, url, docType);
-          }
-        });
+      if (!window.PF || typeof PF.watchEdits !== 'function') {
+        /* Fallback for environments where watchEdits isn't available */
+        if (window.PF && typeof PF.loadEdits === 'function') {
+          PF.loadEdits(applyCertUrlsFromEdits);
+        }
+        return;
+      }
+      _certUnsub = PF.watchEdits(applyCertUrlsFromEdits);
+    }
+
+    function applyCertUrlsFromEdits(edits) {
+      Object.keys(edits).forEach(function(key) {
+        /* Keys: cert-doc-cert1-pdf, cert-doc-cert2-docx, etc. */
+        var m = key.match(/^cert-doc-(cert\d+)-(pdf|docx)$/);
+        if (!m) return;
+        var certId  = m[1];
+        var docType = m[2];
+        var url     = edits[key];
+        if (url && typeof url === 'string' && url.indexOf('http') === 0) {
+          applyCertUrl(certId, url, docType);
+        }
       });
     }
     loadSavedCertUrls();
@@ -1158,7 +1146,7 @@
           if (!document.body.classList.contains('owner-unlocked')) return;
           var certId = btn.getAttribute('data-cert-upload');
           if (!window.PF || !PF.isOwner()) {
-            requireCertFirebaseAuth(function() { btn.click(); });
+            requireFirebaseAuth(function() { btn.click(); });
             return;
           }
           var input = document.createElement('input');
@@ -1234,7 +1222,7 @@
         if (!document.body.classList.contains('owner-unlocked')) return;
         /* Require Firebase auth before adding a new cert */
         if (!window.PF || !PF.isOwner()) {
-          requireCertFirebaseAuth(function() { addCertBtn.click(); });
+          requireFirebaseAuth(function() { addCertBtn.click(); });
           return;
         }
         var id = 'cert-' + Date.now();

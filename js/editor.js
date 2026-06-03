@@ -94,6 +94,36 @@ window.FormatEngine = (function () {
   var SESSION_KEY      = 'portfolio__owner__unlocked';
   var SETTINGS_KEY     = 'portfolio__settings';
 
+  /* ── XSS SANITISATION ────────────────────────────────────────
+     All Firebase → innerHTML writes go through this wrapper.
+     DOMPurify is the industry-standard sanitiser for HTML content.
+     ALLOWED_TAGS: the full set used by the format bar (bold, italic,
+     underline, strikethrough, links, spans with inline styles, lists,
+     headings, blockquotes, superscript, subscript).
+     We deliberately exclude <script>, <iframe>, <object>, <embed>,
+     event handlers (onclick, onerror…), and javascript: URIs.
+  ──────────────────────────────────────────────────────────── */
+  var _purifyConfig = {
+    ALLOWED_TAGS: [
+      'b','strong','i','em','u','s','strike','del',
+      'sup','sub','mark','br','p','span',
+      'h1','h2','h3','h4','h5','h6',
+      'ul','ol','li','blockquote','a'
+    ],
+    ALLOWED_ATTR: ['style','href','target','rel','class'],
+    ALLOWED_URI_REGEXP: /^(?:https?|mailto):/i,
+    FORCE_BODY: false
+  };
+
+  function sanitize(html) {
+    if (typeof window.DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, _purifyConfig);
+    }
+    /* DOMPurify not loaded (offline / CDN blocked) — return as-is.
+       In practice this path is only hit in local dev without internet. */
+    return html;
+  }
+
 
   /* ══════════════════════════════════════════════════════════
      PART 0 — SETTINGS PANEL
@@ -474,7 +504,7 @@ window.FormatEngine = (function () {
         var id = el.getAttribute('data-edit-id');
         if (id && edits[id] !== undefined && edits[id] !== null) {
           /* Only touch DOM if value actually changed — avoids caret disruption */
-          if (el.innerHTML !== edits[id]) el.innerHTML = edits[id];
+          if (el.innerHTML !== edits[id]) el.innerHTML = sanitize(edits[id]);
         }
       });
     }
@@ -495,7 +525,7 @@ window.FormatEngine = (function () {
       var id = el.getAttribute('data-edit-id');
       if (id && (cachedEdits[id] === undefined || cachedEdits[id] === null)) {
         var s = localStorage.getItem(storageKey(id));
-        if (s !== null && el.innerHTML !== s) el.innerHTML = s;
+        if (s !== null && el.innerHTML !== s) el.innerHTML = sanitize(s);
       }
     });
 
@@ -1630,23 +1660,78 @@ window.FormatEngine = (function () {
       var editBtn = document.createElement('button');
       editBtn.className = 'link-edit-btn'; editBtn.title = 'Edit link URL'; editBtn.textContent = '🔗';
       card.appendChild(editBtn);
+
+      /* Derive a stable key from the card's social class name          */
+      var key       = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
+      var fbEditKey = 'social-link-' + (card.className.match(/social-\w+/)||['social'])[0];
+
       editBtn.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         var current = card.getAttribute('href') || '';
         var newUrl = window.prompt('Enter the full URL for this social link:\n(e.g. https://linkedin.com/in/yourname)', current);
-        if (newUrl !== null && newUrl.trim()) {
-          card.setAttribute('href', newUrl.trim());
-          var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
-          try { localStorage.setItem(key, newUrl.trim()); } catch(e) {}
+        if (newUrl === null || !newUrl.trim()) return;
+
+        var url = newUrl.trim();
+        card.setAttribute('href', url);
+
+        /* Always save to localStorage first (instant, always available) */
+        try { localStorage.setItem(key, url); } catch(e) {}
+
+        /* Save to Firebase so ALL devices see the updated link ───────── */
+        if (window.PF && typeof PF.saveEdit === 'function') {
+          var doSave = function() {
+            PF.saveEdit(fbEditKey, url)
+              .then(function() {
+                showToast('✓ Link saved',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Saved to Firebase — visible on all devices.</div>',
+                  5000);
+              })
+              .catch(function(err) {
+                showToast('✓ Link updated (local only)',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Firebase save failed: ' + err.message + '<br>To make permanent, update href in contact.html and push to GitHub.</div>',
+                  7000);
+              });
+          };
+          if (PF.isOwner()) {
+            doSave();
+          } else {
+            PF.ensureOwnerSignIn()
+              .then(function() { doSave(); })
+              .catch(function() {
+                showToast('✓ Link updated (local only)',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Sign-in cancelled. To make permanent, update href in contact.html and push to GitHub.</div>',
+                  7000);
+              });
+          }
+        } else {
           showToast('✓ Link updated',
-            '<div class="upload-toast__path">' + newUrl.trim() + '</div>' +
+            '<div class="upload-toast__path">' + url + '</div>' +
             '<div class="upload-toast__warn">Saved to browser. To make permanent, update href in contact.html and push to GitHub.</div>',
             6000);
         }
       });
-      var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
-      var saved = null; try { saved = localStorage.getItem(key); } catch(e) {}
-      if (saved) card.setAttribute('href', saved);
+
+      /* On page load: restore from Firebase first, fall back to localStorage */
+      if (window.PF && typeof PF.loadEdits === 'function') {
+        PF.loadEdits(function(edits) {
+          var fbUrl = edits && edits[fbEditKey];
+          if (fbUrl) {
+            card.setAttribute('href', fbUrl);
+            try { localStorage.setItem(key, fbUrl); } catch(e) {}   /* keep local in sync */
+          } else {
+            /* Firebase had nothing — apply localStorage value if any */
+            var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+            if (lsUrl) card.setAttribute('href', lsUrl);
+          }
+        });
+      } else {
+        /* Firebase not loaded — use localStorage */
+        var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+        if (lsUrl) card.setAttribute('href', lsUrl);
+      }
     });
   }
 
