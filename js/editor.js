@@ -543,7 +543,9 @@ window.FormatEngine = (function () {
           wireAddCards();
           if (document.body.classList.contains('owner-unlocked')) {
             injectAllDeleteBtns();
-            setTimeout(injectUploadTriggers, 60);
+            /* Note: upload zone wiring for newly-restored cards is handled
+               by injectUploadZones() in initUploadSystem which fires on
+               dynamicCardsRestored dispatch above — no call needed here */
           }
         }, 80);
       } catch(e) {}
@@ -1207,7 +1209,10 @@ window.FormatEngine = (function () {
     injectAllDeleteBtns();
     initSlideableBars();
     wireAddCards();
-    setTimeout(injectUploadTriggers, 100);
+    /* NOTE: injectUploadTriggers() intentionally NOT called here.
+       initUploadSystem (below) owns all upload wiring and fires its
+       own MutationObserver on the 'owner-unlocked' class add.
+       Calling it here as well was the root cause of duplicate upload buttons. */
     document.dispatchEvent(new CustomEvent('ownerUnlocked'));
   }
 
@@ -1256,11 +1261,14 @@ window.FormatEngine = (function () {
 
 
   /* ══════════════════════════════════════════════════════════
-     PART 10 — UPLOAD TRIGGERS (placeholder upload buttons)
-     (unchanged from v4 — still wires image/video/doc
-     upload zones on unlock)
+     PART 10 — ASSET GUIDE PANEL only.
+     Upload trigger wiring is owned exclusively by initUploadSystem
+     below. This part only injects the guide panel UI that the
+     upload zones reference via showAssetGuide().
   ══════════════════════════════════════════════════════════ */
 
+  /* ── Keep legacy image storage helpers for backward-compat
+     (loadStoredImages below reads keys written by old version) ── */
   var IMAGE_STORE_PREFIX = 'portfolio__img__';
 
   function storeImage(key, dataUrl) {
@@ -1336,109 +1344,6 @@ window.FormatEngine = (function () {
       ].join('');
     }
     guide.classList.add('open');
-  }
-
-  function injectUploadTriggers() {
-    var imagePlaceholders = [
-      { selector: '.card-media__placeholder', type: 'image', keyFn: function(el) {
-          var card = el.closest('[data-edit-id]') || el.closest('.project-card') || el.closest('.media-card');
-          return card ? (card.id || card.getAttribute('data-new-id') || card.className.split(' ')[1] || 'img-' + Date.now()) : 'img-' + Date.now();
-      }},
-      { selector: '.media-card__placeholder', type: 'image', keyFn: function(el) {
-          var card = el.closest('.media-card');
-          return card ? (card.getAttribute('data-new-id') || card.getAttribute('data-media-title') || 'media-' + Date.now()).replace(/\s+/g, '-') : 'media-' + Date.now();
-      }},
-      { selector: '.about-hero__placeholder', type: 'image', keyFn: function() { return 'about-photo'; }},
-    ];
-    imagePlaceholders.forEach(function(spec) {
-      document.querySelectorAll(spec.selector).forEach(function(placeholder) {
-        /* Skip about.html's dedicated profile photo upload (inline script handles it) */
-        if (placeholder.id === 'profile-placeholder' ||
-            placeholder.closest('#profile-img-wrap')) return;
-        /* Skip if initUploadSystem already wired a .upload-zone here */
-        if (placeholder.querySelector('.upload-zone')) return;
-        if (placeholder.querySelector('.upload-trigger')) return;
-        var key = spec.keyFn(placeholder);
-        placeholder.setAttribute('data-img-key', key);
-        placeholder.style.position = 'relative';
-        var trigger = document.createElement('div');
-        trigger.className = 'upload-trigger';
-        trigger.setAttribute('title', 'Upload image');
-        trigger.innerHTML = '<div class="upload-trigger__icon">+</div>';
-        var fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/jpeg,image/png,image/webp,image/gif';
-        fileInput.style.display = 'none';
-        placeholder.appendChild(fileInput);
-        placeholder.appendChild(trigger);
-        trigger.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (!document.body.classList.contains('owner-unlocked')) return;
-          fileInput.click();
-        });
-        fileInput.addEventListener('change', function() {
-          var file = fileInput.files[0];
-          if (!file) return;
-          if (file.size > 4 * 1024 * 1024) {
-            alert('Image is ' + (file.size / 1024 / 1024).toFixed(1) + 'MB — too large for browser storage. Please resize to under 4MB.');
-            return;
-          }
-          var reader = new FileReader();
-          reader.onload = function(ev) {
-            var dataUrl = ev.target.result;
-            var ok = storeImage(key, dataUrl);
-            if (ok) {
-              applyStoredImage(placeholder, dataUrl);
-              trigger.style.background = '#4ade80';
-              trigger.querySelector('.upload-trigger__icon').textContent = '✓';
-              setTimeout(function() {
-                trigger.style.background = '';
-                trigger.querySelector('.upload-trigger__icon').textContent = '+';
-              }, 2000);
-            }
-          };
-          reader.readAsDataURL(file);
-          fileInput.value = '';
-        });
-        var stored = localStorage.getItem(IMAGE_STORE_PREFIX + key);
-        if (stored) applyStoredImage(placeholder, stored);
-      });
-    });
-
-    /* PDF/doc guide triggers */
-    document.querySelectorAll('.card-media__placeholder-icon').forEach(function(icon) {
-      var text = icon.textContent.trim();
-      if (text === '📐' || text === '📄' || text === '📚' || text === '🔥') {
-        var placeholder = icon.closest('.card-media');
-        if (!placeholder || placeholder.querySelector('.upload-trigger')) return;
-        var trigger = document.createElement('div');
-        trigger.className = 'upload-trigger';
-        trigger.setAttribute('title', 'How to add this document');
-        trigger.innerHTML = '<div class="upload-trigger__icon">?</div>';
-        placeholder.style.position = 'relative';
-        placeholder.appendChild(trigger);
-        trigger.addEventListener('click', function(e) { e.stopPropagation(); showAssetGuide('pdf'); });
-      }
-    });
-
-    /* Video guide triggers */
-    document.querySelectorAll('.card-media__play').forEach(function(playBtn) {
-      var placeholder = playBtn.closest('.card-media');
-      if (!placeholder) return;
-      var hasImage    = placeholder.querySelector('img');
-      var hasTrigger  = placeholder.querySelector('.upload-trigger[data-video-guide]');
-      if (hasImage || hasTrigger) return;
-      var triggerIcon = placeholder.querySelector('.card-media__placeholder-icon');
-      if (!triggerIcon || triggerIcon.textContent.trim() !== '🎬') return;
-      var trigger = document.createElement('div');
-      trigger.className = 'upload-trigger';
-      trigger.setAttribute('data-video-guide', '1');
-      trigger.setAttribute('title', 'How to add a video');
-      trigger.innerHTML = '<div class="upload-trigger__icon">🎬</div><div class="upload-trigger__label">HOW TO ADD<br>VIDEO</div>';
-      placeholder.style.position = 'relative';
-      placeholder.appendChild(trigger);
-      trigger.addEventListener('click', function(e) { e.stopPropagation(); showAssetGuide('video'); });
-    });
   }
 
   /* Inject asset guide panel (once) */
@@ -1547,14 +1452,17 @@ window.FormatEngine = (function () {
       }
       img.src = dataUrl;
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      /* LOCAL ONLY badge — owner visibility only. Visitors see the image without the badge. */
       var badge = container.querySelector('.upload-local-badge');
-      if (badge) badge.style.display = '';
+      if (badge) badge.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
       container.setAttribute('data-has-upload', '1');
       var changeBtn = container.querySelector('.upload-change-btn');
       if (!changeBtn) {
         changeBtn = document.createElement('button');
         changeBtn.className = 'upload-change-btn';
         changeBtn.textContent = '✎ CHANGE PHOTO';
+        /* Change button only for owners */
+        changeBtn.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
         container.appendChild(changeBtn);
         changeBtn.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -1657,42 +1565,106 @@ window.FormatEngine = (function () {
       });
     });
 
-    /* PDF / DOCX upload buttons */
+    /* PDF / DOCX upload buttons
+       ─────────────────────────────────────────────────────────────────────
+       FIX (v6): Previous version used URL.createObjectURL() which produced
+       a blob: URL that is:
+         (a) session-only — revoked on tab close
+         (b) sent to Google Docs viewer which CANNOT read blob: URLs
+         (c) required re-wiring wireDocBtns via _docWired=false which
+             caused the doc viewer to either double-fire or not fire at all
+
+       New approach:
+         1. Read the file as a base64 DataURL (like image uploads do)
+         2. Store it in localStorage under uploadKey(assetPath)
+         3. Update btn.setAttribute('data-doc-src', dataUrl) in-place
+            without touching _docWired — the existing click listener on
+            btn already reads the current data-doc-src attribute live
+         4. In openDocViewer (projects.html), data: URLs are treated as
+            local PDFs — the inline viewer handles them natively via an
+            <iframe srcdoc> or object element, bypassing Google Docs
+       ────────────────────────────────────────────────────────────────── */
+    var DOC_SIZE_LIMIT_MB = 4; /* 4 MB base64 ≈ 5.3 MB encoded — safe for localStorage */
     document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
       if (btn._uploadDocWired || !btn.classList.contains('card-btn--primary')) return;
       btn._uploadDocWired = true;
       var assetPath = btn.getAttribute('data-doc-src');
+      /* Skip buttons that already point to a stored data URL or blob */
+      if (/^data:|^blob:/.test(assetPath)) return;
       var assetType = btn.getAttribute('data-doc-type') || 'pdf';
       var uploadBtn = document.createElement('button');
       uploadBtn.className = 'card-btn owner-only';
-      uploadBtn.title = 'Upload ' + assetType.toUpperCase() + ' file';
+      uploadBtn.title = 'Upload ' + assetType.toUpperCase() + ' file to replace placeholder';
       uploadBtn.innerHTML = '<span style="font-size:11px;">📂</span> UPLOAD ' + assetType.toUpperCase();
-      uploadBtn.style.display = 'none';
+      /* Always hidden by default; shown only when owner-unlocked */
+      uploadBtn.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
       if (btn.parentNode) btn.parentNode.insertBefore(uploadBtn, btn.nextSibling);
-      if (document.body.classList.contains('owner-unlocked')) uploadBtn.style.display = '';
+
       uploadBtn.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         if (!document.body.classList.contains('owner-unlocked')) return;
-        var accept = assetType === 'pdf' ? 'application/pdf' : '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        var accept = assetType === 'pdf'
+          ? 'application/pdf'
+          : '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         openFilePicker(accept, function(file) {
-          var objectUrl = URL.createObjectURL(file);
-          btn.setAttribute('data-doc-src-local', objectUrl);
-          btn._localObjectUrl = objectUrl;
-          var downloadBtn = btn.parentNode && btn.parentNode.querySelector('a[download][href*="' + assetPath + '"]');
-          if (downloadBtn) downloadBtn.href = objectUrl;
-          showToast('✓ ' + assetType.toUpperCase() + ' loaded for this session',
-            '<div class="upload-toast__path">File: ' + file.name + '</div>' +
-            '<div class="upload-toast__warn">⚡ Session only — link works until you close the tab.<br>' +
-            'To make it permanent:<br>' +
-            '1. Name the file: <strong>' + assetPath.split('/').pop() + '</strong><br>' +
-            '2. Copy into <strong>' + assetPath.split('/').slice(0,-1).join('/') + '/</strong><br>' +
-            '3. Commit and push to GitHub</div>', 12000);
-          btn.removeAttribute('data-doc-src');
-          btn.setAttribute('data-doc-src', objectUrl);
-          btn._docWired = false;
-          if (typeof wireDocBtns === 'function') wireDocBtns();
+          var sizeMB = file.size / (1024 * 1024);
+          if (sizeMB > DOC_SIZE_LIMIT_MB) {
+            showToast('⚠ File too large',
+              '<div class="upload-toast__warn">This file is ' + sizeMB.toFixed(1) + 'MB.<br>' +
+              'Keep under ' + DOC_SIZE_LIMIT_MB + 'MB for browser storage.<br>' +
+              'Larger files must be committed to <code>assets/docs/</code> in GitHub.</div>', 8000);
+            return;
+          }
+          readAsDataURL(file, function(dataUrl) {
+            /* Persist in localStorage — survives page refresh, no session limit */
+            try { localStorage.setItem(uploadKey(assetPath), dataUrl); }
+            catch(storageErr) {
+              showToast('⚠ Storage full',
+                '<div class="upload-toast__warn">Browser storage is full. ' +
+                'Commit the file to <code>' + assetPath + '</code> in GitHub instead.</div>', 7000);
+              return;
+            }
+
+            /* Update the READ/VIEW button's src attribute directly.
+               The existing click listener reads data-doc-src live,
+               so this takes effect immediately — no re-wiring needed. */
+            btn.setAttribute('data-doc-src', dataUrl);
+            btn.setAttribute('data-doc-type', assetType);
+
+            /* Also update any paired download link */
+            var downloadLink = btn.parentNode && btn.parentNode.querySelector('a[download]');
+            if (downloadLink) downloadLink.href = dataUrl;
+
+            /* Visual feedback: highlight the read button green */
+            var prevBg = btn.style.background;
+            btn.style.background = 'rgba(74,222,128,0.18)';
+            btn.style.borderColor = 'rgba(74,222,128,0.6)';
+            setTimeout(function() {
+              btn.style.background = prevBg;
+              btn.style.borderColor = '';
+            }, 2500);
+
+            showToast('✓ ' + assetType.toUpperCase() + ' ready',
+              '<div class="upload-toast__path">File: ' + file.name + '</div>' +
+              '<div class="upload-toast__warn">Stored in browser — persists across page refreshes.<br>' +
+              'Click <strong>' + (btn.textContent.trim().split(' ')[0] || 'READ') + '</strong> to open the document viewer.<br><br>' +
+              'To make it permanent for all visitors:<br>' +
+              '1. Name the file: <strong>' + assetPath.split('/').pop() + '</strong><br>' +
+              '2. Copy into <strong>' + assetPath.split('/').slice(0,-1).join('/') + '/</strong><br>' +
+              '3. Commit and push to GitHub</div>', 14000);
+          });
         });
       });
+
+      /* Restore on page load: if a base64 version was stored from a previous upload,
+         apply it immediately so the viewer button is ready without any upload action. */
+      var storedDoc = null;
+      try { storedDoc = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
+      if (storedDoc && /^data:/.test(storedDoc)) {
+        btn.setAttribute('data-doc-src', storedDoc);
+        btn.style.borderColor = 'rgba(74,222,128,0.35)';
+        btn.title = btn.title + ' (stored locally)';
+      }
     });
 
     /* Video upload zones */
@@ -1820,14 +1792,24 @@ window.FormatEngine = (function () {
     });
   }
 
-  /* ── WIRE ON UNLOCK ── */
+  /* ── WIRE ON UNLOCK / LOCK ── */
   var unlockObserver = new MutationObserver(function(mutations) {
     mutations.forEach(function(m) {
       if (m.type === 'attributes' && m.attributeName === 'class') {
-        if (document.body.classList.contains('owner-unlocked')) {
+        var isOwner = document.body.classList.contains('owner-unlocked');
+        if (isOwner) {
+          /* injectUploadZones guards with _uploadWired — safe to call multiple times */
           injectUploadZones();
           injectLinkEditors();
-          document.querySelectorAll('.card-btn[title^="Upload"]').forEach(function(b) { b.style.display = ''; });
+          /* Show upload-related owner-only elements */
+          document.querySelectorAll('.card-btn[title^="Upload"], .upload-local-badge, .upload-change-btn').forEach(function(b) {
+            b.style.display = '';
+          });
+        } else {
+          /* Hide owner-only upload UI when locked */
+          document.querySelectorAll('.upload-local-badge, .upload-change-btn').forEach(function(b) {
+            b.style.display = 'none';
+          });
         }
       }
     });
@@ -1839,6 +1821,13 @@ window.FormatEngine = (function () {
     injectLinkEditors();
   }
   loadStoredUploads();
+
+  /* Also re-wire when dynamic cards are restored from localStorage */
+  document.addEventListener('dynamicCardsRestored', function() {
+    if (document.body.classList.contains('owner-unlocked')) {
+      setTimeout(function() { injectUploadZones(); }, 60);
+    }
+  });
 
 })(); /* end initUploadSystem */
 
@@ -1853,15 +1842,26 @@ window.FormatEngine = (function () {
 ═══════════════════════════════════════════════════════════ */
 (function patchArticlesFormatBar() {
 
-  /* Wait for the page's own script to have run first */
-  setTimeout(function() {
+  /* ── Retry loop: attempt up to 10 times at 100ms intervals ──
+     Replaces the brittle single 300ms setTimeout.  Stops as
+     soon as the target elements exist (usually attempt 1–3). */
+  var attempts = 0;
+  var MAX_ATTEMPTS = 10;
+  var INTERVAL_MS  = 100;
+
+  function tryPatch() {
+    attempts++;
     var rfbBar    = document.getElementById('reader-format-bar');
     var rfbSize   = document.getElementById('rfb-size-input');
     var rfbSizeUp = document.getElementById('rfb-size-up');
     var rfbSizeDn = document.getElementById('rfb-size-down');
-    if (!rfbBar || !rfbSize) return; // not articles page or not loaded yet
 
-    /* Find the bold/italic/underline/strike buttons by their data-cmd */
+    if (!rfbBar || !rfbSize) {
+      if (attempts < MAX_ATTEMPTS) setTimeout(tryPatch, INTERVAL_MS);
+      return; // elements not ready — retry
+    }
+
+    /* ── Find the bold/italic/underline/strike buttons by their data-cmd ── */
     var rfbBtns = {
       bold:         rfbBar.querySelector('[data-cmd="bold"]'),
       italic:       rfbBar.querySelector('[data-cmd="italic"]'),
@@ -1945,8 +1945,14 @@ window.FormatEngine = (function () {
         setTimeout(function() { FormatEngine.syncControls(rfbControls); }, 10);
       });
     });
+  } /* end tryPatch */
 
-  }, 300); /* wait 300ms for articles page script to set up the reader */
+  /* Start the retry loop on DOMContentLoaded or immediately if already loaded */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(tryPatch, 50); });
+  } else {
+    setTimeout(tryPatch, 50);
+  }
 
 })();
 

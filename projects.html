@@ -1233,26 +1233,58 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
       var displayTitle = title;
       if (!displayTitle || displayTitle === 'Document') {
         try {
-          /* Extract the last path segment from the URL and decode it */
-          var seg = src.split('/').pop().split('?')[0];
-          var decoded = decodeURIComponent(seg);
-          if (decoded && decoded !== '#') displayTitle = decoded;
+          /* For data: and blob: URLs the path is meaningless — keep the explicit title */
+          if (!/^(data:|blob:)/.test(src)) {
+            var seg = src.split('/').pop().split('?')[0];
+            var decoded = decodeURIComponent(seg);
+            if (decoded && decoded !== '#') displayTitle = decoded;
+          }
         } catch (e) {}
       }
       docTitle.textContent = displayTitle || 'Document';
       docLoading.classList.remove('hidden');
       docDownload.href = src;
-      /* Set the download filename to the real decoded filename */
       try {
-        var dlName = decodeURIComponent(src.split('/').pop().split('?')[0]);
+        /* For data: URLs the download attribute makes the browser prompt Save As */
+        var dlName = /^data:/.test(src)
+          ? (displayTitle || 'document') + '.' + (type || 'pdf')
+          : decodeURIComponent(src.split('/').pop().split('?')[0]);
         docDownload.setAttribute('download', dlName || '');
       } catch (e) { docDownload.setAttribute('download', ''); }
       docPageInfo.textContent = '';
 
       var viewerSrc;
-      var isFullUrl = /^https?:\/\//i.test(src);
+      var isDataUrl  = /^data:/.test(src);
+      var isBlobUrl  = /^blob:/.test(src);
+      var isFullUrl  = /^https?:\/\//i.test(src);
 
-      if (type === 'pdf') {
+      if (isDataUrl) {
+        /* Base64 DataURL stored in localStorage after owner upload.
+           The iframe can display PDFs via the browser's native PDF viewer
+           using a data: src directly — no Google Docs wrapper needed.    */
+        if (type === 'docx') {
+          /* DOCX as data URL: Google Docs Viewer needs an accessible HTTP URL.
+             Fall back to triggering a download with a helpful message.      */
+          docPageInfo.textContent = 'DOCX preview not available for local uploads. Click ⬇ to download.';
+          viewerSrc = 'about:blank';
+          /* Auto-trigger download so the user gets the file immediately */
+          setTimeout(function() { docDownload.click(); }, 400);
+        } else {
+          /* PDF or other: display inline via native PDF viewer */
+          viewerSrc = src;
+          docPageInfo.textContent = 'PDF loaded from local storage';
+        }
+      } else if (isBlobUrl) {
+        /* Session blob URL (legacy path — shouldn't happen with v6 upload system
+           but kept for backward compatibility with old uploads in the same session) */
+        if (type === 'pdf') {
+          viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
+        } else {
+          viewerSrc = 'about:blank';
+          docPageInfo.textContent = 'DOCX preview not available. Click ⬇ to download.';
+          setTimeout(function() { docDownload.click(); }, 400);
+        }
+      } else if (type === 'pdf') {
         if (isFullUrl) {
           /* Cloudinary / any external PDF — use Google Docs viewer
              because cross-origin iframes block native browser PDF viewing */
@@ -1319,19 +1351,32 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
     });
 
     // Wire all READ PAPER / VIEW DRAWING buttons
+    // Uses event delegation on card-actions to avoid _docWired stale closure bugs.
+    // Individual button wiring kept for initial static buttons on page load.
     function wireDocBtns() {
       document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
         if (btn._docWired) return;
         btn._docWired = true;
         btn.addEventListener('click', function(e) {
           e.preventDefault();
+          /* Always read data-doc-src at click time — it may have been updated
+             by the upload system (base64 DataURL replacing the placeholder path) */
           var src = btn.getAttribute('data-doc-src');
-          /* Skip placeholder or empty src */
-          if (!src || src === '#') return;
+          /* Skip placeholder or empty src — show a helpful hint instead */
+          if (!src || src === '#' || src === 'assets/docs/') {
+            /* Only show hint to owners; visitors shouldn't see upload prompts */
+            if (document.body.classList.contains('owner-unlocked')) {
+              var uploadBtn = btn.nextSibling;
+              if (uploadBtn && uploadBtn.classList && uploadBtn.classList.contains('card-btn')) {
+                uploadBtn.style.animation = 'pulse-border 0.5s ease 2';
+              }
+            }
+            return;
+          }
           openDocViewer(
             src,
             btn.getAttribute('data-doc-type') || 'pdf',
-            btn.getAttribute('data-doc-title') || 'Document'
+            btn.getAttribute('data-doc-title') || btn.textContent.trim() || 'Document'
           );
         });
       });
