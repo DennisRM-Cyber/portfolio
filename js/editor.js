@@ -1714,15 +1714,27 @@ window.FormatEngine = (function () {
         }
       });
 
-      /* On page load: restore from Firebase first, fall back to localStorage */
-      if (window.PF && typeof PF.loadEdits === 'function') {
-        PF.loadEdits(function(edits) {
+      /* On page load: restore from Firebase in real-time (watchEdits), fall back to localStorage.
+         Using watchEdits means a link changed on any device appears instantly on all others.     */
+      if (window.PF && typeof PF.watchEdits === 'function') {
+        PF.watchEdits(function(edits) {
           var fbUrl = edits && edits[fbEditKey];
           if (fbUrl) {
             card.setAttribute('href', fbUrl);
             try { localStorage.setItem(key, fbUrl); } catch(e) {}   /* keep local in sync */
           } else {
-            /* Firebase had nothing — apply localStorage value if any */
+            var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+            if (lsUrl) card.setAttribute('href', lsUrl);
+          }
+        });
+      } else if (window.PF && typeof PF.loadEdits === 'function') {
+        /* Fallback: one-time read if watchEdits unavailable */
+        PF.loadEdits(function(edits) {
+          var fbUrl = edits && edits[fbEditKey];
+          if (fbUrl) {
+            card.setAttribute('href', fbUrl);
+            try { localStorage.setItem(key, fbUrl); } catch(e) {}
+          } else {
             var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
             if (lsUrl) card.setAttribute('href', lsUrl);
           }
