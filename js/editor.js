@@ -7,17 +7,26 @@
 ============================================================ */
 
 /* ════════════════════════════════════════════════════════════
-   SHARED FORMAT ENGINE
-   Single source of truth for BOTH the floating page format bar
-   AND the article reader format bar. Both bars call into this.
-   Key fixes:
-     · Reads current selection's computed font-size, bold, italic
-       etc. and syncs toolbar controls on every selectionchange
-     · Font-size stepping keeps selection alive — no deselect loop
-     · Highlight and text-color apply without losing selection
+   SHARED FORMAT ENGINE  — Word-style toolbar behaviour
+   ────────────────────────────────────────────────────────────
+   Key design:
+   · saveRange()  — always called on mousedown BEFORE the click
+     moves focus away from the contenteditable. This is the
+     single most important trick. All controls call it first.
+   · applyFontSize() — uses execCommand('fontSize', 7) sentinel
+     then replaces the injected <font> elements with
+     <span style="font-size:Xpx">.  Works on multi-node
+     selections, partial words, and across element boundaries.
+   · syncControls() — reads the COMPUTED style of the anchor
+     node, not the attribute.  This means the displayed size
+     always matches what the text actually looks like, even
+     when inherited from a parent.
+   · currentSize variable — updated on every selectionchange
+     so stepper buttons always start from the correct value.
 ════════════════════════════════════════════════════════════ */
 window.FormatEngine = (function () {
 
+  /* ── Read the real computed style of the current selection ── */
   function getSelectionStyle() {
     var result = {
       fontSize: null, fontFamily: '', bold: false,
@@ -27,63 +36,105 @@ window.FormatEngine = (function () {
     if (!sel || !sel.rangeCount) return result;
     var node = sel.anchorNode;
     if (node && node.nodeType === 3) node = node.parentElement;
-    if (!node) return result;
+    if (!node || node.nodeType !== 1) return result;
     try {
       var cs = window.getComputedStyle(node);
       var px = parseFloat(cs.fontSize);
+      /* Round to nearest integer — avoids 15.9999 or 16.0001 noise */
       if (!isNaN(px) && px > 0) result.fontSize = Math.round(px);
-      result.fontFamily   = cs.fontFamily || '';
-      result.bold         = document.queryCommandState('bold');
-      result.italic       = document.queryCommandState('italic');
-      result.underline    = document.queryCommandState('underline');
+      result.fontFamily    = cs.fontFamily || '';
+      result.bold          = parseInt(cs.fontWeight) >= 600 ||
+                             document.queryCommandState('bold');
+      result.italic        = document.queryCommandState('italic');
+      result.underline     = document.queryCommandState('underline');
       result.strikeThrough = document.queryCommandState('strikeThrough');
     } catch (e) {}
     return result;
   }
 
-  /* Apply font size without losing the selection.
-     Uses execCommand('fontSize') with sentinel=7, then swaps the
-     browser-injected <font size="7"> elements for <span style="font-size:Xpx">
-     while the caret / selection remains untouched.                              */
-  function applyFontSize(px) {
-    var sel = window.getSelection();
-    if (!sel || !sel.rangeCount || sel.isCollapsed) return;
-    var SENTINEL = 7;
-    document.execCommand('fontSize', false, SENTINEL);
-    // Find the <font size="7"> elements the browser just inserted
+  /* ── Apply font size without losing the selection ────────────
+     Strategy:
+     1. Restore the saved range (selection may be gone if user
+        clicked the toolbar).
+     2. execCommand('fontSize', 7) — browser wraps selected text
+        in <font size="7"> markers.
+     3. Walk the DOM and replace every <font size="7"> with a
+        <span style="font-size:Xpx">.
+     4. Selection stays intact because we never removed it —
+        we only replaced container elements around it.         */
+  function applyFontSize(px, savedRange) {
+    /* Restore selection first if a saved range was passed */
+    if (savedRange) {
+      var sel = window.getSelection();
+      if (sel) { sel.removeAllRanges(); sel.addRange(savedRange); }
+    }
+    var currentSel = window.getSelection();
+    if (!currentSel || !currentSel.rangeCount || currentSel.isCollapsed) return;
+
+    /* Find the best search root — stay local to avoid touching
+       font elements in other parts of the page */
     var searchRoot = document.body;
     try {
-      var range = sel.getRangeAt(0);
+      var range    = currentSel.getRangeAt(0);
       var ancestor = range.commonAncestorContainer;
       while (ancestor && ancestor.nodeType !== 1) ancestor = ancestor.parentNode;
       if (ancestor) searchRoot = ancestor;
     } catch (e) {}
-    searchRoot.querySelectorAll('font[size="' + SENTINEL + '"]').forEach(function (font) {
+
+    var SENTINEL = 7;
+    document.execCommand('fontSize', false, SENTINEL);
+
+    /* Replace <font size="7"> with <span style="font-size:Xpx"> */
+    var fonts = searchRoot.querySelectorAll('font[size="' + SENTINEL + '"]');
+    /* querySelectorAll on searchRoot may miss if searchRoot itself
+       is the font element (rare but possible) */
+    if (fonts.length === 0 && searchRoot.tagName === 'FONT' &&
+        searchRoot.getAttribute('size') == SENTINEL) {
+      fonts = [searchRoot];
+    }
+    fonts.forEach(function (font) {
       var span = document.createElement('span');
       span.style.fontSize = px + 'px';
       while (font.firstChild) span.appendChild(font.firstChild);
-      font.parentNode.replaceChild(span, font);
+      if (font.parentNode) font.parentNode.replaceChild(span, font);
     });
   }
 
-  function syncControls(controls) {
+  /* ── Sync toolbar controls to reflect the current selection ──
+     Called on every selectionchange and after every command.
+     Updates the size input, bold/italic/underline/strike states.
+     Does NOT update the input if the user is actively typing
+     in it (activeElement guard).                               */
+  function syncControls(controls, currentSizeRef) {
     var style = getSelectionStyle();
+
+    /* Size input — only update when the user isn't editing it */
     if (controls.sizeInput && style.fontSize !== null) {
       if (document.activeElement !== controls.sizeInput) {
         controls.sizeInput.value = style.fontSize;
       }
+      /* Always update the shared size reference so steppers start correctly */
+      if (currentSizeRef && style.fontSize !== null) {
+        currentSizeRef.value = style.fontSize;
+      }
     }
+
     function setActive(btn, state) {
-      if (!btn) return;
-      btn.classList.toggle('active', !!state);
+      if (btn) btn.classList.toggle('active', !!state);
     }
     setActive(controls.boldBtn,       style.bold);
     setActive(controls.italicBtn,     style.italic);
     setActive(controls.underlineBtn,  style.underline);
     setActive(controls.strikeBtn,     style.strikeThrough);
+
+    return style;
   }
 
-  return { getSelectionStyle: getSelectionStyle, applyFontSize: applyFontSize, syncControls: syncControls };
+  return {
+    getSelectionStyle : getSelectionStyle,
+    applyFontSize     : applyFontSize,
+    syncControls      : syncControls
+  };
 }());
 
 
@@ -1010,43 +1061,66 @@ window.FormatEngine = (function () {
   var fmtSizeInput = document.getElementById('fmt-size-input');
   var fmtSizeUp    = document.getElementById('fmt-size-up');
   var fmtSizeDown  = document.getElementById('fmt-size-down');
-  var currentFontSize = 16;
+  /* Use an object so FormatEngine.syncControls can update it by reference */
+  var currentFontSizeRef = { value: 16 };
 
-  fmtSizeInput.addEventListener('focus', saveRange);
-  fmtSizeInput.addEventListener('change', function() {
-    var px = Math.max(8, Math.min(96, parseInt(this.value) || 16));
-    this.value = px;
-    currentFontSize = px;
-    restoreSelection();
-    FormatEngine.applyFontSize(px);
+  /* mousedown fires BEFORE the input steals focus from the contenteditable.
+     This is the correct moment to save the selection range.                 */
+  fmtSizeInput.addEventListener('mousedown', function() { saveRange(); });
+
+  fmtSizeInput.addEventListener('input', function() {
+    /* Live preview as user types — only apply when value is valid */
+    var px = parseInt(this.value);
+    if (!isNaN(px) && px >= 8 && px <= 96) {
+      currentFontSizeRef.value = px;
+      /* Don't apply yet — wait for Enter or blur to commit */
+    }
   });
+
+  fmtSizeInput.addEventListener('change', function() {
+    var px = Math.max(8, Math.min(96, parseInt(this.value) || currentFontSizeRef.value));
+    this.value = px;
+    currentFontSizeRef.value = px;
+    FormatEngine.applyFontSize(px, savedRange);
+  });
+
   fmtSizeInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); this.dispatchEvent(new Event('change')); }
-    /* Allow arrow keys to step size while keeping selection */
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var px = Math.max(8, Math.min(96, parseInt(this.value) || currentFontSizeRef.value));
+      this.value = px;
+      currentFontSizeRef.value = px;
+      FormatEngine.applyFontSize(px, savedRange);
+      this.blur();
+    }
     if (e.key === 'ArrowUp') {
-      e.preventDefault(); saveRange();
-      currentFontSize = Math.min(96, currentFontSize + 1);
-      this.value = currentFontSize;
-      FormatEngine.applyFontSize(currentFontSize);
+      e.preventDefault();
+      currentFontSizeRef.value = Math.min(96, currentFontSizeRef.value + 1);
+      this.value = currentFontSizeRef.value;
+      FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
     }
     if (e.key === 'ArrowDown') {
-      e.preventDefault(); saveRange();
-      currentFontSize = Math.max(8, currentFontSize - 1);
-      this.value = currentFontSize;
-      FormatEngine.applyFontSize(currentFontSize);
+      e.preventDefault();
+      currentFontSizeRef.value = Math.max(8, currentFontSizeRef.value - 1);
+      this.value = currentFontSizeRef.value;
+      FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
     }
   });
+
   fmtSizeUp.addEventListener('mousedown', function(e) {
-    e.preventDefault(); saveRange();
-    currentFontSize = Math.min(96, currentFontSize + 1);
-    fmtSizeInput.value = currentFontSize;
-    FormatEngine.applyFontSize(currentFontSize);
+    e.preventDefault();
+    saveRange();
+    currentFontSizeRef.value = Math.min(96, currentFontSizeRef.value + 1);
+    fmtSizeInput.value = currentFontSizeRef.value;
+    FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
   });
+
   fmtSizeDown.addEventListener('mousedown', function(e) {
-    e.preventDefault(); saveRange();
-    currentFontSize = Math.max(8, currentFontSize - 1);
-    fmtSizeInput.value = currentFontSize;
-    FormatEngine.applyFontSize(currentFontSize);
+    e.preventDefault();
+    saveRange();
+    currentFontSizeRef.value = Math.max(8, currentFontSizeRef.value - 1);
+    fmtSizeInput.value = currentFontSizeRef.value;
+    FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
   });
 
   /* ── Text colour ── */
@@ -1081,10 +1155,9 @@ window.FormatEngine = (function () {
   };
 
   function syncFmtBarControls() {
-    FormatEngine.syncControls(fmtBarControls);
-    /* Also update the size variable to stay in sync */
-    var style = FormatEngine.getSelectionStyle();
-    if (style.fontSize !== null) currentFontSize = style.fontSize;
+    /* Pass currentFontSizeRef so syncControls can update it when
+       the selection moves to text with a different size.          */
+    FormatEngine.syncControls(fmtBarControls, currentFontSizeRef);
   }
 
   /* ── selectionchange: show bar + sync controls ── */
