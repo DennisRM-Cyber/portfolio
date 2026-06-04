@@ -1243,14 +1243,38 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
       }
       docTitle.textContent = displayTitle || 'Document';
       docLoading.classList.remove('hidden');
-      docDownload.href = src;
+      /* ── Build a download URL that preserves the original filename ──
+         Browsers IGNORE the HTML `download` attribute for cross-origin
+         links (e.g. Cloudinary), so we ask Cloudinary itself to send
+         `Content-Disposition: attachment; filename="<original>"` via the
+         `fl_attachment:<name>` URL flag injected right after `/upload/`.
+         For same-origin and data: URLs we keep the standard `download`
+         attribute, which browsers DO honour in that case.            */
       try {
-        /* For data: URLs the download attribute makes the browser prompt Save As */
-        var dlName = /^data:/.test(src)
-          ? (displayTitle || 'document') + '.' + (type || 'pdf')
-          : decodeURIComponent(src.split('/').pop().split('?')[0]);
-        docDownload.setAttribute('download', dlName || '');
-      } catch (e) { docDownload.setAttribute('download', ''); }
+        var dlName = (displayTitle && displayTitle !== 'Document')
+          ? displayTitle
+          : decodeURIComponent(src.split('/').pop().split('?')[0] || 'document');
+        /* Strip any path separators from the filename and ensure it has
+           an extension so the OS opens it with the right app.        */
+        dlName = String(dlName).replace(/[\\/]/g, '_');
+        if (!/\.[a-z0-9]{1,5}$/i.test(dlName)) {
+          dlName = dlName + '.' + (type || 'pdf');
+        }
+        var downloadHref = src;
+        if (/^https?:\/\/res\.cloudinary\.com\//i.test(src) && /\/upload\//.test(src)) {
+          /* Cloudinary public_id includes the extension already; pass the
+             filename WITHOUT extension to fl_attachment so the download
+             keeps the original name + the file's real extension.       */
+          var baseName = dlName.replace(/\.[a-z0-9]{1,5}$/i, '');
+          var safe = encodeURIComponent(baseName).replace(/%20/g, '_');
+          downloadHref = src.replace('/upload/', '/upload/fl_attachment:' + safe + '/');
+        }
+        docDownload.href = downloadHref;
+        docDownload.setAttribute('download', dlName);
+      } catch (e) {
+        docDownload.href = src;
+        docDownload.setAttribute('download', '');
+      }
       docPageInfo.textContent = '';
 
       var viewerSrc;
