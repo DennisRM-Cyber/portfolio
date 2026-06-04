@@ -539,6 +539,53 @@
       border: none;
       background: #f5f5f0;
     }
+    /* Native in-page renderer (PDF.js canvases or Mammoth HTML).
+       Replaces the Google Docs viewer iframe for cross-origin docs. */
+    .doc-viewer__render {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: #2a2a2a;
+      padding: 24px 0;
+      display: none;
+      scroll-behavior: smooth;
+    }
+    .doc-viewer__render.active { display: block; }
+    .doc-viewer__render canvas.pdfjs-page {
+      display: block;
+      margin: 0 auto 18px;
+      max-width: calc(100% - 32px);
+      height: auto;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+      background: #fff;
+    }
+    .doc-viewer__render .docx-host {
+      max-width: 880px;
+      margin: 0 auto;
+      background: #fff;
+      color: #111;
+      padding: 56px 72px;
+      font-family: Georgia, 'Times New Roman', serif;
+      line-height: 1.6;
+      font-size: 15px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+      border-radius: 2px;
+    }
+    .doc-viewer__render .docx-host h1,
+    .doc-viewer__render .docx-host h2,
+    .doc-viewer__render .docx-host h3 { font-family: Georgia, serif; color: #000; margin: 1.2em 0 0.5em; }
+    .doc-viewer__render .docx-host p  { margin: 0 0 1em; }
+    .doc-viewer__render .docx-host table { border-collapse: collapse; margin: 1em 0; }
+    .doc-viewer__render .docx-host table td,
+    .doc-viewer__render .docx-host table th { border: 1px solid #999; padding: 6px 10px; }
+    .doc-viewer__render .docx-host img { max-width: 100%; height: auto; }
+    .doc-viewer__render .doc-error {
+      max-width: 520px; margin: 80px auto; padding: 24px 28px;
+      background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.35);
+      border-radius: 6px; color: #f5d0d0; font-family: var(--font-mono);
+      font-size: 11px; line-height: 1.7; letter-spacing: 0.04em;
+    }
+    .doc-viewer__render .doc-error a { color: #f87171; }
     .doc-viewer__loading {
       position: absolute;
       inset: 0;
@@ -1141,6 +1188,7 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
         <span>LOADING DOCUMENT…</span>
       </div>
       <iframe class="doc-viewer__frame" id="doc-frame" title="Document viewer"></iframe>
+      <div class="doc-viewer__render" id="doc-render" tabindex="0" aria-label="Document content"></div>
     </div>
   </div>
 
@@ -1224,6 +1272,168 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
     var docPageInfo = document.getElementById('doc-page-info');
     var docPrev     = document.getElementById('doc-prev');
     var docNext     = document.getElementById('doc-next');
+    var docRender   = document.getElementById('doc-render');
+
+    /* ── Lazy-load PDF.js and Mammoth from CDN on first use ──
+       Cloudinary serves docs with `Access-Control-Allow-Origin: *`, so
+       both libs can fetch the file directly — no server proxy needed. */
+    var _pdfjsPromise = null;
+    function loadPdfJs() {
+      if (_pdfjsPromise) return _pdfjsPromise;
+      _pdfjsPromise = new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = function() {
+          var lib = window['pdfjsLib'] || window['pdfjs-dist/build/pdf'];
+          if (!lib) { reject(new Error('pdf.js not exposed on window')); return; }
+          lib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          resolve(lib);
+        };
+        s.onerror = function() { reject(new Error('Failed to load pdf.js')); };
+        document.head.appendChild(s);
+      });
+      return _pdfjsPromise;
+    }
+    var _mammothPromise = null;
+    function loadMammoth() {
+      if (_mammothPromise) return _mammothPromise;
+      _mammothPromise = new Promise(function(resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+        s.onload = function() {
+          if (window.mammoth) resolve(window.mammoth);
+          else reject(new Error('mammoth not exposed on window'));
+        };
+        s.onerror = function() { reject(new Error('Failed to load mammoth.js')); };
+        document.head.appendChild(s);
+      });
+      return _mammothPromise;
+    }
+
+    /* Convert a data: URL to ArrayBuffer (for local PDF/DOCX uploads
+       stored as base64 in localStorage). */
+    function dataUrlToArrayBuffer(dataUrl) {
+      var b64 = dataUrl.split(',')[1] || '';
+      var bin = atob(b64);
+      var len = bin.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
+      return bytes.buffer;
+    }
+
+    /* Fetch any source (http, data:, blob:, same-origin path) as ArrayBuffer. */
+    function fetchAsArrayBuffer(src) {
+      if (/^data:/.test(src)) {
+        try { return Promise.resolve(dataUrlToArrayBuffer(src)); }
+        catch (e) { return Promise.reject(e); }
+      }
+      return fetch(src, { credentials: 'omit' }).then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' fetching document');
+        return r.arrayBuffer();
+      });
+    }
+
+    /* State for prev/next navigation across rendered PDF pages. */
+    var _pdfState = { pages: [], current: 1, total: 0 };
+
+    function showRender() {
+      docFrame.style.display = 'none';
+      docFrame.src = 'about:blank';
+      docRender.classList.add('active');
+      docRender.innerHTML = '';
+      docRender.scrollTop = 0;
+    }
+    function showIframe() {
+      docRender.classList.remove('active');
+      docRender.innerHTML = '';
+      docFrame.style.display = '';
+    }
+    function showError(message, downloadable) {
+      showRender();
+      var html = '<div class="doc-error">' +
+        '<strong>Could not render this document inline.</strong><br><br>' +
+        message +
+        (downloadable ? '<br><br>Use the <strong>⬇ DOWNLOAD</strong> button above to save it locally.' : '') +
+        '</div>';
+      docRender.innerHTML = html;
+      docLoading.classList.add('hidden');
+    }
+
+    /* Render a PDF (any source) into the overlay using PDF.js. */
+    function renderPdf(src) {
+      showRender();
+      _pdfState = { pages: [], current: 1, total: 0 };
+      docPageInfo.textContent = 'LOADING…';
+      loadPdfJs()
+        .then(function(pdfjsLib) { return fetchAsArrayBuffer(src).then(function(buf) { return pdfjsLib.getDocument({ data: buf }).promise; }); })
+        .then(function(pdf) {
+          _pdfState.total = pdf.numPages;
+          var wrapWidth = Math.max(320, docRender.clientWidth - 48);
+          var renderChain = Promise.resolve();
+          for (var p = 1; p <= pdf.numPages; p++) {
+            (function(pageNum) {
+              renderChain = renderChain.then(function() {
+                return pdf.getPage(pageNum).then(function(page) {
+                  var v1 = page.getViewport({ scale: 1 });
+                  var scale = Math.min(2.0, wrapWidth / v1.width);
+                  var viewport = page.getViewport({ scale: scale * (window.devicePixelRatio || 1) });
+                  var canvas = document.createElement('canvas');
+                  canvas.className = 'pdfjs-page';
+                  canvas.dataset.page = String(pageNum);
+                  canvas.width = Math.floor(viewport.width);
+                  canvas.height = Math.floor(viewport.height);
+                  canvas.style.width = Math.floor(viewport.width / (window.devicePixelRatio || 1)) + 'px';
+                  docRender.appendChild(canvas);
+                  _pdfState.pages.push(canvas);
+                  return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
+                });
+              });
+            })(p);
+          }
+          return renderChain.then(function() {
+            docPageInfo.textContent = 'PAGE 1 / ' + _pdfState.total;
+            docLoading.classList.add('hidden');
+            /* Update page counter as the user scrolls. */
+            var io = new IntersectionObserver(function(entries) {
+              entries.forEach(function(e) {
+                if (e.isIntersecting) {
+                  var n = parseInt(e.target.dataset.page, 10);
+                  if (n) {
+                    _pdfState.current = n;
+                    docPageInfo.textContent = 'PAGE ' + n + ' / ' + _pdfState.total;
+                  }
+                }
+              });
+            }, { root: docRender, threshold: 0.5 });
+            _pdfState.pages.forEach(function(c) { io.observe(c); });
+          });
+        })
+        .catch(function(err) {
+          console.error('[pdf.js] render failed', err);
+          showError('PDF rendering failed: ' + (err && err.message ? err.message : err), true);
+        });
+    }
+
+    /* Render a DOCX (any source) into the overlay using Mammoth. */
+    function renderDocx(src) {
+      showRender();
+      docPageInfo.textContent = 'LOADING…';
+      var host = document.createElement('div');
+      host.className = 'docx-host';
+      docRender.appendChild(host);
+      loadMammoth()
+        .then(function(mammoth) { return fetchAsArrayBuffer(src).then(function(buf) { return mammoth.convertToHtml({ arrayBuffer: buf }); }); })
+        .then(function(result) {
+          host.innerHTML = result.value || '<p><em>(Document is empty.)</em></p>';
+          docPageInfo.textContent = 'DOCX RENDERED';
+          docLoading.classList.add('hidden');
+        })
+        .catch(function(err) {
+          console.error('[mammoth] render failed', err);
+          showError('DOCX rendering failed: ' + (err && err.message ? err.message : err), true);
+        });
+    }
 
     function openDocViewer(src, type, title) {
       /* ── Derive a clean display title ────────────────────────────
@@ -1277,78 +1487,31 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
       }
       docPageInfo.textContent = '';
 
-      var viewerSrc;
-      var isDataUrl  = /^data:/.test(src);
-      var isBlobUrl  = /^blob:/.test(src);
-      var isFullUrl  = /^https?:\/\//i.test(src);
-
-      if (isDataUrl) {
-        /* Base64 DataURL stored in localStorage after owner upload.
-           The iframe can display PDFs via the browser's native PDF viewer
-           using a data: src directly — no Google Docs wrapper needed.    */
-        if (type === 'docx') {
-          /* DOCX as data URL: Google Docs Viewer needs an accessible HTTP URL.
-             Fall back to triggering a download with a helpful message.      */
-          docPageInfo.textContent = 'DOCX preview not available for local uploads. Click ⬇ to download.';
-          viewerSrc = 'about:blank';
-          /* Auto-trigger download so the user gets the file immediately */
-          setTimeout(function() { docDownload.click(); }, 400);
-        } else {
-          /* PDF or other: display inline via native PDF viewer */
-          viewerSrc = src;
-          docPageInfo.textContent = 'PDF loaded from local storage';
-        }
-      } else if (isBlobUrl) {
-        /* Session blob URL (legacy path — shouldn't happen with v6 upload system
-           but kept for backward compatibility with old uploads in the same session) */
-        if (type === 'pdf') {
-          viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
-        } else {
-          viewerSrc = 'about:blank';
-          docPageInfo.textContent = 'DOCX preview not available. Click ⬇ to download.';
-          setTimeout(function() { docDownload.click(); }, 400);
-        }
-      } else if (type === 'pdf') {
-        if (isFullUrl) {
-          /* Cloudinary / any external PDF — use Google Docs viewer
-             because cross-origin iframes block native browser PDF viewing */
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
-          docPageInfo.textContent = 'Tip: Loading via Google Docs viewer…';
-        } else {
-          /* Same-origin local PDF — native browser viewer works fine */
-          viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
-        }
-      } else if (type === 'docx') {
-        if (isFullUrl) {
-          /* Cloudinary DOCX — pass the full URL directly to Google Docs viewer */
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
-        } else {
-          /* Local DOCX — build the absolute URL for Google Docs viewer */
-          var base = window.location.origin +
-            window.location.pathname.replace(/\/[^/]*$/, '/');
-          var fullUrl = base + src;
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fullUrl) + '&embedded=true';
-        }
-        docPageInfo.textContent = 'Tip: Google Docs viewer — may take a moment to load';
-      } else {
-        /* DWG and other raw files — open directly / download prompt */
-        viewerSrc = isFullUrl ? src : (window.location.origin +
-          window.location.pathname.replace(/\/[^/]*$/, '/') + src);
-      }
-
-      docFrame.src = '';
-      setTimeout(function() {
-        docFrame.src = viewerSrc;
-      }, 80);
-
+      /* ── Render natively in-page: PDF.js for PDFs, Mammoth for DOCX.
+         No external Google viewer. Works for Cloudinary, same-origin,
+         data: URLs and blob: URLs alike, because we fetch the bytes
+         ourselves and hand them to a JS renderer.                    */
       docViewer.classList.add('open');
+      if (type === 'pdf') {
+        renderPdf(src);
+      } else if (type === 'docx') {
+        renderDocx(src);
+      } else {
+        /* DWG and other raw files — open in a new tab / let download work. */
+        showError('Inline preview is not available for this file type.', true);
+      }
       document.body.style.overflow = 'hidden';
     }
 
     function closeDocViewer() {
       docViewer.classList.remove('open');
       document.body.style.overflow = '';
-      setTimeout(function() { docFrame.src = ''; }, 300);
+      setTimeout(function() {
+        docFrame.src = '';
+        docRender.innerHTML = '';
+        docRender.classList.remove('active');
+        _pdfState = { pages: [], current: 1, total: 0 };
+      }, 300);
     }
 
     docFrame.addEventListener('load', function() {
@@ -1357,22 +1520,19 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
 
     docClose.addEventListener('click', closeDocViewer);
 
-    // Prev / Next page (PDF only — navigates via hash)
-    var currentPage = 1;
-    docPrev.addEventListener('click', function() {
-      if (currentPage > 1) {
-        currentPage--;
-        var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-        docFrame.src = src;
-        docPageInfo.textContent = 'PAGE ' + currentPage;
+    /* Prev / Next now scroll to the matching <canvas> from PDF.js. */
+    function scrollToPdfPage(n) {
+      if (!_pdfState.total) return;
+      n = Math.max(1, Math.min(_pdfState.total, n));
+      var canvas = _pdfState.pages[n - 1];
+      if (canvas) {
+        canvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        _pdfState.current = n;
+        docPageInfo.textContent = 'PAGE ' + n + ' / ' + _pdfState.total;
       }
-    });
-    docNext.addEventListener('click', function() {
-      currentPage++;
-      var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-      docFrame.src = src;
-      docPageInfo.textContent = 'PAGE ' + currentPage;
-    });
+    }
+    docPrev.addEventListener('click', function() { scrollToPdfPage(_pdfState.current - 1); });
+    docNext.addEventListener('click', function() { scrollToPdfPage(_pdfState.current + 1); });
 
     // Wire all READ PAPER / VIEW DRAWING buttons
     // Uses event delegation on card-actions to avoid _docWired stale closure bugs.
