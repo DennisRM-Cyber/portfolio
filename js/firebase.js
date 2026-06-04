@@ -448,7 +448,7 @@
       var handler = function (snap) { callback(snap.val() || {}); };
       ref.on('value', handler);
       return function () { ref.off('value', handler); };
-    }
+    },
 
 
     /* ════════════════════════════════════════════════════════
