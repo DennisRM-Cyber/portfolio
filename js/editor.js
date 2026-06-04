@@ -1163,13 +1163,22 @@ window.FormatEngine = (function () {
   }
 
   /* ── selectionchange: show bar + sync controls ── */
-  document.addEventListener('selectionchange', function() {
+  /* rAF-throttled handler: selectionchange fires on every caret move
+     and continuously while dragging — coalescing to one run per frame
+     eliminates the Word-like lag while typing or holding shift+arrow. */
+  var _selRAF = 0;
+  var _lastSelKey = '';
+  var _hideTimer  = 0;
+  function handleSelectionChange() {
+    _selRAF = 0;
     if (!editMode) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-      setTimeout(function() {
+      if (_hideTimer) clearTimeout(_hideTimer);
+      _hideTimer = setTimeout(function() {
+        _hideTimer = 0;
         if (!formatBar.matches(':hover')) hideFormatBar();
-      }, 120);
+      }, 150);
       return;
     }
     /* Check selection is inside a contenteditable */
@@ -1183,12 +1192,23 @@ window.FormatEngine = (function () {
     }
     if (!inEdit) return;
 
-    savedRange = sel.getRangeAt(0).cloneRange();
-    var rect = sel.getRangeAt(0).getBoundingClientRect();
-    showFormatBar(rect.left + rect.width / 2, rect.top);
+    var range = sel.getRangeAt(0);
+    savedRange = range.cloneRange();
+
+    /* Skip layout work if selection bounds + text length didn't change */
+    var key = sel.toString().length + ':' + range.startOffset + ':' + range.endOffset;
+    if (key !== _lastSelKey || !formatBar.classList.contains('visible')) {
+      _lastSelKey = key;
+      var rect = range.getBoundingClientRect();
+      showFormatBar(rect.left + rect.width / 2, rect.top);
+    }
 
     /* Sync toolbar state to reflect selected text */
     syncFmtBarControls();
+  }
+  document.addEventListener('selectionchange', function() {
+    if (_selRAF) return;
+    _selRAF = requestAnimationFrame(handleSelectionChange);
   });
 
   formatBar.addEventListener('mousedown', function() {
@@ -1586,7 +1606,9 @@ window.FormatEngine = (function () {
        ────────────────────────────────────────────────────────────────── */
     var DOC_SIZE_LIMIT_MB = 4; /* 4 MB base64 ≈ 5.3 MB encoded — safe for localStorage */
     document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
-      if (btn._uploadDocWired || !btn.classList.contains('card-btn--primary')) return;
+      if (btn._uploadDocWired || !btn.classList.contains("card-btn--primary")) return;
+      /* FIX: skip cards owned by projects.html doc-id upload system (avoids duplicate upload buttons) */
+      if (btn.closest && btn.closest(".card-actions[data-doc-id]")) return;
       btn._uploadDocWired = true;
       var assetPath = btn.getAttribute('data-doc-src');
       /* Skip buttons that already point to a stored data URL or blob */

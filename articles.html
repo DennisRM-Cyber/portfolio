@@ -875,10 +875,10 @@
       </div>
       <!-- ROW 2: Character + paragraph formatting -->
       <div class="rfb-row">
-        <button data-cmd="bold"               title="Bold (Ctrl+B)"><b>B</b></button>
-        <button data-cmd="italic"             title="Italic (Ctrl+I)"><i>I</i></button>
-        <button data-cmd="underline"          title="Underline (Ctrl+U)"><u>U</u></button>
-        <button data-cmd="strikeThrough"      title="Strikethrough"><s>S</s></button>
+        <button id="rfb-btn-bold"      data-cmd="bold"          title="Bold (Ctrl+B)"><b>B</b></button>
+        <button id="rfb-btn-italic"    data-cmd="italic"        title="Italic (Ctrl+I)"><i>I</i></button>
+        <button id="rfb-btn-underline" data-cmd="underline"     title="Underline (Ctrl+U)"><u>U</u></button>
+        <button id="rfb-btn-strike"    data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
         <button data-cmd="superscript"        title="Superscript">x<sup>2</sup></button>
         <button data-cmd="subscript"          title="Subscript">x<sub>2</sub></button>
         <div class="rfb-divider"></div>
@@ -1162,13 +1162,16 @@
       FormatEngine.syncControls(rfbBarControls, rfbCurrentSizeRef);
     }
 
-    /* selectionchange — fires whenever the caret or selection moves
-       inside the article reader while in edit mode                  */
-    document.addEventListener('selectionchange', function() {
+    /* selectionchange — rAF-throttled so caret movement and selection
+       drags don't lag the editor (was running getComputedStyle +
+       queryCommandState x4 + DOM walk on every keystroke).            */
+    var _rfbRAF = 0;
+    var _rfbLastKey = '';
+    function handleRfbSelectionChange() {
+      _rfbRAF = 0;
       if (!readerEditMode) return;
       var sel = window.getSelection();
       if (!sel || sel.isCollapsed) return;
-      /* Make sure selection is inside the reader body */
       var node = sel.anchorNode;
       var inReader = false;
       while (node) {
@@ -1178,8 +1181,16 @@
         node = node.parentNode;
       }
       if (!inReader) return;
-      rfbSavedRange = sel.getRangeAt(0).cloneRange();
+      var range = sel.getRangeAt(0);
+      rfbSavedRange = range.cloneRange();
+      var key = sel.toString().length + ':' + range.startOffset + ':' + range.endOffset;
+      if (key === _rfbLastKey) return;
+      _rfbLastKey = key;
       syncRfbControls();
+    }
+    document.addEventListener('selectionchange', function() {
+      if (_rfbRAF) return;
+      _rfbRAF = requestAnimationFrame(handleRfbSelectionChange);
     });
 
     // Save range on any mousedown inside the reader format bar
