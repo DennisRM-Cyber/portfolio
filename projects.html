@@ -1411,8 +1411,61 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
         })
         .catch(function(err) {
           console.error('[pdf.js] render failed', err);
-          showError('PDF rendering failed: ' + (err && err.message ? err.message : err), true);
+          var msg = err && err.message ? err.message : String(err);
+          /* Cloudinary returns 401 for PDF/ZIP delivery when the account
+             setting "PDF and ZIP files delivery" is disabled (default on
+             free accounts). Fall back to: (a) try the browser's native
+             PDF viewer via <iframe src=...#toolbar=0>, (b) if that also
+             fails the user can use the DOWNLOAD button.  We also surface
+             the exact fix in the error message.                          */
+          if (/401|403/.test(msg) && /^https?:\/\/res\.cloudinary\.com\//i.test(src)) {
+            /* Try native browser PDF viewer as a fallback. */
+            try {
+              showRender();
+              var inlineUrl = src.replace('/upload/', '/upload/fl_inline/');
+              var f = document.createElement('iframe');
+              f.src = inlineUrl;
+              f.style.cssText = 'width:100%;height:100%;border:0;background:#fff;';
+              f.setAttribute('title', 'Document preview');
+              docRender.appendChild(f);
+              docPageInfo.textContent = 'NATIVE VIEWER';
+              docLoading.classList.add('hidden');
+              /* If the iframe itself fails to load anything renderable
+                 within 4 s, show the actionable error.                    */
+              setTimeout(function() {
+                try {
+                  var blank = !f.contentDocument || !f.contentDocument.body
+                              || f.contentDocument.body.childElementCount === 0;
+                  if (blank) showPdfBlockedError();
+                } catch (e) { /* cross-origin — assume it loaded */ }
+              }, 4000);
+              return;
+            } catch (e) { /* fall through to error */ }
+            showPdfBlockedError();
+            return;
+          }
+          showError('PDF rendering failed: ' + msg, true);
         });
+    }
+
+    /* Actionable error for the Cloudinary PDF/ZIP-delivery restriction. */
+    function showPdfBlockedError() {
+      showRender();
+      docRender.innerHTML =
+        '<div class="doc-error">' +
+          '<strong>This PDF can\'t be previewed in the browser.</strong><br><br>' +
+          'Your storage provider (Cloudinary) is blocking direct PDF delivery ' +
+          '(HTTP 401). This is a one-time account setting.<br><br>' +
+          '<strong>Fix it in 10 seconds:</strong><br>' +
+          '1. Open <a href="https://console.cloudinary.com/settings/security" ' +
+              'target="_blank" rel="noopener" style="color:#4ea1ff;text-decoration:underline;">' +
+              'Cloudinary Console → Settings → Security</a><br>' +
+          '2. Under <em>Restricted media types</em>, <strong>uncheck</strong> ' +
+              '"PDF and ZIP files delivery".<br>' +
+          '3. Save, then reload this page.<br><br>' +
+          'Meanwhile, use the <strong>⬇ DOWNLOAD</strong> button above to save the file.' +
+        '</div>';
+      docLoading.classList.add('hidden');
     }
 
     /* Render a DOCX (any source) into the overlay using Mammoth. */
