@@ -353,10 +353,6 @@
     }
 
     /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-    /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
-       defined once in firebase.js, eliminating duplication.         */
-        /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
     /* Thin wrapper — delegates to the shared PF.requireFirebaseAuth
        defined once in firebase.js, eliminating duplication.         */
     function requireFirebaseAuth(onAuthenticated) {
@@ -463,17 +459,22 @@
     function loadCvUrl() {
       if (!window.PF) return;
       PF.loadEdits(function (edits) {
-        var url = edits['doc-cv'];
+        var url  = edits['doc-cv'];
+        /* Companion key saved alongside the URL so the download keeps the real filename */
+        var name = edits['doc-cv-name'] || '';
         if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-          applyCvUrl(url);
+          applyCvUrl(url, name);
         }
       });
     }
 
-    function applyCvUrl(url) {
+    function applyCvUrl(url, filename) {
       if (!cvBtn) return;
       cvBtn.setAttribute('href', url);
-      cvBtn.setAttribute('download', '');
+      /* Set a named download attribute so the browser saves the file with the
+         real CV filename instead of the Cloudinary random public ID.
+         Falls back to a sensible default so the attribute is never empty.   */
+      cvBtn.setAttribute('download', filename || 'Rubui-Mwangi-CV.pdf');
       cvBtn.textContent = 'DOWNLOAD CV';
     }
 
@@ -482,9 +483,13 @@
     /* ── CLOUDINARY RAW UPLOAD ──────────────────────────────────── */
     function uploadRawToCloudinary(file, onSuccess, onError) {
       var fd = new FormData();
-      fd.append('file',          file);
-      fd.append('upload_preset', CLD_PRESET);
-      fd.append('folder',        'portfolio/docs');
+      fd.append('file',            file);
+      fd.append('upload_preset',   CLD_PRESET);
+      fd.append('folder',          'portfolio/docs');
+      /* Preserve the original filename (e.g. "Rubui-Mwangi-CV.pdf") so
+         downloads use the real name instead of Cloudinary's random public ID. */
+      fd.append('use_filename',    'true');
+      fd.append('unique_filename', 'true');
       fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/raw/upload', {
         method: 'POST', body: fd
       })
@@ -543,15 +548,18 @@
 
         uploadRawToCloudinary(file,
           function (url) {
-            PF.saveEdit('doc-cv', url)
+            var fileName = file.name;   /* real OS filename e.g. "Rubui-Mwangi-CV.pdf" */
+            /* Save URL and filename together so every page load restores the
+               correct download name, not just the Cloudinary random public ID. */
+            PF.saveAllEdits({ 'doc-cv': url, 'doc-cv-name': fileName })
               .then(function () {
                 document.body.removeChild(toast);
-                applyCvUrl(url);
+                applyCvUrl(url, fileName);
               })
               .catch(function (err) {
                 document.body.removeChild(toast);
-                applyCvUrl(url);
-                alert('CV uploaded but Firebase save failed: ' + err.message + 'The link will work this session but may not persist.');
+                applyCvUrl(url, fileName);
+                alert('CV uploaded but Firebase save failed: ' + err.message + ' The link will work this session but may not persist.');
               });
           },
           function (err) {

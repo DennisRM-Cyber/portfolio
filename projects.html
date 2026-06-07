@@ -1325,9 +1325,16 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
     /* ── CLOUDINARY RAW UPLOAD (PDFs, DOCX, DWG, any file) ─────── */
     function uploadRawToCloudinary(file, onSuccess, onError) {
       var fd = new FormData();
-      fd.append('file',           file);
-      fd.append('upload_preset',  CLD_PRESET);
-      fd.append('folder',         'portfolio/docs');
+      fd.append('file',            file);
+      fd.append('upload_preset',   CLD_PRESET);
+      fd.append('folder',          'portfolio/docs');
+      /* Preserve the original OS filename as the Cloudinary public_id.
+         Without this Cloudinary assigns a random ID (e.g. bq7ylioahhfgsn2nry7e),
+         so downloads and viewer titles would show a meaningless hash instead of
+         the real document name.  unique_filename=true appends a short suffix only
+         if the same name already exists in the folder, avoiding overwrites.      */
+      fd.append('use_filename',    'true');
+      fd.append('unique_filename', 'true');
       /* Use the /raw/upload endpoint — works for all non-image files */
       fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/raw/upload', {
         method: 'POST', body: fd
@@ -1364,15 +1371,21 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
           el.setAttribute('data-doc-src', url);
           /* Update the viewer title to use the real uploaded filename */
           if (displayName) el.setAttribute('data-doc-title', displayName);
-          /* Re-wire the doc viewer click since the src changed */
-          el._docWired = false;
+          /* NOTE: _docWired is intentionally NOT reset here.
+             wireDocBtns listeners already read data-doc-src at click-time,
+             so they pick up the new URL automatically without re-wiring.
+             Resetting _docWired and calling wireDocBtns() would attach a
+             second identical listener, causing the file to open in two
+             browser tabs on every click.                                  */
         }
         if (el.hasAttribute('href')) {
           el.setAttribute('href', url);
+          /* Set the named download attribute so the browser saves the file
+             with the real document name, not the Cloudinary-generated
+             random public ID (e.g. bq7ylioahhfgsn2nry7e.pdf).           */
+          if (displayName) el.setAttribute('download', displayName);
         }
       });
-      /* Re-run wireDocBtns so the viewer picks up the new URL */
-      if (typeof window.wireDocBtns === 'function') window.wireDocBtns();
     }
 
     /* ── LOAD ALL SAVED DOC URLS FROM FIREBASE ON PAGE LOAD ─────── */

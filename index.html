@@ -349,7 +349,7 @@
 
       <div class="hero__actions">
         <a href="projects.html" class="btn btn--primary" data-i18n="hero.btn1">VIEW PROJECTS</a>
-        <a href="#" class="btn btn--ghost" data-i18n="hero.btn2">DOWNLOAD CV</a>
+        <a href="#" id="hero-cv-btn" class="btn btn--ghost" data-i18n="hero.btn2">DOWNLOAD CV</a>
       </div>
     </div>
   </header>
@@ -469,6 +469,25 @@
   <script src="js/firebase.js"></script>
   <script src="js/main.js"></script>
   <script src="js/editor.js"></script>
+
+  <script>
+  /* ── HERO CV BUTTON — sync with Firebase ───────────────────────────────
+     Reads the same doc-cv / doc-cv-name keys that about.html writes so
+     the homepage DOWNLOAD CV button always points to the real uploaded CV,
+     not a dead "#" placeholder.                                           */
+  (function () {
+    var btn = document.getElementById('hero-cv-btn');
+    if (!btn || !window.PF) return;
+    PF.loadEdits(function (edits) {
+      var url  = edits['doc-cv'];
+      var name = edits['doc-cv-name'] || 'Rubui-Mwangi-CV.pdf';
+      if (url && typeof url === 'string' && url.indexOf('http') === 0) {
+        btn.setAttribute('href', url);
+        btn.setAttribute('download', name);
+      }
+    });
+  })();
+  </script>
 
 </body>
 </html>
