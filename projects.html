@@ -445,172 +445,9 @@
     .upload-doc-btn:hover { background: rgba(240,165,0,0.15); border-color: var(--amber); }
     body.owner-unlocked .upload-doc-btn { display: inline-flex !important; }
 
-    /* ── IN-PAGE DOCUMENT VIEWER ───────────────── */
-    .doc-viewer-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 600;
-      background: rgba(10, 16, 36, 0.94);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s;
-      display: flex;
-      flex-direction: column;
-    }
-    .doc-viewer-overlay.open {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .doc-viewer__topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 24px;
-      border-bottom: 1px solid rgba(240,165,0,0.18);
-      background: rgba(5,9,22,0.98);
-      flex-shrink: 0;
-      gap: 16px;
-    }
-    .doc-viewer__title {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      color: var(--amber);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .doc-viewer__controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .doc-viewer__page-info {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: 0.1em;
-      white-space: nowrap;
-      padding: 0 8px;
-    }
-    .doc-viewer__btn {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 0.12em;
-      padding: 7px 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(240,165,0,0.25);
-      background: transparent;
-      color: var(--amber);
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      text-decoration: none;
-    }
-    .doc-viewer__btn:hover {
-      background: rgba(240,165,0,0.12);
-      border-color: var(--amber);
-      color: var(--white);
-    }
-    .doc-viewer__btn--close {
-      border-color: rgba(248,113,113,0.3);
-      color: #f87171;
-    }
-    .doc-viewer__btn--close:hover {
-      background: rgba(248,113,113,0.12);
-      border-color: #f87171;
-      color: #f87171;
-    }
-
-    .doc-viewer__frame-wrap {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-    .doc-viewer__frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #f5f5f0;
-    }
-    /* Native in-page renderer (PDF.js canvases or Mammoth HTML).
-       Replaces the Google Docs viewer iframe for cross-origin docs. */
-    .doc-viewer__render {
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background: #2a2a2a;
-      padding: 24px 0;
-      display: none;
-      scroll-behavior: smooth;
-    }
-    .doc-viewer__render.active { display: block; }
-    .doc-viewer__render canvas.pdfjs-page {
-      display: block;
-      margin: 0 auto 18px;
-      max-width: calc(100% - 32px);
-      height: auto;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.45);
-      background: #fff;
-    }
-    .doc-viewer__render .docx-host {
-      max-width: 880px;
-      margin: 0 auto;
-      background: #fff;
-      color: #111;
-      padding: 56px 72px;
-      font-family: Georgia, 'Times New Roman', serif;
-      line-height: 1.6;
-      font-size: 15px;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.45);
-      border-radius: 2px;
-    }
-    .doc-viewer__render .docx-host h1,
-    .doc-viewer__render .docx-host h2,
-    .doc-viewer__render .docx-host h3 { font-family: Georgia, serif; color: #000; margin: 1.2em 0 0.5em; }
-    .doc-viewer__render .docx-host p  { margin: 0 0 1em; }
-    .doc-viewer__render .docx-host table { border-collapse: collapse; margin: 1em 0; }
-    .doc-viewer__render .docx-host table td,
-    .doc-viewer__render .docx-host table th { border: 1px solid #999; padding: 6px 10px; }
-    .doc-viewer__render .docx-host img { max-width: 100%; height: auto; }
-    .doc-viewer__render .doc-error {
-      max-width: 520px; margin: 80px auto; padding: 24px 28px;
-      background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.35);
-      border-radius: 6px; color: #f5d0d0; font-family: var(--font-mono);
-      font-size: 11px; line-height: 1.7; letter-spacing: 0.04em;
-    }
-    .doc-viewer__render .doc-error a { color: #f87171; }
-    .doc-viewer__loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      background: rgba(5,9,22,0.97);
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      transition: opacity 0.3s;
-    }
-    .doc-viewer__loading.hidden { opacity: 0; pointer-events: none; }
-    .doc-viewer__spinner {
-      width: 28px;
-      height: 28px;
-      border: 2px solid rgba(240,165,0,0.2);
-      border-top-color: var(--amber);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    /* In-page document viewer removed — READ buttons now hand the file
+       directly to the OS / browser via window.open(). PDFs render in a new
+       tab; .docx/.dwg/.xlsx download and open in the user's default app. */
 
     /* Video modal */
     .video-overlay {
@@ -686,10 +523,6 @@
       .project-grid {
         grid-template-columns: 1fr;
       }
-      .doc-viewer__topbar {
-        flex-wrap: wrap;
-        gap: 10px;
-      }
     }
   </style>
 <style>
@@ -716,11 +549,6 @@ body.contrast-light .project-card--academic:hover{ border-color: rgba(138,90,0,0
 body.contrast-light .project-add-card { border-color: rgba(13,110,110,0.28) !important; }
 body.contrast-light .project-add-card:hover { background: rgba(13,110,110,0.04) !important; border-color: #0d6e6e !important; }
 body.contrast-light .project-add-card__label { color: #4a556e !important; }
-body.contrast-light .doc-viewer__topbar { background: rgba(255,255,255,0.99) !important; border-color: rgba(14,20,32,0.12) !important; }
-body.contrast-light .doc-viewer__title  { color: #0d6e6e !important; }
-body.contrast-light .doc-viewer__btn    { border-color: rgba(13,110,110,0.3) !important; color: #0d6e6e !important; }
-body.contrast-light .doc-viewer__btn:hover { background: rgba(13,110,110,0.08) !important; }
-body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35) !important; color: #a03010 !important; }
 </style>
 </head>
 
@@ -1169,31 +997,6 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
 
 
   <!-- ═══════════════════════════════════════════
-       IN-PAGE DOCUMENT VIEWER OVERLAY
-  ═══════════════════════════════════════════ -->
-  <div class="doc-viewer-overlay" id="doc-viewer" role="dialog" aria-modal="true" aria-label="Document viewer">
-    <div class="doc-viewer__topbar">
-      <span class="doc-viewer__title" id="doc-viewer-title">Document</span>
-      <div class="doc-viewer__controls">
-        <span class="doc-viewer__page-info" id="doc-page-info"></span>
-        <button class="doc-viewer__btn" id="doc-prev">← PREV</button>
-        <button class="doc-viewer__btn" id="doc-next">NEXT →</button>
-        <a  class="doc-viewer__btn" id="doc-download" download>⬇ DOWNLOAD</a>
-        <button class="doc-viewer__btn doc-viewer__btn--close" id="doc-close">✕ CLOSE</button>
-      </div>
-    </div>
-    <div class="doc-viewer__frame-wrap">
-      <div class="doc-viewer__loading" id="doc-loading">
-        <div class="doc-viewer__spinner"></div>
-        <span>LOADING DOCUMENT…</span>
-      </div>
-      <iframe class="doc-viewer__frame" id="doc-frame" title="Document viewer"></iframe>
-      <div class="doc-viewer__render" id="doc-render" tabindex="0" aria-label="Document content"></div>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
        VIDEO OVERLAY
   ═══════════════════════════════════════════ -->
   <div class="video-overlay" id="video-overlay" role="dialog" aria-modal="true" aria-label="Video player">
@@ -1233,7 +1036,7 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
   /* ═══════════════════════════════════════════════
      projects.js — inline, page-specific scripts
      1. Category filter bar
-     2. In-page document viewer (PDF + DOCX via Google Docs)
+     2. Document open handler (hands files to the OS / browser)
      3. Video overlay (YouTube + local)
      4. Add-project cards (new project template)
   ═══════════════════════════════════════════════ */
@@ -1262,346 +1065,23 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
     });
 
 
-    /* ── 2. IN-PAGE DOCUMENT VIEWER ────────────── */
-    var docViewer   = document.getElementById('doc-viewer');
-    var docFrame    = document.getElementById('doc-frame');
-    var docTitle    = document.getElementById('doc-viewer-title');
-    var docLoading  = document.getElementById('doc-loading');
-    var docClose    = document.getElementById('doc-close');
-    var docDownload = document.getElementById('doc-download');
-    var docPageInfo = document.getElementById('doc-page-info');
-    var docPrev     = document.getElementById('doc-prev');
-    var docNext     = document.getElementById('doc-next');
-    var docRender   = document.getElementById('doc-render');
-
-    /* ── Lazy-load PDF.js and Mammoth from CDN on first use ──
-       Cloudinary serves docs with `Access-Control-Allow-Origin: *`, so
-       both libs can fetch the file directly — no server proxy needed. */
-    var _pdfjsPromise = null;
-    function loadPdfJs() {
-      if (_pdfjsPromise) return _pdfjsPromise;
-      _pdfjsPromise = new Promise(function(resolve, reject) {
-        var s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        s.onload = function() {
-          var lib = window['pdfjsLib'] || window['pdfjs-dist/build/pdf'];
-          if (!lib) { reject(new Error('pdf.js not exposed on window')); return; }
-          lib.GlobalWorkerOptions.workerSrc =
-            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-          resolve(lib);
-        };
-        s.onerror = function() { reject(new Error('Failed to load pdf.js')); };
-        document.head.appendChild(s);
-      });
-      return _pdfjsPromise;
-    }
-    var _mammothPromise = null;
-    function loadMammoth() {
-      if (_mammothPromise) return _mammothPromise;
-      _mammothPromise = new Promise(function(resolve, reject) {
-        var s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
-        s.onload = function() {
-          if (window.mammoth) resolve(window.mammoth);
-          else reject(new Error('mammoth not exposed on window'));
-        };
-        s.onerror = function() { reject(new Error('Failed to load mammoth.js')); };
-        document.head.appendChild(s);
-      });
-      return _mammothPromise;
-    }
-
-    /* Convert a data: URL to ArrayBuffer (for local PDF/DOCX uploads
-       stored as base64 in localStorage). */
-    function dataUrlToArrayBuffer(dataUrl) {
-      var b64 = dataUrl.split(',')[1] || '';
-      var bin = atob(b64);
-      var len = bin.length;
-      var bytes = new Uint8Array(len);
-      for (var i = 0; i < len; i++) bytes[i] = bin.charCodeAt(i);
-      return bytes.buffer;
-    }
-
-    /* Fetch any source (http, data:, blob:, same-origin path) as ArrayBuffer. */
-    function fetchAsArrayBuffer(src) {
-      if (/^data:/.test(src)) {
-        try { return Promise.resolve(dataUrlToArrayBuffer(src)); }
-        catch (e) { return Promise.reject(e); }
-      }
-      return fetch(src, { credentials: 'omit' }).then(function(r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status + ' fetching document');
-        return r.arrayBuffer();
-      });
-    }
-
-    /* State for prev/next navigation across rendered PDF pages. */
-    var _pdfState = { pages: [], current: 1, total: 0 };
-
-    function showRender() {
-      docFrame.style.display = 'none';
-      docFrame.src = 'about:blank';
-      docRender.classList.add('active');
-      docRender.innerHTML = '';
-      docRender.scrollTop = 0;
-    }
-    function showIframe() {
-      docRender.classList.remove('active');
-      docRender.innerHTML = '';
-      docFrame.style.display = '';
-    }
-    function showError(message, downloadable) {
-      showRender();
-      var html = '<div class="doc-error">' +
-        '<strong>Could not render this document inline.</strong><br><br>' +
-        message +
-        (downloadable ? '<br><br>Use the <strong>⬇ DOWNLOAD</strong> button above to save it locally.' : '') +
-        '</div>';
-      docRender.innerHTML = html;
-      docLoading.classList.add('hidden');
-    }
-
-    /* Render a PDF (any source) into the overlay using PDF.js. */
-    function renderPdf(src) {
-      showRender();
-      _pdfState = { pages: [], current: 1, total: 0 };
-      docPageInfo.textContent = 'LOADING…';
-      loadPdfJs()
-        .then(function(pdfjsLib) { return fetchAsArrayBuffer(src).then(function(buf) { return pdfjsLib.getDocument({ data: buf }).promise; }); })
-        .then(function(pdf) {
-          _pdfState.total = pdf.numPages;
-          var wrapWidth = Math.max(320, docRender.clientWidth - 48);
-          var renderChain = Promise.resolve();
-          for (var p = 1; p <= pdf.numPages; p++) {
-            (function(pageNum) {
-              renderChain = renderChain.then(function() {
-                return pdf.getPage(pageNum).then(function(page) {
-                  var v1 = page.getViewport({ scale: 1 });
-                  var scale = Math.min(2.0, wrapWidth / v1.width);
-                  var viewport = page.getViewport({ scale: scale * (window.devicePixelRatio || 1) });
-                  var canvas = document.createElement('canvas');
-                  canvas.className = 'pdfjs-page';
-                  canvas.dataset.page = String(pageNum);
-                  canvas.width = Math.floor(viewport.width);
-                  canvas.height = Math.floor(viewport.height);
-                  canvas.style.width = Math.floor(viewport.width / (window.devicePixelRatio || 1)) + 'px';
-                  docRender.appendChild(canvas);
-                  _pdfState.pages.push(canvas);
-                  return page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
-                });
-              });
-            })(p);
-          }
-          return renderChain.then(function() {
-            docPageInfo.textContent = 'PAGE 1 / ' + _pdfState.total;
-            docLoading.classList.add('hidden');
-            /* Update page counter as the user scrolls. */
-            var io = new IntersectionObserver(function(entries) {
-              entries.forEach(function(e) {
-                if (e.isIntersecting) {
-                  var n = parseInt(e.target.dataset.page, 10);
-                  if (n) {
-                    _pdfState.current = n;
-                    docPageInfo.textContent = 'PAGE ' + n + ' / ' + _pdfState.total;
-                  }
-                }
-              });
-            }, { root: docRender, threshold: 0.5 });
-            _pdfState.pages.forEach(function(c) { io.observe(c); });
-          });
-        })
-        .catch(function(err) {
-          console.error('[pdf.js] render failed', err);
-          var msg = err && err.message ? err.message : String(err);
-          /* Cloudinary returns 401 for PDF/ZIP delivery when the account
-             setting "PDF and ZIP files delivery" is disabled (default on
-             free accounts). Fall back to: (a) try the browser's native
-             PDF viewer via <iframe src=...#toolbar=0>, (b) if that also
-             fails the user can use the DOWNLOAD button.  We also surface
-             the exact fix in the error message.                          */
-          if (/401|403/.test(msg) && /^https?:\/\/res\.cloudinary\.com\//i.test(src)) {
-            /* Try native browser PDF viewer as a fallback. */
-            try {
-              showRender();
-              var inlineUrl = src.replace('/upload/', '/upload/fl_inline/');
-              var f = document.createElement('iframe');
-              f.src = inlineUrl;
-              f.style.cssText = 'width:100%;height:100%;border:0;background:#fff;';
-              f.setAttribute('title', 'Document preview');
-              docRender.appendChild(f);
-              docPageInfo.textContent = 'NATIVE VIEWER';
-              docLoading.classList.add('hidden');
-              /* If the iframe itself fails to load anything renderable
-                 within 4 s, show the actionable error.                    */
-              setTimeout(function() {
-                try {
-                  var blank = !f.contentDocument || !f.contentDocument.body
-                              || f.contentDocument.body.childElementCount === 0;
-                  if (blank) showPdfBlockedError();
-                } catch (e) { /* cross-origin — assume it loaded */ }
-              }, 4000);
-              return;
-            } catch (e) { /* fall through to error */ }
-            showPdfBlockedError();
-            return;
-          }
-          showError('PDF rendering failed: ' + msg, true);
-        });
-    }
-
-    /* Actionable error for the Cloudinary PDF/ZIP-delivery restriction. */
-    function showPdfBlockedError() {
-      showRender();
-      docRender.innerHTML =
-        '<div class="doc-error">' +
-          '<strong>This PDF can\'t be previewed in the browser.</strong><br><br>' +
-          'Your storage provider (Cloudinary) is blocking direct PDF delivery ' +
-          '(HTTP 401). This is a one-time account setting.<br><br>' +
-          '<strong>Fix it in 10 seconds:</strong><br>' +
-          '1. Open <a href="https://console.cloudinary.com/settings/security" ' +
-              'target="_blank" rel="noopener" style="color:#4ea1ff;text-decoration:underline;">' +
-              'Cloudinary Console → Settings → Security</a><br>' +
-          '2. Under <em>Restricted media types</em>, <strong>uncheck</strong> ' +
-              '"PDF and ZIP files delivery".<br>' +
-          '3. Save, then reload this page.<br><br>' +
-          'Meanwhile, use the <strong>⬇ DOWNLOAD</strong> button above to save the file.' +
-        '</div>';
-      docLoading.classList.add('hidden');
-    }
-
-    /* Render a DOCX (any source) into the overlay using Mammoth. */
-    function renderDocx(src) {
-      showRender();
-      docPageInfo.textContent = 'LOADING…';
-      var host = document.createElement('div');
-      host.className = 'docx-host';
-      docRender.appendChild(host);
-      loadMammoth()
-        .then(function(mammoth) { return fetchAsArrayBuffer(src).then(function(buf) { return mammoth.convertToHtml({ arrayBuffer: buf }); }); })
-        .then(function(result) {
-          host.innerHTML = result.value || '<p><em>(Document is empty.)</em></p>';
-          docPageInfo.textContent = 'DOCX RENDERED';
-          docLoading.classList.add('hidden');
-        })
-        .catch(function(err) {
-          console.error('[mammoth] render failed', err);
-          showError('DOCX rendering failed: ' + (err && err.message ? err.message : err), true);
-        });
-    }
-
-    function openDocViewer(src, type, title) {
-      /* ── Derive a clean display title ────────────────────────────
-         Priority: explicit title arg → filename decoded from the URL
-         → fallback 'Document'.  This means uploaded files always show
-         their real filename in the viewer header bar.               */
-      var displayTitle = title;
-      if (!displayTitle || displayTitle === 'Document') {
-        try {
-          /* For data: and blob: URLs the path is meaningless — keep the explicit title */
-          if (!/^(data:|blob:)/.test(src)) {
-            var seg = src.split('/').pop().split('?')[0];
-            var decoded = decodeURIComponent(seg);
-            if (decoded && decoded !== '#') displayTitle = decoded;
-          }
-        } catch (e) {}
-      }
-      docTitle.textContent = displayTitle || 'Document';
-      docLoading.classList.remove('hidden');
-      /* ── Build a download URL that preserves the original filename ──
-         Browsers IGNORE the HTML `download` attribute for cross-origin
-         links (e.g. Cloudinary), so we ask Cloudinary itself to send
-         `Content-Disposition: attachment; filename="<original>"` via the
-         `fl_attachment:<name>` URL flag injected right after `/upload/`.
-         For same-origin and data: URLs we keep the standard `download`
-         attribute, which browsers DO honour in that case.            */
-      try {
-        var dlName = (displayTitle && displayTitle !== 'Document')
-          ? displayTitle
-          : decodeURIComponent(src.split('/').pop().split('?')[0] || 'document');
-        /* Strip any path separators from the filename and ensure it has
-           an extension so the OS opens it with the right app.        */
-        dlName = String(dlName).replace(/[\\/]/g, '_');
-        if (!/\.[a-z0-9]{1,5}$/i.test(dlName)) {
-          dlName = dlName + '.' + (type || 'pdf');
-        }
-        var downloadHref = src;
-        if (/^https?:\/\/res\.cloudinary\.com\//i.test(src) && /\/upload\//.test(src)) {
-          /* Cloudinary public_id includes the extension already; pass the
-             filename WITHOUT extension to fl_attachment so the download
-             keeps the original name + the file's real extension.       */
-          var baseName = dlName.replace(/\.[a-z0-9]{1,5}$/i, '');
-          var safe = encodeURIComponent(baseName).replace(/%20/g, '_');
-          downloadHref = src.replace('/upload/', '/upload/fl_attachment:' + safe + '/');
-        }
-        docDownload.href = downloadHref;
-        docDownload.setAttribute('download', dlName);
-      } catch (e) {
-        docDownload.href = src;
-        docDownload.setAttribute('download', '');
-      }
-      docPageInfo.textContent = '';
-
-      /* ── Render natively in-page: PDF.js for PDFs, Mammoth for DOCX.
-         No external Google viewer. Works for Cloudinary, same-origin,
-         data: URLs and blob: URLs alike, because we fetch the bytes
-         ourselves and hand them to a JS renderer.                    */
-      docViewer.classList.add('open');
-      if (type === 'pdf') {
-        renderPdf(src);
-      } else if (type === 'docx') {
-        renderDocx(src);
-      } else {
-        /* DWG and other raw files — open in a new tab / let download work. */
-        showError('Inline preview is not available for this file type.', true);
-      }
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeDocViewer() {
-      docViewer.classList.remove('open');
-      document.body.style.overflow = '';
-      setTimeout(function() {
-        docFrame.src = '';
-        docRender.innerHTML = '';
-        docRender.classList.remove('active');
-        _pdfState = { pages: [], current: 1, total: 0 };
-      }, 300);
-    }
-
-    docFrame.addEventListener('load', function() {
-      docLoading.classList.add('hidden');
-    });
-
-    docClose.addEventListener('click', closeDocViewer);
-
-    /* Prev / Next now scroll to the matching <canvas> from PDF.js. */
-    function scrollToPdfPage(n) {
-      if (!_pdfState.total) return;
-      n = Math.max(1, Math.min(_pdfState.total, n));
-      var canvas = _pdfState.pages[n - 1];
-      if (canvas) {
-        canvas.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        _pdfState.current = n;
-        docPageInfo.textContent = 'PAGE ' + n + ' / ' + _pdfState.total;
-      }
-    }
-    docPrev.addEventListener('click', function() { scrollToPdfPage(_pdfState.current - 1); });
-    docNext.addEventListener('click', function() { scrollToPdfPage(_pdfState.current + 1); });
-
-    // Wire all READ PAPER / VIEW DRAWING buttons
-    // Uses event delegation on card-actions to avoid _docWired stale closure bugs.
-    // Individual button wiring kept for initial static buttons on page load.
+    /* ── 2. DOCUMENT OPEN HANDLER ─────────────────
+       No inline viewer. Each READ / VIEW button opens its file in a new
+       browser tab. The browser displays types it understands natively
+       (PDF, images, txt) and downloads the rest, letting the OS open
+       them in the user's default app (Word for .docx, AutoCAD for .dwg,
+       Excel for .xlsx, …).                                              */
     function wireDocBtns() {
       document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
         if (btn._docWired) return;
         btn._docWired = true;
         btn.addEventListener('click', function(e) {
           e.preventDefault();
-          /* Always read data-doc-src at click time — it may have been updated
-             by the upload system (base64 DataURL replacing the placeholder path) */
+          /* Re-read at click time — the upload system rewrites this attr
+             after a successful Cloudinary upload. */
           var src = btn.getAttribute('data-doc-src');
-          /* Skip placeholder or empty src — show a helpful hint instead */
           if (!src || src === '#' || src === 'assets/docs/') {
-            /* Only show hint to owners; visitors shouldn't see upload prompts */
+            /* No file attached yet — nudge the owner toward the UPLOAD button. */
             if (document.body.classList.contains('owner-unlocked')) {
               var uploadBtn = btn.nextSibling;
               if (uploadBtn && uploadBtn.classList && uploadBtn.classList.contains('card-btn')) {
@@ -1610,21 +1090,25 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
             }
             return;
           }
-          openDocViewer(
-            src,
-            btn.getAttribute('data-doc-type') || 'pdf',
-            btn.getAttribute('data-doc-title') || btn.textContent.trim() || 'Document'
-          );
+          try {
+            var win = window.open(src, '_blank', 'noopener,noreferrer');
+            if (!win) {
+              /* Popup blocked — fall back to a synthetic link click. */
+              var a = document.createElement('a');
+              a.href = src;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }
+          } catch (err) {
+            window.location.href = src;
+          }
         });
       });
     }
     wireDocBtns();
-
-    // Close on backdrop click
-    docViewer.addEventListener('click', function(e) {
-      if (e.target === docViewer) closeDocViewer();
-    });
-
 
     /* ── 3. VIDEO OVERLAY ──────────────────────── */
     var videoOverlay = document.getElementById('video-overlay');
@@ -1776,7 +1260,6 @@ body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35)
     // Keyboard: Escape closes any open overlay
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        if (docViewer.classList.contains('open'))   closeDocViewer();
         if (videoOverlay.classList.contains('open')) closeVideo();
       }
     });
