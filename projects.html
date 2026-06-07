@@ -13,7 +13,7 @@
 
   <!-- Open Graph: LinkedIn, WhatsApp, Facebook previews -->
   <meta property="og:type"         content="website" />
-  <meta property="og:site_name"    content="Rubui Mwangi — Portfolio" />
+  <meta property="og:site_name"    content="Rubui Mwangi  Portfolio" />
   <meta property="og:title"        content="Projects . Rubui Mwangi" />
   <meta property="og:description"  content="Engineering projects by Rubui Mwangi — IoT power line fault detection, Arduino and ESP32 firmware, real-time Firebase dashboards, AutoCAD electrical layouts, and academic work." />
   <meta property="og:url"          content="https://dennisrm-cyber.github.io/portfolio/projects.html" />
@@ -445,9 +445,125 @@
     .upload-doc-btn:hover { background: rgba(240,165,0,0.15); border-color: var(--amber); }
     body.owner-unlocked .upload-doc-btn { display: inline-flex !important; }
 
-    /* In-page document viewer removed — READ buttons now hand the file
-       directly to the OS / browser via window.open(). PDFs render in a new
-       tab; .docx/.dwg/.xlsx download and open in the user's default app. */
+    /* ── IN-PAGE DOCUMENT VIEWER ───────────────── */
+    .doc-viewer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      background: rgba(10, 16, 36, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s;
+      display: flex;
+      flex-direction: column;
+    }
+    .doc-viewer-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .doc-viewer__topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid rgba(240,165,0,0.18);
+      background: rgba(5,9,22,0.98);
+      flex-shrink: 0;
+      gap: 16px;
+    }
+    .doc-viewer__title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--amber);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .doc-viewer__controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .doc-viewer__page-info {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+    .doc-viewer__btn {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(240,165,0,0.25);
+      background: transparent;
+      color: var(--amber);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+    }
+    .doc-viewer__btn:hover {
+      background: rgba(240,165,0,0.12);
+      border-color: var(--amber);
+      color: var(--white);
+    }
+    .doc-viewer__btn--close {
+      border-color: rgba(248,113,113,0.3);
+      color: #f87171;
+    }
+    .doc-viewer__btn--close:hover {
+      background: rgba(248,113,113,0.12);
+      border-color: #f87171;
+      color: #f87171;
+    }
+
+    .doc-viewer__frame-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .doc-viewer__frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #f5f5f0;
+    }
+    .doc-viewer__loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: rgba(5,9,22,0.97);
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      transition: opacity 0.3s;
+    }
+    .doc-viewer__loading.hidden { opacity: 0; pointer-events: none; }
+    .doc-viewer__spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid rgba(240,165,0,0.2);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Video modal */
     .video-overlay {
@@ -523,38 +639,34 @@
       .project-grid {
         grid-template-columns: 1fr;
       }
+      .doc-viewer__topbar {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
     }
   </style>
-<style>
-/* ── PROJECTS PAGE — LIGHT THEME OVERRIDES ── */
-body.contrast-light .project-card { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; box-shadow: 0 4px 20px rgba(14,20,32,0.10) !important; }
-body.contrast-light .project-card:hover { border-color: #0d6e6e !important; box-shadow: 0 8px 28px rgba(14,20,32,0.15) !important; }
-body.contrast-light .card-title { color: #0e1420 !important; }
-body.contrast-light .card-desc  { color: #2a3248 !important; }
-body.contrast-light .card-year  { color: #4a556e !important; }
-body.contrast-light .card-media { background: rgba(200,205,216,0.5) !important; border-color: rgba(14,20,32,0.10) !important; }
-body.contrast-light .card-media__placeholder-label { color: rgba(14,20,32,0.3) !important; }
-body.contrast-light .card-actions { border-top-color: rgba(14,20,32,0.10) !important; }
-body.contrast-light .card-btn { border-color: rgba(13,110,110,0.35) !important; color: #0d6e6e !important; }
-body.contrast-light .card-btn:hover { background: rgba(13,110,110,0.08) !important; border-color: #0d6e6e !important; }
-body.contrast-light .card-btn--primary { background: #0d6e6e !important; color: #fff !important; border-color: #0d6e6e !important; }
-body.contrast-light .card-btn--primary:hover { background: #0a5858 !important; }
-body.contrast-light .cat-header__label { color: #0d6e6e !important; }
-body.contrast-light .cat-header__count { color: #4a556e !important; }
-body.contrast-light .cat-header__line  { background: linear-gradient(90deg,rgba(13,110,110,0.35),transparent) !important; }
-body.contrast-light .project-card--iot:hover    { border-color: rgba(10,102,64,0.4) !important; }
-body.contrast-light .project-card--autocad:hover{ border-color: rgba(26,79,160,0.4) !important; }
-body.contrast-light .project-card--hobby:hover  { border-color: rgba(92,58,158,0.4) !important; }
-body.contrast-light .project-card--academic:hover{ border-color: rgba(138,90,0,0.4) !important; }
-body.contrast-light .project-add-card { border-color: rgba(13,110,110,0.28) !important; }
-body.contrast-light .project-add-card:hover { background: rgba(13,110,110,0.04) !important; border-color: #0d6e6e !important; }
-body.contrast-light .project-add-card__label { color: #4a556e !important; }
-</style>
 </head>
 
 <body class="page-frame">
-  <!-- nav injected by main.js -->
 
+  <!-- ═══════════════════ NAV ═══════════════════ -->
+  <nav class="nav">
+    <div class="container nav__inner">
+      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
+      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
+        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
+        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
+        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
+        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
+        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
+        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
+      </ul>
+    </div>
+  </nav>
 
   <!-- ═══════════════════ HERO ══════════════════ -->
   <div class="scroll-surface">
@@ -991,9 +1103,33 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
   <footer class="footer">
     <div class="container footer__inner">
       <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
-      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span><span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span></span>
+      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span>OPEN TO OPPORTUNITIES</span>
     </div>
   </footer>
+
+
+  <!-- ═══════════════════════════════════════════
+       IN-PAGE DOCUMENT VIEWER OVERLAY
+  ═══════════════════════════════════════════ -->
+  <div class="doc-viewer-overlay" id="doc-viewer" role="dialog" aria-modal="true" aria-label="Document viewer">
+    <div class="doc-viewer__topbar">
+      <span class="doc-viewer__title" id="doc-viewer-title">Document</span>
+      <div class="doc-viewer__controls">
+        <span class="doc-viewer__page-info" id="doc-page-info"></span>
+        <button class="doc-viewer__btn" id="doc-prev">← PREV</button>
+        <button class="doc-viewer__btn" id="doc-next">NEXT →</button>
+        <a  class="doc-viewer__btn" id="doc-download" download>⬇ DOWNLOAD</a>
+        <button class="doc-viewer__btn doc-viewer__btn--close" id="doc-close">✕ CLOSE</button>
+      </div>
+    </div>
+    <div class="doc-viewer__frame-wrap">
+      <div class="doc-viewer__loading" id="doc-loading">
+        <div class="doc-viewer__spinner"></div>
+        <span>LOADING DOCUMENT…</span>
+      </div>
+      <iframe class="doc-viewer__frame" id="doc-frame" title="Document viewer"></iframe>
+    </div>
+  </div>
 
 
   <!-- ═══════════════════════════════════════════
@@ -1025,7 +1161,6 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
   </div>
 
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-e0jCNBMnPnCkKbOtQmfCVbCmrZQBs6tKwAKfHaGFgOCLEKv7e4ggYd0e4RpIlgQ62l5p0hPOE1+KVJAb2Jzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1036,7 +1171,7 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
   /* ═══════════════════════════════════════════════
      projects.js — inline, page-specific scripts
      1. Category filter bar
-     2. Document open handler (hands files to the OS / browser)
+     2. In-page document viewer (PDF + DOCX via Google Docs)
      3. Video overlay (YouTube + local)
      4. Add-project cards (new project template)
   ═══════════════════════════════════════════════ */
@@ -1065,50 +1200,103 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
     });
 
 
-    /* ── 2. DOCUMENT OPEN HANDLER ─────────────────
-       No inline viewer. Each READ / VIEW button opens its file in a new
-       browser tab. The browser displays types it understands natively
-       (PDF, images, txt) and downloads the rest, letting the OS open
-       them in the user's default app (Word for .docx, AutoCAD for .dwg,
-       Excel for .xlsx, …).                                              */
+    /* ── 2. IN-PAGE DOCUMENT VIEWER ────────────── */
+    var docViewer   = document.getElementById('doc-viewer');
+    var docFrame    = document.getElementById('doc-frame');
+    var docTitle    = document.getElementById('doc-viewer-title');
+    var docLoading  = document.getElementById('doc-loading');
+    var docClose    = document.getElementById('doc-close');
+    var docDownload = document.getElementById('doc-download');
+    var docPageInfo = document.getElementById('doc-page-info');
+    var docPrev     = document.getElementById('doc-prev');
+    var docNext     = document.getElementById('doc-next');
+
+    function openDocViewer(src, type, title) {
+      docTitle.textContent = title || 'Document';
+      docLoading.classList.remove('hidden');
+      docDownload.href = src;
+      docDownload.setAttribute('download', '');
+      docPageInfo.textContent = '';
+
+      var viewerSrc;
+      if (type === 'pdf') {
+        // Use browser's native PDF viewer via iframe
+        // For GitHub Pages, PDF.js would be needed for cross-origin;
+        // for same-origin files this works perfectly.
+        viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
+      } else if (type === 'docx') {
+        // Google Docs viewer — works for publicly accessible files
+        // Replace with your actual GitHub Pages URL after deployment
+        var fullUrl = window.location.origin + '/' +
+          window.location.pathname.split('/').slice(1, -1).join('/') +
+          (window.location.pathname.includes('/') ? '/' : '') + src;
+        viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fullUrl) + '&embedded=true';
+        docPageInfo.textContent = 'Tip: Google Docs viewer — may take a moment to load';
+      }
+
+      docFrame.src = '';
+      setTimeout(function() {
+        docFrame.src = viewerSrc;
+      }, 80);
+
+      docViewer.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDocViewer() {
+      docViewer.classList.remove('open');
+      document.body.style.overflow = '';
+      setTimeout(function() { docFrame.src = ''; }, 300);
+    }
+
+    docFrame.addEventListener('load', function() {
+      docLoading.classList.add('hidden');
+    });
+
+    docClose.addEventListener('click', closeDocViewer);
+
+    // Prev / Next page (PDF only — navigates via hash)
+    var currentPage = 1;
+    docPrev.addEventListener('click', function() {
+      if (currentPage > 1) {
+        currentPage--;
+        var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
+        docFrame.src = src;
+        docPageInfo.textContent = 'PAGE ' + currentPage;
+      }
+    });
+    docNext.addEventListener('click', function() {
+      currentPage++;
+      var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
+      docFrame.src = src;
+      docPageInfo.textContent = 'PAGE ' + currentPage;
+    });
+
+    // Wire all READ PAPER / VIEW DRAWING buttons
     function wireDocBtns() {
       document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
         if (btn._docWired) return;
         btn._docWired = true;
         btn.addEventListener('click', function(e) {
           e.preventDefault();
-          /* Re-read at click time — the upload system rewrites this attr
-             after a successful Cloudinary upload. */
           var src = btn.getAttribute('data-doc-src');
-          if (!src || src === '#' || src === 'assets/docs/') {
-            /* No file attached yet — nudge the owner toward the UPLOAD button. */
-            if (document.body.classList.contains('owner-unlocked')) {
-              var uploadBtn = btn.nextSibling;
-              if (uploadBtn && uploadBtn.classList && uploadBtn.classList.contains('card-btn')) {
-                uploadBtn.style.animation = 'pulse-border 0.5s ease 2';
-              }
-            }
-            return;
-          }
-          try {
-            var win = window.open(src, '_blank', 'noopener,noreferrer');
-            if (!win) {
-              /* Popup blocked — fall back to a synthetic link click. */
-              var a = document.createElement('a');
-              a.href = src;
-              a.target = '_blank';
-              a.rel = 'noopener noreferrer';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-            }
-          } catch (err) {
-            window.location.href = src;
-          }
+          /* Skip placeholder or empty src */
+          if (!src || src === '#') return;
+          openDocViewer(
+            src,
+            btn.getAttribute('data-doc-type') || 'pdf',
+            btn.getAttribute('data-doc-title') || 'Document'
+          );
         });
       });
     }
     wireDocBtns();
+
+    // Close on backdrop click
+    docViewer.addEventListener('click', function(e) {
+      if (e.target === docViewer) closeDocViewer();
+    });
+
 
     /* ── 3. VIDEO OVERLAY ──────────────────────── */
     var videoOverlay = document.getElementById('video-overlay');
@@ -1233,7 +1421,7 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
           wireNewProjectCard(newCard);
 
           // Enable edit mode and focus title
-          if (typeof window.enableEditMode === 'function') window.enableEditMode();
+          if (typeof enableEditMode === 'function') enableEditMode();
           var titleEl = newCard.querySelector('.card-title');
           if (titleEl) {
             titleEl.setAttribute('contenteditable', 'true');
@@ -1250,49 +1438,38 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
     }
     wireAddProjectBtns();
 
-    /* ── GLOBAL EXPORTS for cross-IIFE access ──────────────────────
-       The document-upload IIFE below calls these after re-wiring URLs.
-       editor.js calls enableEditMode() when inserting new cards.
-    ─────────────────────────────────────────────────────────────── */
-    window.wireDocBtns   = wireDocBtns;
-    window.wireVideoBtns = wireVideoBtns;
-
     // Keyboard: Escape closes any open overlay
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
+        if (docViewer.classList.contains('open'))   closeDocViewer();
         if (videoOverlay.classList.contains('open')) closeVideo();
       }
     });
 
 
-    /* ── LIKE BUTTONS — Firebase global real-time likes ──────── */
-    /* Mirrors the like system used on articles.html / contact.html.
-       PF.watchLike + PF.toggleLike are defined in firebase.js.     */
-    var _likeUnsubs = [];
+    /* ── LIKE BUTTONS ─────────────────── */
+    function getProjLikeKey(id) { return 'portfolio__like__project__' + id; }
+    function getProjLikeCount(id) { try { return parseInt(localStorage.getItem(getProjLikeKey(id)) || '0'); } catch(e){ return 0; } }
+    function isProjLiked(id) { try { return localStorage.getItem(getProjLikeKey(id)+'__liked')==='1'; } catch(e){ return false; } }
 
     function wireProjLikeBtns() {
       document.querySelectorAll('.like-btn[data-like-id]').forEach(function(btn) {
-        if (btn._likeWired) return;
-        btn._likeWired = true;
-        var id      = btn.getAttribute('data-like-id');
+        if (btn._likeWired) return; btn._likeWired = true;
+        var id = btn.getAttribute('data-like-id');
         var countEl = btn.querySelector('.like-count');
-        if (!window.PF || typeof PF.watchLike !== 'function') {
-          /* Firebase not available — silent fallback, no counts shown */
-          return;
-        }
-        /* Subscribe to real-time count from Firebase */
-        var unsub = PF.watchLike(id, function(count, isLiked) {
-          countEl.textContent = count > 0 ? count : '';
-          btn.classList.toggle('liked', isLiked);
-        });
-        _likeUnsubs.push(unsub);
-
+        var c = getProjLikeCount(id);
+        var liked = isProjLiked(id);
+        countEl.textContent = c > 0 ? c : '';
+        btn.classList.toggle('liked', liked);
         btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          e.preventDefault();
-          PF.toggleLike(id).catch(function(err) {
-            console.warn('[projects] like error:', err.message);
-          });
+          e.stopPropagation(); e.preventDefault();
+          var cur = getProjLikeCount(id);
+          var wasLiked = isProjLiked(id);
+          cur = wasLiked ? Math.max(0, cur-1) : cur+1;
+          localStorage.setItem(getProjLikeKey(id)+'__liked', wasLiked?'0':'1');
+          localStorage.setItem(getProjLikeKey(id), cur);
+          countEl.textContent = cur > 0 ? cur : '';
+          btn.classList.toggle('liked', !wasLiked);
         });
       });
     }
@@ -1328,11 +1505,17 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
       fd.append('file',            file);
       fd.append('upload_preset',   CLD_PRESET);
       fd.append('folder',          'portfolio/docs');
-      /* Preserve the original OS filename as the Cloudinary public_id.
-         Without this Cloudinary assigns a random ID (e.g. bq7ylioahhfgsn2nry7e),
-         so downloads and viewer titles would show a meaningless hash instead of
-         the real document name.  unique_filename=true appends a short suffix only
-         if the same name already exists in the folder, avoiding overwrites.      */
+      /* use_filename=true tells Cloudinary to use the original OS filename
+         as the public_id instead of a random hash (e.g. bq7ylioahhfgsn2nry7e).
+         unique_filename=true appends a short suffix only when the same name
+         already exists in the folder, preventing silent overwrites.
+         NOTE: these two params are allowed by unsigned upload presets —
+         they are NOT the same as the banned 'filename' param that caused
+         the "Use filename parameter is not allowed" error. That error comes
+         from a Cloudinary preset setting ("Use filename of uploaded file")
+         being enabled on the dashboard side. Fix that in:
+         Cloudinary dashboard → Settings → Upload → preset i1mylmri →
+         uncheck "Use filename or externally defined Public ID" → Save.    */
       fd.append('use_filename',    'true');
       fd.append('unique_filename', 'true');
       /* Use the /raw/upload endpoint — works for all non-image files */
@@ -1349,9 +1532,9 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
 
     /* ── UPDATE ALL MATCHING BUTTONS ON A CARD ──────────────────── */
     /* filename (optional) — the real OS filename of the uploaded file.
-       When provided it becomes the data-doc-title on READ/VIEW buttons
-       so the viewer header always shows the actual document name,
-       not the old hardcoded placeholder title.                         */
+       When provided it becomes the download attribute on anchor buttons
+       so the browser saves the file with the real name, not a Cloudinary
+       random public ID (e.g. bq7ylioahhfgsn2nry7e.pdf).               */
     function applyDocUrl(docId, slot, url, filename) {
       /* slot = 'pdf' | 'docx' | 'dwg' */
       var actions = document.querySelector('.card-actions[data-doc-id="' + docId + '"]');
@@ -1369,8 +1552,6 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
       actions.querySelectorAll('[data-doc-slot="' + slot + '"]').forEach(function (el) {
         if (el.hasAttribute('data-doc-src')) {
           el.setAttribute('data-doc-src', url);
-          /* Update the viewer title to use the real uploaded filename */
-          if (displayName) el.setAttribute('data-doc-title', displayName);
           /* NOTE: _docWired is intentionally NOT reset here.
              wireDocBtns listeners already read data-doc-src at click-time,
              so they pick up the new URL automatically without re-wiring.
@@ -1381,8 +1562,7 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
         if (el.hasAttribute('href')) {
           el.setAttribute('href', url);
           /* Set the named download attribute so the browser saves the file
-             with the real document name, not the Cloudinary-generated
-             random public ID (e.g. bq7ylioahhfgsn2nry7e.pdf).           */
+             with the real document name, not a Cloudinary random public ID. */
           if (displayName) el.setAttribute('download', displayName);
         }
       });
@@ -1390,12 +1570,11 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
 
     /* ── LOAD ALL SAVED DOC URLS FROM FIREBASE ON PAGE LOAD ─────── */
     /* Also reads the companion -name keys (doc-CARDID-SLOT-name) that
-       were saved alongside each URL so the viewer shows the real
-       filename rather than the hardcoded placeholder title.          */
+       were saved alongside each URL so downloads use the real filename
+       rather than the Cloudinary-generated random public ID.          */
     function loadSavedDocUrls() {
       if (!window.PF) return;
       PF.loadEdits(function (edits) {
-        /* First pass: collect all URL keys and their companion name keys */
         Object.keys(edits).forEach(function (key) {
           /* URL keys: doc-fyp-pdf, doc-ac1-dwg, etc. (no trailing -name) */
           var m = key.match(/^doc-([a-z0-9]+)-([a-z]+)$/);
@@ -1414,17 +1593,105 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
     loadSavedDocUrls();
 
     /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────── */
-    /* Delegates to PF.requireFirebaseAuth — defined once in firebase.js.
-       Both parameters mirror the original: onAuthenticated(user), onCancel. */
     function requireFirebaseAuth(onAuthenticated) {
-      if (window.PF && typeof PF.requireFirebaseAuth === 'function') {
-        PF.requireFirebaseAuth(onAuthenticated, function() {/* cancelled */});
-      } else {
-        console.warn('[projects] PF.requireFirebaseAuth not available');
+      var existing = document.getElementById('fb-signin-modal');
+      if (existing) existing.remove();
+
+      var modal = document.createElement('div');
+      modal.id = 'fb-signin-modal';
+      modal.style.cssText = [
+        'position:fixed;inset:0;z-index:10000',
+        'background:rgba(3,6,14,0.88)',
+        'backdrop-filter:blur(18px)',
+        'display:flex;align-items:center;justify-content:center',
+        'animation:fbModalIn 0.18s ease'
+      ].join(';');
+
+      modal.innerHTML = [
+        '<style>',
+        '@keyframes fbModalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}',
+        '#fb-signin-modal .fb-box{background:rgba(14,20,44,0.98);border:1px solid rgba(240,165,0,0.28);border-radius:16px;padding:32px 36px 28px;width:min(400px,90vw);box-shadow:0 32px 80px rgba(0,0,0,0.7);}',
+        '#fb-signin-modal .fb-label{font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.18em;color:rgba(240,165,0,0.55);margin-bottom:8px;}',
+        '#fb-signin-modal .fb-title{font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:#f0f4ff;margin-bottom:6px;}',
+        '#fb-signin-modal .fb-hint{font-size:12px;color:rgba(180,190,220,0.65);line-height:1.6;margin-bottom:24px;}',
+        '#fb-signin-modal .fb-field{margin-bottom:14px;}',
+        '#fb-signin-modal .fb-field label{display:block;font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.15em;color:rgba(240,165,0,0.6);margin-bottom:5px;}',
+        '#fb-signin-modal .fb-input{width:100%;box-sizing:border-box;background:rgba(8,14,30,0.9);border:1px solid rgba(240,165,0,0.2);border-radius:8px;padding:10px 14px;color:#f0f4ff;font-family:JetBrains Mono,monospace;font-size:13px;outline:none;transition:border-color 0.18s;}',
+        '#fb-signin-modal .fb-input:focus{border-color:rgba(240,165,0,0.6);}',
+        '#fb-signin-modal .fb-input.error{border-color:#f87171!important;}',
+        '#fb-signin-modal .fb-error{font-family:JetBrains Mono,monospace;font-size:9px;color:#f87171;min-height:16px;margin-bottom:18px;letter-spacing:0.08em;}',
+        '#fb-signin-modal .fb-actions{display:flex;gap:10px;}',
+        '#fb-signin-modal .fb-btn-sign{flex:1;padding:12px;border-radius:10px;background:var(--amber,#f0a500);border:none;color:#0d1526;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;letter-spacing:0.14em;cursor:pointer;transition:opacity 0.18s;}',
+        '#fb-signin-modal .fb-btn-sign:hover{opacity:0.88;}',
+        '#fb-signin-modal .fb-btn-sign:disabled{opacity:0.4;cursor:default;}',
+        '#fb-signin-modal .fb-btn-cancel{padding:12px 18px;border-radius:10px;background:transparent;border:1px solid rgba(248,113,113,0.35);color:#f87171;font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.12em;cursor:pointer;transition:background 0.15s;}',
+        '#fb-signin-modal .fb-btn-cancel:hover{background:rgba(248,113,113,0.1);}',
+        '</style>',
+        '<div class="fb-box">',
+        '<div class="fb-label">// firebase auth</div>',
+        '<div class="fb-title">Sign in to upload</div>',
+        '<div class="fb-hint">Enter your Firebase owner credentials to upload documents.</div>',
+        '<div class="fb-field"><label for="fb-email">EMAIL</label>',
+        '<input class="fb-input" id="fb-email" type="email" placeholder="owner@email.com" autocomplete="email" /></div>',
+        '<div class="fb-field"><label for="fb-pass">PASSWORD</label>',
+        '<input class="fb-input" id="fb-pass" type="password" placeholder="Firebase password" autocomplete="current-password" /></div>',
+        '<div class="fb-error" id="fb-error"></div>',
+        '<div class="fb-actions">',
+        '<button class="fb-btn-sign" id="fb-sign-btn">SIGN IN &amp; UPLOAD</button>',
+        '<button class="fb-btn-cancel" id="fb-cancel-btn">CANCEL</button>',
+        '</div></div>'
+      ].join('');
+
+      document.body.appendChild(modal);
+
+      var emailEl   = modal.querySelector('#fb-email');
+      var passEl    = modal.querySelector('#fb-pass');
+      var errorEl   = modal.querySelector('#fb-error');
+      var signBtn   = modal.querySelector('#fb-sign-btn');
+      var cancelBtn = modal.querySelector('#fb-cancel-btn');
+
+      setTimeout(function () { emailEl.focus(); }, 80);
+
+      function closeModal() {
+        modal.style.animation = 'fbModalIn 0.15s ease reverse';
+        setTimeout(function () { if (modal.parentNode) modal.remove(); }, 140);
       }
+      function setError(msg) {
+        errorEl.textContent = msg;
+        emailEl.classList.toggle('error', !!msg);
+        passEl.classList.toggle('error',  !!msg);
+      }
+      function doSignIn() {
+        var email = emailEl.value.trim();
+        var pass  = passEl.value;
+        if (!email || !pass) { setError('Both fields are required.'); return; }
+        setError('');
+        signBtn.disabled    = true;
+        signBtn.textContent = 'SIGNING IN…';
+        PF.signIn(email, pass)
+          .then(function () { closeModal(); onAuthenticated(); })
+          .catch(function (err) {
+            signBtn.disabled    = false;
+            signBtn.textContent = 'SIGN IN & UPLOAD';
+            var msg = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
+              ? 'Incorrect email or password.'
+              : err.code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.'
+              : err.code === 'auth/network-request-failed' ? 'Network error. Check your connection.'
+              : (err.message || 'Sign-in failed.');
+            setError(msg);
+            passEl.value = ''; passEl.focus();
+          });
+      }
+      signBtn.addEventListener('click', doSignIn);
+      passEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSignIn(); });
+      cancelBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+      document.addEventListener('keydown', function escClose(e) {
+        if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escClose); }
+      });
     }
 
-        /* ── TRIGGER UPLOAD FOR ONE SLOT ON ONE CARD ────────────────── */
+    /* ── TRIGGER UPLOAD FOR ONE SLOT ON ONE CARD ────────────────── */
     function triggerDocUpload(docId, slot, acceptTypes, labelText) {
       if (!document.body.classList.contains('owner-unlocked')) return;
 
@@ -1462,10 +1729,10 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
 
         uploadRawToCloudinary(file,
           function (url) {
-            var fileName    = file.name;          /* real OS filename e.g. "My_Report.pdf"  */
+            var fileName    = file.name;                       /* real OS filename e.g. "My_Report.pdf"   */
             var firebaseKey = 'doc-' + docId + '-' + slot;
-            var nameKey     = 'doc-' + docId + '-' + slot + '-name'; /* store name alongside URL */
-            /* Save URL and filename to Firebase in one batch */
+            var nameKey     = 'doc-' + docId + '-' + slot + '-name'; /* companion key for filename */
+            /* Save URL and filename to Firebase in one batch so both persist */
             var batch = {};
             batch[firebaseKey] = url;
             batch[nameKey]     = fileName;
@@ -1546,3 +1813,33 @@ body.contrast-light .project-add-card__label { color: #4a556e !important; }
 
 </body>
 </html>
+<style>
+/* ── PROJECTS PAGE — LIGHT THEME OVERRIDES ── */
+body.contrast-light .project-card { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; box-shadow: 0 4px 20px rgba(14,20,32,0.10) !important; }
+body.contrast-light .project-card:hover { border-color: #0d6e6e !important; box-shadow: 0 8px 28px rgba(14,20,32,0.15) !important; }
+body.contrast-light .card-title { color: #0e1420 !important; }
+body.contrast-light .card-desc  { color: #2a3248 !important; }
+body.contrast-light .card-year  { color: #4a556e !important; }
+body.contrast-light .card-media { background: rgba(200,205,216,0.5) !important; border-color: rgba(14,20,32,0.10) !important; }
+body.contrast-light .card-media__placeholder-label { color: rgba(14,20,32,0.3) !important; }
+body.contrast-light .card-actions { border-top-color: rgba(14,20,32,0.10) !important; }
+body.contrast-light .card-btn { border-color: rgba(13,110,110,0.35) !important; color: #0d6e6e !important; }
+body.contrast-light .card-btn:hover { background: rgba(13,110,110,0.08) !important; border-color: #0d6e6e !important; }
+body.contrast-light .card-btn--primary { background: #0d6e6e !important; color: #fff !important; border-color: #0d6e6e !important; }
+body.contrast-light .card-btn--primary:hover { background: #0a5858 !important; }
+body.contrast-light .cat-header__label { color: #0d6e6e !important; }
+body.contrast-light .cat-header__count { color: #4a556e !important; }
+body.contrast-light .cat-header__line  { background: linear-gradient(90deg,rgba(13,110,110,0.35),transparent) !important; }
+body.contrast-light .project-card--iot:hover    { border-color: rgba(10,102,64,0.4) !important; }
+body.contrast-light .project-card--autocad:hover{ border-color: rgba(26,79,160,0.4) !important; }
+body.contrast-light .project-card--hobby:hover  { border-color: rgba(92,58,158,0.4) !important; }
+body.contrast-light .project-card--academic:hover{ border-color: rgba(138,90,0,0.4) !important; }
+body.contrast-light .project-add-card { border-color: rgba(13,110,110,0.28) !important; }
+body.contrast-light .project-add-card:hover { background: rgba(13,110,110,0.04) !important; border-color: #0d6e6e !important; }
+body.contrast-light .project-add-card__label { color: #4a556e !important; }
+body.contrast-light .doc-viewer__topbar { background: rgba(255,255,255,0.99) !important; border-color: rgba(14,20,32,0.12) !important; }
+body.contrast-light .doc-viewer__title  { color: #0d6e6e !important; }
+body.contrast-light .doc-viewer__btn    { border-color: rgba(13,110,110,0.3) !important; color: #0d6e6e !important; }
+body.contrast-light .doc-viewer__btn:hover { background: rgba(13,110,110,0.08) !important; }
+body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35) !important; color: #a03010 !important; }
+</style>
