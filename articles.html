@@ -673,7 +673,7 @@
 
   <nav class="nav">
     <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"></span>Portfolio.EE<span> _</span></a>
+      <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>
       <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -1042,7 +1042,7 @@
       }
       saveBtn.textContent = '\u2713 SAVED';
       saveBtn.classList.add('saved');
-      setTimeout(function() { saveBtn.textContent = '\U0001F4BE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
+      setTimeout(function() { saveBtn.textContent = '\uD83D\uDCBE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
     }
 
     readerClose.addEventListener('click', closeReader);
@@ -1208,33 +1208,43 @@
     wireRows();
 
 
-    /* ── LIKE BUTTONS ───────────────────────────── */
-    function getLikeKey(id) { return 'portfolio__like__article__' + id; }
-    function getLikeCount(id) { try { return parseInt(localStorage.getItem(getLikeKey(id)) || '0'); } catch(e) { return 0; } }
-    function isLiked(id) { try { return localStorage.getItem(getLikeKey(id) + '__liked') === '1'; } catch(e) { return false; } }
-
+    /* ── LIKE BUTTONS — Firebase-first, localStorage fallback ── */
     function wireLikeBtn(btn) {
-      var id = btn.getAttribute('data-like-id');
+      if (btn._likeWired) return;
+      btn._likeWired = true;
+      var id      = btn.getAttribute('data-like-id');
       var countEl = btn.querySelector('.like-count');
-      var count = getLikeCount(id);
-      var liked = isLiked(id);
-      countEl.textContent = count > 0 ? count : '';
-      btn.classList.toggle('liked', liked);
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var c = getLikeCount(id);
-        var wasLiked = isLiked(id);
-        if (wasLiked) {
-          c = Math.max(0, c - 1);
-          localStorage.setItem(getLikeKey(id) + '__liked', '0');
-        } else {
-          c++;
-          localStorage.setItem(getLikeKey(id) + '__liked', '1');
-        }
-        localStorage.setItem(getLikeKey(id), c);
+
+      if (window.PF && typeof PF.watchLike === 'function') {
+        /* Real-time Firebase */
+        PF.watchLike('article__' + id, function(count, liked) {
+          countEl.textContent = count > 0 ? count : '';
+          btn.classList.toggle('liked', liked);
+        });
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          PF.toggleLike('article__' + id).catch(function(err) {
+            console.warn('[likes] Firebase toggleLike failed:', err.message);
+          });
+        });
+      } else {
+        /* localStorage fallback */
+        var LK  = 'portfolio__like__article__' + id;
+        var c   = parseInt(localStorage.getItem(LK) || '0');
+        var lkd = localStorage.getItem(LK + '__liked') === '1';
         countEl.textContent = c > 0 ? c : '';
-        btn.classList.toggle('liked', !wasLiked);
-      });
+        btn.classList.toggle('liked', lkd);
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var cur     = parseInt(localStorage.getItem(LK) || '0');
+          var wasLiked = localStorage.getItem(LK + '__liked') === '1';
+          cur = wasLiked ? Math.max(0, cur - 1) : cur + 1;
+          localStorage.setItem(LK + '__liked', wasLiked ? '0' : '1');
+          localStorage.setItem(LK, cur);
+          countEl.textContent = cur > 0 ? cur : '';
+          btn.classList.toggle('liked', !wasLiked);
+        });
+      }
     }
     document.querySelectorAll('.like-btn[data-like-id]').forEach(wireLikeBtn);
 

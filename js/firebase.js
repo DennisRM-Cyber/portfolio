@@ -191,6 +191,19 @@
     },
 
     /**
+     * Subscribe to all edits in real-time (fires instantly from in-memory cache
+     * on repeat visits, then again when network responds).
+     * callback(editsObject) — keys = edit-IDs, values = HTML strings.
+     * Returns unsubscribe function. Use instead of loadEdits for zero-flash loads.
+     */
+    watchEdits: function (callback) {
+      var ref     = db.ref('edits');
+      var handler = function (snap) { callback(snap.val() || {}); };
+      ref.on('value', handler);
+      return function () { ref.off('value', handler); };
+    },
+
+    /**
      * Save a single edit. Requires owner auth.
      * editId  = data-edit-id value
      * html    = innerHTML string

@@ -445,125 +445,7 @@
     .upload-doc-btn:hover { background: rgba(240,165,0,0.15); border-color: var(--amber); }
     body.owner-unlocked .upload-doc-btn { display: inline-flex !important; }
 
-    /* ── IN-PAGE DOCUMENT VIEWER ───────────────── */
-    .doc-viewer-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 600;
-      background: rgba(10, 16, 36, 0.94);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s;
-      display: flex;
-      flex-direction: column;
-    }
-    .doc-viewer-overlay.open {
-      opacity: 1;
-      pointer-events: all;
-    }
 
-    .doc-viewer__topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 24px;
-      border-bottom: 1px solid rgba(240,165,0,0.18);
-      background: rgba(5,9,22,0.98);
-      flex-shrink: 0;
-      gap: 16px;
-    }
-    .doc-viewer__title {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      color: var(--amber);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .doc-viewer__controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .doc-viewer__page-info {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: 0.1em;
-      white-space: nowrap;
-      padding: 0 8px;
-    }
-    .doc-viewer__btn {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 0.12em;
-      padding: 7px 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(240,165,0,0.25);
-      background: transparent;
-      color: var(--amber);
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      text-decoration: none;
-    }
-    .doc-viewer__btn:hover {
-      background: rgba(240,165,0,0.12);
-      border-color: var(--amber);
-      color: var(--white);
-    }
-    .doc-viewer__btn--close {
-      border-color: rgba(248,113,113,0.3);
-      color: #f87171;
-    }
-    .doc-viewer__btn--close:hover {
-      background: rgba(248,113,113,0.12);
-      border-color: #f87171;
-      color: #f87171;
-    }
-
-    .doc-viewer__frame-wrap {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-    .doc-viewer__frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #f5f5f0;
-    }
-    .doc-viewer__loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      background: rgba(5,9,22,0.97);
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      transition: opacity 0.3s;
-    }
-    .doc-viewer__loading.hidden { opacity: 0; pointer-events: none; }
-    .doc-viewer__spinner {
-      width: 28px;
-      height: 28px;
-      border: 2px solid rgba(240,165,0,0.2);
-      border-top-color: var(--amber);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Video modal */
     .video-overlay {
@@ -639,10 +521,6 @@
       .project-grid {
         grid-template-columns: 1fr;
       }
-      .doc-viewer__topbar {
-        flex-wrap: wrap;
-        gap: 10px;
-      }
     }
   </style>
 </head>
@@ -652,7 +530,7 @@
   <!-- ═══════════════════ NAV ═══════════════════ -->
   <nav class="nav">
     <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
+      <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>
       <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
@@ -1108,28 +986,7 @@
   </footer>
 
 
-  <!-- ═══════════════════════════════════════════
-       IN-PAGE DOCUMENT VIEWER OVERLAY
-  ═══════════════════════════════════════════ -->
-  <div class="doc-viewer-overlay" id="doc-viewer" role="dialog" aria-modal="true" aria-label="Document viewer">
-    <div class="doc-viewer__topbar">
-      <span class="doc-viewer__title" id="doc-viewer-title">Document</span>
-      <div class="doc-viewer__controls">
-        <span class="doc-viewer__page-info" id="doc-page-info"></span>
-        <button class="doc-viewer__btn" id="doc-prev">← PREV</button>
-        <button class="doc-viewer__btn" id="doc-next">NEXT →</button>
-        <a  class="doc-viewer__btn" id="doc-download" download>⬇ DOWNLOAD</a>
-        <button class="doc-viewer__btn doc-viewer__btn--close" id="doc-close">✕ CLOSE</button>
-      </div>
-    </div>
-    <div class="doc-viewer__frame-wrap">
-      <div class="doc-viewer__loading" id="doc-loading">
-        <div class="doc-viewer__spinner"></div>
-        <span>LOADING DOCUMENT…</span>
-      </div>
-      <iframe class="doc-viewer__frame" id="doc-frame" title="Document viewer"></iframe>
-    </div>
-  </div>
+  <!-- doc-viewer-overlay removed — READ/VIEW buttons now open in the OS/browser directly -->
 
 
   <!-- ═══════════════════════════════════════════
@@ -1171,7 +1028,7 @@
   /* ═══════════════════════════════════════════════
      projects.js — inline, page-specific scripts
      1. Category filter bar
-     2. In-page document viewer (PDF + DOCX via Google Docs)
+     2. Document open — OS/browser native (window.open)
      3. Video overlay (YouTube + local)
      4. Add-project cards (new project template)
   ═══════════════════════════════════════════════ */
@@ -1200,79 +1057,9 @@
     });
 
 
-    /* ── 2. IN-PAGE DOCUMENT VIEWER ────────────── */
-    var docViewer   = document.getElementById('doc-viewer');
-    var docFrame    = document.getElementById('doc-frame');
-    var docTitle    = document.getElementById('doc-viewer-title');
-    var docLoading  = document.getElementById('doc-loading');
-    var docClose    = document.getElementById('doc-close');
-    var docDownload = document.getElementById('doc-download');
-    var docPageInfo = document.getElementById('doc-page-info');
-    var docPrev     = document.getElementById('doc-prev');
-    var docNext     = document.getElementById('doc-next');
-
-    function openDocViewer(src, type, title) {
-      docTitle.textContent = title || 'Document';
-      docLoading.classList.remove('hidden');
-      docDownload.href = src;
-      docDownload.setAttribute('download', '');
-      docPageInfo.textContent = '';
-
-      var viewerSrc;
-      if (type === 'pdf') {
-        // Use browser's native PDF viewer via iframe
-        // For GitHub Pages, PDF.js would be needed for cross-origin;
-        // for same-origin files this works perfectly.
-        viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
-      } else if (type === 'docx') {
-        // Google Docs viewer — works for publicly accessible files
-        // Replace with your actual GitHub Pages URL after deployment
-        var fullUrl = window.location.origin + '/' +
-          window.location.pathname.split('/').slice(1, -1).join('/') +
-          (window.location.pathname.includes('/') ? '/' : '') + src;
-        viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fullUrl) + '&embedded=true';
-        docPageInfo.textContent = 'Tip: Google Docs viewer — may take a moment to load';
-      }
-
-      docFrame.src = '';
-      setTimeout(function() {
-        docFrame.src = viewerSrc;
-      }, 80);
-
-      docViewer.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeDocViewer() {
-      docViewer.classList.remove('open');
-      document.body.style.overflow = '';
-      setTimeout(function() { docFrame.src = ''; }, 300);
-    }
-
-    docFrame.addEventListener('load', function() {
-      docLoading.classList.add('hidden');
-    });
-
-    docClose.addEventListener('click', closeDocViewer);
-
-    // Prev / Next page (PDF only — navigates via hash)
-    var currentPage = 1;
-    docPrev.addEventListener('click', function() {
-      if (currentPage > 1) {
-        currentPage--;
-        var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-        docFrame.src = src;
-        docPageInfo.textContent = 'PAGE ' + currentPage;
-      }
-    });
-    docNext.addEventListener('click', function() {
-      currentPage++;
-      var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-      docFrame.src = src;
-      docPageInfo.textContent = 'PAGE ' + currentPage;
-    });
-
-    // Wire all READ PAPER / VIEW DRAWING buttons
+    /* ── 2. DOCUMENT OPEN — OS / BROWSER NATIVE ─── */
+    // Buttons with data-doc-src open the file directly in the browser
+    // (PDF viewer, OS app, etc.) via window.open. No in-page iframe.
     function wireDocBtns() {
       document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
         if (btn._docWired) return;
@@ -1280,22 +1067,12 @@
         btn.addEventListener('click', function(e) {
           e.preventDefault();
           var src = btn.getAttribute('data-doc-src');
-          /* Skip placeholder or empty src */
           if (!src || src === '#') return;
-          openDocViewer(
-            src,
-            btn.getAttribute('data-doc-type') || 'pdf',
-            btn.getAttribute('data-doc-title') || 'Document'
-          );
+          window.open(src, '_blank', 'noopener');
         });
       });
     }
     wireDocBtns();
-
-    // Close on backdrop click
-    docViewer.addEventListener('click', function(e) {
-      if (e.target === docViewer) closeDocViewer();
-    });
 
 
     /* ── 3. VIDEO OVERLAY ──────────────────────── */
@@ -1438,39 +1215,50 @@
     }
     wireAddProjectBtns();
 
-    // Keyboard: Escape closes any open overlay
+    // Keyboard: Escape closes the video overlay
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        if (docViewer.classList.contains('open'))   closeDocViewer();
         if (videoOverlay.classList.contains('open')) closeVideo();
       }
     });
 
 
-    /* ── LIKE BUTTONS ─────────────────── */
-    function getProjLikeKey(id) { return 'portfolio__like__project__' + id; }
-    function getProjLikeCount(id) { try { return parseInt(localStorage.getItem(getProjLikeKey(id)) || '0'); } catch(e){ return 0; } }
-    function isProjLiked(id) { try { return localStorage.getItem(getProjLikeKey(id)+'__liked')==='1'; } catch(e){ return false; } }
-
+    /* ── LIKE BUTTONS — Firebase-first, localStorage fallback ── */
     function wireProjLikeBtns() {
       document.querySelectorAll('.like-btn[data-like-id]').forEach(function(btn) {
-        if (btn._likeWired) return; btn._likeWired = true;
-        var id = btn.getAttribute('data-like-id');
+        if (btn._likeWired) return;
+        btn._likeWired = true;
+        var id      = btn.getAttribute('data-like-id');
         var countEl = btn.querySelector('.like-count');
-        var c = getProjLikeCount(id);
-        var liked = isProjLiked(id);
-        countEl.textContent = c > 0 ? c : '';
-        btn.classList.toggle('liked', liked);
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation(); e.preventDefault();
-          var cur = getProjLikeCount(id);
-          var wasLiked = isProjLiked(id);
-          cur = wasLiked ? Math.max(0, cur-1) : cur+1;
-          localStorage.setItem(getProjLikeKey(id)+'__liked', wasLiked?'0':'1');
-          localStorage.setItem(getProjLikeKey(id), cur);
-          countEl.textContent = cur > 0 ? cur : '';
-          btn.classList.toggle('liked', !wasLiked);
-        });
+
+        if (window.PF && typeof PF.watchLike === 'function') {
+          PF.watchLike('project__' + id, function(count, liked) {
+            countEl.textContent = count > 0 ? count : '';
+            btn.classList.toggle('liked', liked);
+          });
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            PF.toggleLike('project__' + id).catch(function(err) {
+              console.warn('[likes] Firebase toggleLike failed:', err.message);
+            });
+          });
+        } else {
+          var LK   = 'portfolio__like__project__' + id;
+          var c    = parseInt(localStorage.getItem(LK) || '0');
+          var lkd  = localStorage.getItem(LK + '__liked') === '1';
+          countEl.textContent = c > 0 ? c : '';
+          btn.classList.toggle('liked', lkd);
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation(); e.preventDefault();
+            var cur      = parseInt(localStorage.getItem(LK) || '0');
+            var wasLiked = localStorage.getItem(LK + '__liked') === '1';
+            cur = wasLiked ? Math.max(0, cur - 1) : cur + 1;
+            localStorage.setItem(LK + '__liked', wasLiked ? '0' : '1');
+            localStorage.setItem(LK, cur);
+            countEl.textContent = cur > 0 ? cur : '';
+            btn.classList.toggle('liked', !wasLiked);
+          });
+        }
       });
     }
     wireProjLikeBtns();
@@ -1525,14 +1313,14 @@
       actions.querySelectorAll('[data-doc-slot="' + slot + '"]').forEach(function (el) {
         if (el.hasAttribute('data-doc-src')) {
           el.setAttribute('data-doc-src', url);
-          /* Re-wire the doc viewer click since the src changed */
+          /* Re-wire so click picks up the new URL */
           el._docWired = false;
         }
         if (el.hasAttribute('href')) {
           el.setAttribute('href', url);
         }
       });
-      /* Re-run wireDocBtns so the viewer picks up the new URL */
+      /* Re-run wireDocBtns so clicks pick up the new URL */
       if (typeof wireDocBtns === 'function') wireDocBtns();
     }
 
@@ -1794,9 +1582,4 @@ body.contrast-light .project-card--academic:hover{ border-color: rgba(138,90,0,0
 body.contrast-light .project-add-card { border-color: rgba(13,110,110,0.28) !important; }
 body.contrast-light .project-add-card:hover { background: rgba(13,110,110,0.04) !important; border-color: #0d6e6e !important; }
 body.contrast-light .project-add-card__label { color: #4a556e !important; }
-body.contrast-light .doc-viewer__topbar { background: rgba(255,255,255,0.99) !important; border-color: rgba(14,20,32,0.12) !important; }
-body.contrast-light .doc-viewer__title  { color: #0d6e6e !important; }
-body.contrast-light .doc-viewer__btn    { border-color: rgba(13,110,110,0.3) !important; color: #0d6e6e !important; }
-body.contrast-light .doc-viewer__btn:hover { background: rgba(13,110,110,0.08) !important; }
-body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35) !important; color: #a03010 !important; }
 </style>
