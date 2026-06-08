@@ -675,29 +675,9 @@
 </head>
 <body class="page-frame">
 
-<<<<<<< HEAD
-  <nav class="nav">
-    <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"><span>// </span>Portfolio.EE<span> _</span></a>
-      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav__links">
-        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
-        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
-        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
-        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
-        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
-        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
-        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
-      </ul>
-    </div>
-  </nav>
-=======
   
   <!-- nav injected by main.js -->
 
->>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
 
   <div class="scroll-surface">
     <div class="container">
@@ -1089,11 +1069,6 @@
         var row = document.querySelector('[data-article-id="' + currentArticleId + '"] .article-row__title');
         if (row) row.textContent = newTitle;
       }
-<<<<<<< HEAD
-      saveBtn.textContent = '\u2713 SAVED';
-      saveBtn.classList.add('saved');
-      setTimeout(function() { saveBtn.textContent = '\uD83D\uDCBE SAVE'; saveBtn.classList.remove('saved'); }, 2000);
-=======
 
       /* Phase 1: cache instantly to localStorage so a refresh shows it */
       try { localStorage.setItem(artKey(currentArticleId), newContent); } catch(e) {}
@@ -1137,7 +1112,6 @@
         saveBtn.classList.add('saved');
         setTimeout(function() { saveBtn.textContent = '💾 SAVE'; saveBtn.classList.remove('saved'); }, 2000);
       }
->>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     }
 
     readerClose.addEventListener('click', closeReader);
@@ -1390,12 +1364,6 @@
     wireRows();
 
 
-<<<<<<< HEAD
-    /* ── LIKE BUTTONS — Firebase-first, localStorage fallback ── */
-    function wireLikeBtn(btn) {
-      if (btn._likeWired) return;
-      btn._likeWired = true;
-=======
     /* ── LIKE BUTTONS (Firebase real-time) ─────────────────────────
        PF.watchLike  → real-time listener: fires on load and on any
                         change from any device. callback(count, isLiked)
@@ -1405,39 +1373,10 @@
     var _likeUnsubs = [];   /* keep unsubscribe fns so we can clean up */
 
     function wireLikeBtn(btn) {
->>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
       var id      = btn.getAttribute('data-like-id');
       var countEl = btn.querySelector('.like-count');
 
       if (window.PF && typeof PF.watchLike === 'function') {
-<<<<<<< HEAD
-        /* Real-time Firebase */
-        PF.watchLike('article__' + id, function(count, liked) {
-          countEl.textContent = count > 0 ? count : '';
-          btn.classList.toggle('liked', liked);
-        });
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          PF.toggleLike('article__' + id).catch(function(err) {
-            console.warn('[likes] Firebase toggleLike failed:', err.message);
-          });
-        });
-      } else {
-        /* localStorage fallback */
-        var LK  = 'portfolio__like__article__' + id;
-        var c   = parseInt(localStorage.getItem(LK) || '0');
-        var lkd = localStorage.getItem(LK + '__liked') === '1';
-        countEl.textContent = c > 0 ? c : '';
-        btn.classList.toggle('liked', lkd);
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var cur     = parseInt(localStorage.getItem(LK) || '0');
-          var wasLiked = localStorage.getItem(LK + '__liked') === '1';
-          cur = wasLiked ? Math.max(0, cur - 1) : cur + 1;
-          localStorage.setItem(LK + '__liked', wasLiked ? '0' : '1');
-          localStorage.setItem(LK, cur);
-          countEl.textContent = cur > 0 ? cur : '';
-=======
         /* ── Firebase path ── */
         var unsub = PF.watchLike(id, function(count, isLiked) {
           countEl.textContent = count > 0 ? count : '';
@@ -1476,7 +1415,6 @@
           else          { c++;                     localStorage.setItem(likedKey, '1'); }
           localStorage.setItem(lsKey, c);
           countEl.textContent = c > 0 ? c : '';
->>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
           btn.classList.toggle('liked', !wasLiked);
         });
       }

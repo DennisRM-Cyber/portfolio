@@ -1340,17 +1340,12 @@
       actions.querySelectorAll('[data-doc-slot="' + slot + '"]').forEach(function (el) {
         if (el.hasAttribute('data-doc-src')) {
           el.setAttribute('data-doc-src', url);
-<<<<<<< HEAD
-          /* Re-wire so click picks up the new URL */
-          el._docWired = false;
-=======
           /* NOTE: _docWired is intentionally NOT reset here.
              wireDocBtns listeners already read data-doc-src at click-time,
              so they pick up the new URL automatically without re-wiring.
              Resetting _docWired and calling wireDocBtns() would attach a
              second identical listener, causing the file to open in two
              browser tabs on every click.                                  */
->>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
         }
         if (el.hasAttribute('href')) {
           el.setAttribute('href', url);
@@ -1359,11 +1354,6 @@
           if (displayName) el.setAttribute('download', displayName);
         }
       });
-<<<<<<< HEAD
-      /* Re-run wireDocBtns so clicks pick up the new URL */
-      if (typeof wireDocBtns === 'function') wireDocBtns();
-=======
->>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     }
 
     /* ── LOAD ALL SAVED DOC URLS FROM FIREBASE ON PAGE LOAD ─────── */
