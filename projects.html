@@ -1290,9 +1290,22 @@
     /* ── CLOUDINARY RAW UPLOAD (PDFs, DOCX, DWG, any file) ─────── */
     function uploadRawToCloudinary(file, onSuccess, onError) {
       var fd = new FormData();
-      fd.append('file',           file);
-      fd.append('upload_preset',  CLD_PRESET);
-      fd.append('folder',         'portfolio/docs');
+      fd.append('file',            file);
+      fd.append('upload_preset',   CLD_PRESET);
+      fd.append('folder',          'portfolio/docs');
+      /* use_filename=true tells Cloudinary to use the original OS filename
+         as the public_id instead of a random hash (e.g. bq7ylioahhfgsn2nry7e).
+         unique_filename=true appends a short suffix only when the same name
+         already exists in the folder, preventing silent overwrites.
+         NOTE: these two params are allowed by unsigned upload presets —
+         they are NOT the same as the banned 'filename' param that caused
+         the "Use filename parameter is not allowed" error. That error comes
+         from a Cloudinary preset setting ("Use filename of uploaded file")
+         being enabled on the dashboard side. Fix that in:
+         Cloudinary dashboard → Settings → Upload → preset i1mylmri →
+         uncheck "Use filename or externally defined Public ID" → Save.    */
+      fd.append('use_filename',    'true');
+      fd.append('unique_filename', 'true');
       /* Use the /raw/upload endpoint — works for all non-image files */
       fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/raw/upload', {
         method: 'POST', body: fd
@@ -1306,38 +1319,72 @@
     }
 
     /* ── UPDATE ALL MATCHING BUTTONS ON A CARD ──────────────────── */
-    function applyDocUrl(docId, slot, url) {
+    /* filename (optional) — the real OS filename of the uploaded file.
+       When provided it becomes the download attribute on anchor buttons
+       so the browser saves the file with the real name, not a Cloudinary
+       random public ID (e.g. bq7ylioahhfgsn2nry7e.pdf).               */
+    function applyDocUrl(docId, slot, url, filename) {
       /* slot = 'pdf' | 'docx' | 'dwg' */
       var actions = document.querySelector('.card-actions[data-doc-id="' + docId + '"]');
       if (!actions) return;
+
+      /* Derive a clean display name from the provided filename or from the URL */
+      var displayName = filename || '';
+      if (!displayName) {
+        try {
+          var seg = url.split('/').pop().split('?')[0];
+          displayName = decodeURIComponent(seg);
+        } catch (e) {}
+      }
+
       actions.querySelectorAll('[data-doc-slot="' + slot + '"]').forEach(function (el) {
         if (el.hasAttribute('data-doc-src')) {
           el.setAttribute('data-doc-src', url);
+<<<<<<< HEAD
           /* Re-wire so click picks up the new URL */
           el._docWired = false;
+=======
+          /* NOTE: _docWired is intentionally NOT reset here.
+             wireDocBtns listeners already read data-doc-src at click-time,
+             so they pick up the new URL automatically without re-wiring.
+             Resetting _docWired and calling wireDocBtns() would attach a
+             second identical listener, causing the file to open in two
+             browser tabs on every click.                                  */
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
         }
         if (el.hasAttribute('href')) {
           el.setAttribute('href', url);
+          /* Set the named download attribute so the browser saves the file
+             with the real document name, not a Cloudinary random public ID. */
+          if (displayName) el.setAttribute('download', displayName);
         }
       });
+<<<<<<< HEAD
       /* Re-run wireDocBtns so clicks pick up the new URL */
       if (typeof wireDocBtns === 'function') wireDocBtns();
+=======
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     }
 
     /* ── LOAD ALL SAVED DOC URLS FROM FIREBASE ON PAGE LOAD ─────── */
+    /* Also reads the companion -name keys (doc-CARDID-SLOT-name) that
+       were saved alongside each URL so downloads use the real filename
+       rather than the Cloudinary-generated random public ID.          */
     function loadSavedDocUrls() {
       if (!window.PF) return;
       PF.loadEdits(function (edits) {
         Object.keys(edits).forEach(function (key) {
-          /* Keys look like: doc-fyp-pdf, doc-ac1-dwg, etc. */
+          /* URL keys: doc-fyp-pdf, doc-ac1-dwg, etc. (no trailing -name) */
           var m = key.match(/^doc-([a-z0-9]+)-([a-z]+)$/);
           if (!m) return;
           var docId = m[1];
           var slot  = m[2];
           var url   = edits[key];
-          if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-            applyDocUrl(docId, slot, url);
-          }
+          if (!url || typeof url !== 'string' || url.indexOf('http') !== 0) return;
+
+          /* Look up the companion filename saved as doc-CARDID-SLOT-name */
+          var savedName = edits['doc-' + docId + '-' + slot + '-name'] || '';
+          applyDocUrl(docId, slot, url, savedName);
         });
       });
     }
@@ -1480,17 +1527,23 @@
 
         uploadRawToCloudinary(file,
           function (url) {
+            var fileName    = file.name;                       /* real OS filename e.g. "My_Report.pdf"   */
             var firebaseKey = 'doc-' + docId + '-' + slot;
-            PF.saveEdit(firebaseKey, url)
+            var nameKey     = 'doc-' + docId + '-' + slot + '-name'; /* companion key for filename */
+            /* Save URL and filename to Firebase in one batch so both persist */
+            var batch = {};
+            batch[firebaseKey] = url;
+            batch[nameKey]     = fileName;
+            PF.saveAllEdits(batch)
               .then(function () {
                 document.body.removeChild(toast);
-                applyDocUrl(docId, slot, url);
+                applyDocUrl(docId, slot, url, fileName);
               })
               .catch(function (err) {
                 document.body.removeChild(toast);
                 /* Still apply locally so the current session works */
-                applyDocUrl(docId, slot, url);
-                alert('File uploaded but Firebase save failed: ' + err.message + 'The link will work this session but may not persist.');
+                applyDocUrl(docId, slot, url, fileName);
+                alert('File uploaded but Firebase save failed: ' + err.message + ' The link will work this session but may not persist.');
               });
           },
           function (err) {

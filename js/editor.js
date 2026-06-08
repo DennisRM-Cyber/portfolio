@@ -7,6 +7,7 @@
 ============================================================ */
 
 /* ════════════════════════════════════════════════════════════
+<<<<<<< HEAD
    SHARED FORMAT ENGINE
    Single source of truth for BOTH the floating page format bar
    AND the article reader format bar. Both bars call into this.
@@ -18,6 +19,28 @@
 ════════════════════════════════════════════════════════════ */
 window.FormatEngine = (function () {
 
+=======
+   SHARED FORMAT ENGINE  — Word-style toolbar behaviour
+   ────────────────────────────────────────────────────────────
+   Key design:
+   · saveRange()  — always called on mousedown BEFORE the click
+     moves focus away from the contenteditable. This is the
+     single most important trick. All controls call it first.
+   · applyFontSize() — uses execCommand('fontSize', 7) sentinel
+     then replaces the injected <font> elements with
+     <span style="font-size:Xpx">.  Works on multi-node
+     selections, partial words, and across element boundaries.
+   · syncControls() — reads the COMPUTED style of the anchor
+     node, not the attribute.  This means the displayed size
+     always matches what the text actually looks like, even
+     when inherited from a parent.
+   · currentSize variable — updated on every selectionchange
+     so stepper buttons always start from the correct value.
+════════════════════════════════════════════════════════════ */
+window.FormatEngine = (function () {
+
+  /* ── Read the real computed style of the current selection ── */
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
   function getSelectionStyle() {
     var result = {
       fontSize: null, fontFamily: '', bold: false,
@@ -27,6 +50,7 @@ window.FormatEngine = (function () {
     if (!sel || !sel.rangeCount) return result;
     var node = sel.anchorNode;
     if (node && node.nodeType === 3) node = node.parentElement;
+<<<<<<< HEAD
     if (!node) return result;
     try {
       var cs = window.getComputedStyle(node);
@@ -36,11 +60,25 @@ window.FormatEngine = (function () {
       result.bold         = document.queryCommandState('bold');
       result.italic       = document.queryCommandState('italic');
       result.underline    = document.queryCommandState('underline');
+=======
+    if (!node || node.nodeType !== 1) return result;
+    try {
+      var cs = window.getComputedStyle(node);
+      var px = parseFloat(cs.fontSize);
+      /* Round to nearest integer — avoids 15.9999 or 16.0001 noise */
+      if (!isNaN(px) && px > 0) result.fontSize = Math.round(px);
+      result.fontFamily    = cs.fontFamily || '';
+      result.bold          = parseInt(cs.fontWeight) >= 600 ||
+                             document.queryCommandState('bold');
+      result.italic        = document.queryCommandState('italic');
+      result.underline     = document.queryCommandState('underline');
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
       result.strikeThrough = document.queryCommandState('strikeThrough');
     } catch (e) {}
     return result;
   }
 
+<<<<<<< HEAD
   /* Apply font size without losing the selection.
      Uses execCommand('fontSize') with sentinel=7, then swaps the
      browser-injected <font size="7"> elements for <span style="font-size:Xpx">
@@ -54,10 +92,37 @@ window.FormatEngine = (function () {
     var searchRoot = document.body;
     try {
       var range = sel.getRangeAt(0);
+=======
+  /* ── Apply font size without losing the selection ────────────
+     Strategy:
+     1. Restore the saved range (selection may be gone if user
+        clicked the toolbar).
+     2. execCommand('fontSize', 7) — browser wraps selected text
+        in <font size="7"> markers.
+     3. Walk the DOM and replace every <font size="7"> with a
+        <span style="font-size:Xpx">.
+     4. Selection stays intact because we never removed it —
+        we only replaced container elements around it.         */
+  function applyFontSize(px, savedRange) {
+    /* Restore selection first if a saved range was passed */
+    if (savedRange) {
+      var sel = window.getSelection();
+      if (sel) { sel.removeAllRanges(); sel.addRange(savedRange); }
+    }
+    var currentSel = window.getSelection();
+    if (!currentSel || !currentSel.rangeCount || currentSel.isCollapsed) return;
+
+    /* Find the best search root — stay local to avoid touching
+       font elements in other parts of the page */
+    var searchRoot = document.body;
+    try {
+      var range    = currentSel.getRangeAt(0);
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
       var ancestor = range.commonAncestorContainer;
       while (ancestor && ancestor.nodeType !== 1) ancestor = ancestor.parentNode;
       if (ancestor) searchRoot = ancestor;
     } catch (e) {}
+<<<<<<< HEAD
     searchRoot.querySelectorAll('font[size="' + SENTINEL + '"]').forEach(function (font) {
       var span = document.createElement('span');
       span.style.fontSize = px + 'px';
@@ -68,22 +133,76 @@ window.FormatEngine = (function () {
 
   function syncControls(controls) {
     var style = getSelectionStyle();
+=======
+
+    var SENTINEL = 7;
+    document.execCommand('fontSize', false, SENTINEL);
+
+    /* Replace <font size="7"> with <span style="font-size:Xpx"> */
+    var fonts = searchRoot.querySelectorAll('font[size="' + SENTINEL + '"]');
+    /* querySelectorAll on searchRoot may miss if searchRoot itself
+       is the font element (rare but possible) */
+    if (fonts.length === 0 && searchRoot.tagName === 'FONT' &&
+        searchRoot.getAttribute('size') == SENTINEL) {
+      fonts = [searchRoot];
+    }
+    fonts.forEach(function (font) {
+      var span = document.createElement('span');
+      span.style.fontSize = px + 'px';
+      while (font.firstChild) span.appendChild(font.firstChild);
+      if (font.parentNode) font.parentNode.replaceChild(span, font);
+    });
+  }
+
+  /* ── Sync toolbar controls to reflect the current selection ──
+     Called on every selectionchange and after every command.
+     Updates the size input, bold/italic/underline/strike states.
+     Does NOT update the input if the user is actively typing
+     in it (activeElement guard).                               */
+  function syncControls(controls, currentSizeRef) {
+    var style = getSelectionStyle();
+
+    /* Size input — only update when the user isn't editing it */
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     if (controls.sizeInput && style.fontSize !== null) {
       if (document.activeElement !== controls.sizeInput) {
         controls.sizeInput.value = style.fontSize;
       }
+<<<<<<< HEAD
     }
     function setActive(btn, state) {
       if (!btn) return;
       btn.classList.toggle('active', !!state);
+=======
+      /* Always update the shared size reference so steppers start correctly */
+      if (currentSizeRef && style.fontSize !== null) {
+        currentSizeRef.value = style.fontSize;
+      }
+    }
+
+    function setActive(btn, state) {
+      if (btn) btn.classList.toggle('active', !!state);
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     }
     setActive(controls.boldBtn,       style.bold);
     setActive(controls.italicBtn,     style.italic);
     setActive(controls.underlineBtn,  style.underline);
     setActive(controls.strikeBtn,     style.strikeThrough);
+<<<<<<< HEAD
   }
 
   return { getSelectionStyle: getSelectionStyle, applyFontSize: applyFontSize, syncControls: syncControls };
+=======
+
+    return style;
+  }
+
+  return {
+    getSelectionStyle : getSelectionStyle,
+    applyFontSize     : applyFontSize,
+    syncControls      : syncControls
+  };
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
 }());
 
 
@@ -93,6 +212,36 @@ window.FormatEngine = (function () {
   var OWNER_PASSPHRASE = localStorage.getItem('portfolio__passphrase') || 'blueprint2025';
   var SESSION_KEY      = 'portfolio__owner__unlocked';
   var SETTINGS_KEY     = 'portfolio__settings';
+
+  /* ── XSS SANITISATION ────────────────────────────────────────
+     All Firebase → innerHTML writes go through this wrapper.
+     DOMPurify is the industry-standard sanitiser for HTML content.
+     ALLOWED_TAGS: the full set used by the format bar (bold, italic,
+     underline, strikethrough, links, spans with inline styles, lists,
+     headings, blockquotes, superscript, subscript).
+     We deliberately exclude <script>, <iframe>, <object>, <embed>,
+     event handlers (onclick, onerror…), and javascript: URIs.
+  ──────────────────────────────────────────────────────────── */
+  var _purifyConfig = {
+    ALLOWED_TAGS: [
+      'b','strong','i','em','u','s','strike','del',
+      'sup','sub','mark','br','p','span',
+      'h1','h2','h3','h4','h5','h6',
+      'ul','ol','li','blockquote','a'
+    ],
+    ALLOWED_ATTR: ['style','href','target','rel','class'],
+    ALLOWED_URI_REGEXP: /^(?:https?|mailto):/i,
+    FORCE_BODY: false
+  };
+
+  function sanitize(html) {
+    if (typeof window.DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, _purifyConfig);
+    }
+    /* DOMPurify not loaded (offline / CDN blocked) — return as-is.
+       In practice this path is only hit in local dev without internet. */
+    return html;
+  }
 
 
   /* ══════════════════════════════════════════════════════════
@@ -462,7 +611,9 @@ window.FormatEngine = (function () {
           wireAddCards();
           if (document.body.classList.contains('owner-unlocked')) {
             injectAllDeleteBtns();
-            setTimeout(injectUploadTriggers, 60);
+            /* Note: upload zone wiring for newly-restored cards is handled
+               by injectUploadZones() in initUploadSystem which fires on
+               dynamicCardsRestored dispatch above — no call needed here */
           }
         }, 80);
       } catch(e) {}
@@ -474,7 +625,11 @@ window.FormatEngine = (function () {
         var id = el.getAttribute('data-edit-id');
         if (id && edits[id] !== undefined && edits[id] !== null) {
           /* Only touch DOM if value actually changed — avoids caret disruption */
+<<<<<<< HEAD
           if (el.innerHTML !== edits[id]) el.innerHTML = edits[id];
+=======
+          if (el.innerHTML !== edits[id]) el.innerHTML = sanitize(edits[id]);
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
         }
       });
     }
@@ -495,7 +650,11 @@ window.FormatEngine = (function () {
       var id = el.getAttribute('data-edit-id');
       if (id && (cachedEdits[id] === undefined || cachedEdits[id] === null)) {
         var s = localStorage.getItem(storageKey(id));
+<<<<<<< HEAD
         if (s !== null && el.innerHTML !== s) el.innerHTML = s;
+=======
+        if (s !== null && el.innerHTML !== s) el.innerHTML = sanitize(s);
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
       }
     });
 
@@ -980,8 +1139,23 @@ window.FormatEngine = (function () {
   var fmtSizeInput = document.getElementById('fmt-size-input');
   var fmtSizeUp    = document.getElementById('fmt-size-up');
   var fmtSizeDown  = document.getElementById('fmt-size-down');
-  var currentFontSize = 16;
+  /* Use an object so FormatEngine.syncControls can update it by reference */
+  var currentFontSizeRef = { value: 16 };
 
+  /* mousedown fires BEFORE the input steals focus from the contenteditable.
+     This is the correct moment to save the selection range.                 */
+  fmtSizeInput.addEventListener('mousedown', function() { saveRange(); });
+
+  fmtSizeInput.addEventListener('input', function() {
+    /* Live preview as user types — only apply when value is valid */
+    var px = parseInt(this.value);
+    if (!isNaN(px) && px >= 8 && px <= 96) {
+      currentFontSizeRef.value = px;
+      /* Don't apply yet — wait for Enter or blur to commit */
+    }
+  });
+
+<<<<<<< HEAD
   fmtSizeInput.addEventListener('focus', saveRange);
   fmtSizeInput.addEventListener('change', function() {
     var px = Math.max(8, Math.min(96, parseInt(this.value) || 16));
@@ -1019,6 +1193,54 @@ window.FormatEngine = (function () {
     FormatEngine.applyFontSize(currentFontSize);
   });
 
+=======
+  fmtSizeInput.addEventListener('change', function() {
+    var px = Math.max(8, Math.min(96, parseInt(this.value) || currentFontSizeRef.value));
+    this.value = px;
+    currentFontSizeRef.value = px;
+    FormatEngine.applyFontSize(px, savedRange);
+  });
+
+  fmtSizeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var px = Math.max(8, Math.min(96, parseInt(this.value) || currentFontSizeRef.value));
+      this.value = px;
+      currentFontSizeRef.value = px;
+      FormatEngine.applyFontSize(px, savedRange);
+      this.blur();
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      currentFontSizeRef.value = Math.min(96, currentFontSizeRef.value + 1);
+      this.value = currentFontSizeRef.value;
+      FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      currentFontSizeRef.value = Math.max(8, currentFontSizeRef.value - 1);
+      this.value = currentFontSizeRef.value;
+      FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
+    }
+  });
+
+  fmtSizeUp.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    saveRange();
+    currentFontSizeRef.value = Math.min(96, currentFontSizeRef.value + 1);
+    fmtSizeInput.value = currentFontSizeRef.value;
+    FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
+  });
+
+  fmtSizeDown.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    saveRange();
+    currentFontSizeRef.value = Math.max(8, currentFontSizeRef.value - 1);
+    fmtSizeInput.value = currentFontSizeRef.value;
+    FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
+  });
+
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
   /* ── Text colour ── */
   var fmtColor    = document.getElementById('fmt-color');
   var fmtColorBar = document.getElementById('fmt-color-bar');
@@ -1051,6 +1273,7 @@ window.FormatEngine = (function () {
   };
 
   function syncFmtBarControls() {
+<<<<<<< HEAD
     FormatEngine.syncControls(fmtBarControls);
     /* Also update the size variable to stay in sync */
     var style = FormatEngine.getSelectionStyle();
@@ -1059,12 +1282,30 @@ window.FormatEngine = (function () {
 
   /* ── selectionchange: show bar + sync controls ── */
   document.addEventListener('selectionchange', function() {
+=======
+    /* Pass currentFontSizeRef so syncControls can update it when
+       the selection moves to text with a different size.          */
+    FormatEngine.syncControls(fmtBarControls, currentFontSizeRef);
+  }
+
+  /* ── selectionchange: show bar + sync controls ── */
+  /* rAF-throttled handler: selectionchange fires on every caret move
+     and continuously while dragging — coalescing to one run per frame
+     eliminates the Word-like lag while typing or holding shift+arrow. */
+  var _selRAF = 0;
+  var _lastSelKey = '';
+  var _hideTimer  = 0;
+  function handleSelectionChange() {
+    _selRAF = 0;
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     if (!editMode) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-      setTimeout(function() {
+      if (_hideTimer) clearTimeout(_hideTimer);
+      _hideTimer = setTimeout(function() {
+        _hideTimer = 0;
         if (!formatBar.matches(':hover')) hideFormatBar();
-      }, 120);
+      }, 150);
       return;
     }
     /* Check selection is inside a contenteditable */
@@ -1078,12 +1319,32 @@ window.FormatEngine = (function () {
     }
     if (!inEdit) return;
 
+<<<<<<< HEAD
     savedRange = sel.getRangeAt(0).cloneRange();
     var rect = sel.getRangeAt(0).getBoundingClientRect();
     showFormatBar(rect.left + rect.width / 2, rect.top);
 
     /* Sync toolbar state to reflect selected text */
     syncFmtBarControls();
+=======
+    var range = sel.getRangeAt(0);
+    savedRange = range.cloneRange();
+
+    /* Skip layout work if selection bounds + text length didn't change */
+    var key = sel.toString().length + ':' + range.startOffset + ':' + range.endOffset;
+    if (key !== _lastSelKey || !formatBar.classList.contains('visible')) {
+      _lastSelKey = key;
+      var rect = range.getBoundingClientRect();
+      showFormatBar(rect.left + rect.width / 2, rect.top);
+    }
+
+    /* Sync toolbar state to reflect selected text */
+    syncFmtBarControls();
+  }
+  document.addEventListener('selectionchange', function() {
+    if (_selRAF) return;
+    _selRAF = requestAnimationFrame(handleSelectionChange);
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
   });
 
   formatBar.addEventListener('mousedown', function() {
@@ -1104,7 +1365,10 @@ window.FormatEngine = (function () {
     injectAllDeleteBtns();
     initSlideableBars();
     wireAddCards();
-    setTimeout(injectUploadTriggers, 100);
+    /* NOTE: injectUploadTriggers() intentionally NOT called here.
+       initUploadSystem (below) owns all upload wiring and fires its
+       own MutationObserver on the 'owner-unlocked' class add.
+       Calling it here as well was the root cause of duplicate upload buttons. */
     document.dispatchEvent(new CustomEvent('ownerUnlocked'));
   }
 
@@ -1121,6 +1385,15 @@ window.FormatEngine = (function () {
   }
 
   if (sessionStorage.getItem(SESSION_KEY) === '1') unlock();
+
+  /* ── GLOBAL EXPORTS ──────────────────────────────────────────────
+     Expose key functions so page-level inline scripts (projects.html,
+     media.html, etc.) can call them without being inside this IIFE.
+  ──────────────────────────────────────────────────────────────── */
+  window.enableEditMode  = enableEditMode;
+  window.disableEditMode = disableEditMode;
+  window.unlockOwner     = unlock;
+  window.lockOwner       = lock;
 
 
   /* ══════════════════════════════════════════════════════════
@@ -1144,11 +1417,22 @@ window.FormatEngine = (function () {
 
 
   /* ══════════════════════════════════════════════════════════
+<<<<<<< HEAD
      PART 10 — UPLOAD TRIGGERS (placeholder upload buttons)
      (unchanged from v4 — still wires image/video/doc
      upload zones on unlock)
   ══════════════════════════════════════════════════════════ */
 
+=======
+     PART 10 — ASSET GUIDE PANEL only.
+     Upload trigger wiring is owned exclusively by initUploadSystem
+     below. This part only injects the guide panel UI that the
+     upload zones reference via showAssetGuide().
+  ══════════════════════════════════════════════════════════ */
+
+  /* ── Keep legacy image storage helpers for backward-compat
+     (loadStoredImages below reads keys written by old version) ── */
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
   var IMAGE_STORE_PREFIX = 'portfolio__img__';
 
   function storeImage(key, dataUrl) {
@@ -1226,6 +1510,7 @@ window.FormatEngine = (function () {
     guide.classList.add('open');
   }
 
+<<<<<<< HEAD
   function injectUploadTriggers() {
     var imagePlaceholders = [
       { selector: '.card-media__placeholder', type: 'image', keyFn: function(el) {
@@ -1329,6 +1614,8 @@ window.FormatEngine = (function () {
     });
   }
 
+=======
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
   /* Inject asset guide panel (once) */
   if (!document.getElementById('asset-guide')) {
     var assetGuide = document.createElement('div');
@@ -1435,14 +1722,22 @@ window.FormatEngine = (function () {
       }
       img.src = dataUrl;
       img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+<<<<<<< HEAD
       var badge = container.querySelector('.upload-local-badge');
       if (badge) badge.style.display = '';
+=======
+      /* LOCAL ONLY badge — owner visibility only. Visitors see the image without the badge. */
+      var badge = container.querySelector('.upload-local-badge');
+      if (badge) badge.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
       container.setAttribute('data-has-upload', '1');
       var changeBtn = container.querySelector('.upload-change-btn');
       if (!changeBtn) {
         changeBtn = document.createElement('button');
         changeBtn.className = 'upload-change-btn';
         changeBtn.textContent = '✎ CHANGE PHOTO';
+        /* Change button only for owners */
+        changeBtn.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
         container.appendChild(changeBtn);
         changeBtn.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -1545,16 +1840,44 @@ window.FormatEngine = (function () {
       });
     });
 
+<<<<<<< HEAD
     /* PDF / DOCX upload buttons */
+=======
+    /* PDF / DOCX upload buttons
+       ─────────────────────────────────────────────────────────────────────
+       FIX (v6): Previous version used URL.createObjectURL() which produced
+       a blob: URL that is:
+         (a) session-only — revoked on tab close
+         (b) sent to Google Docs viewer which CANNOT read blob: URLs
+         (c) required re-wiring wireDocBtns via _docWired=false which
+             caused the doc viewer to either double-fire or not fire at all
+
+       New approach:
+         1. Read the file as a base64 DataURL (like image uploads do)
+         2. Store it in localStorage under uploadKey(assetPath)
+         3. Update btn.setAttribute('data-doc-src', dataUrl) in-place
+            without touching _docWired — the existing click listener on
+            btn already reads the current data-doc-src attribute live
+         4. In openDocViewer (projects.html), data: URLs are treated as
+            local PDFs — the inline viewer handles them natively via an
+            <iframe srcdoc> or object element, bypassing Google Docs
+       ────────────────────────────────────────────────────────────────── */
+    var DOC_SIZE_LIMIT_MB = 4; /* 4 MB base64 ≈ 5.3 MB encoded — safe for localStorage */
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
-      if (btn._uploadDocWired || !btn.classList.contains('card-btn--primary')) return;
+      if (btn._uploadDocWired || !btn.classList.contains("card-btn--primary")) return;
+      /* FIX: skip cards owned by projects.html doc-id upload system (avoids duplicate upload buttons) */
+      if (btn.closest && btn.closest(".card-actions[data-doc-id]")) return;
       btn._uploadDocWired = true;
       var assetPath = btn.getAttribute('data-doc-src');
+      /* Skip buttons that already point to a stored data URL or blob */
+      if (/^data:|^blob:/.test(assetPath)) return;
       var assetType = btn.getAttribute('data-doc-type') || 'pdf';
       var uploadBtn = document.createElement('button');
       uploadBtn.className = 'card-btn owner-only';
-      uploadBtn.title = 'Upload ' + assetType.toUpperCase() + ' file';
+      uploadBtn.title = 'Upload ' + assetType.toUpperCase() + ' file to replace placeholder';
       uploadBtn.innerHTML = '<span style="font-size:11px;">📂</span> UPLOAD ' + assetType.toUpperCase();
+<<<<<<< HEAD
       uploadBtn.style.display = 'none';
       if (btn.parentNode) btn.parentNode.insertBefore(uploadBtn, btn.nextSibling);
       if (document.body.classList.contains('owner-unlocked')) uploadBtn.style.display = '';
@@ -1579,8 +1902,77 @@ window.FormatEngine = (function () {
           btn.setAttribute('data-doc-src', objectUrl);
           btn._docWired = false;
           if (typeof wireDocBtns === 'function') wireDocBtns();
+=======
+      /* Always hidden by default; shown only when owner-unlocked */
+      uploadBtn.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
+      if (btn.parentNode) btn.parentNode.insertBefore(uploadBtn, btn.nextSibling);
+
+      uploadBtn.addEventListener('click', function(e) {
+        e.preventDefault(); e.stopPropagation();
+        if (!document.body.classList.contains('owner-unlocked')) return;
+        var accept = assetType === 'pdf'
+          ? 'application/pdf'
+          : '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        openFilePicker(accept, function(file) {
+          var sizeMB = file.size / (1024 * 1024);
+          if (sizeMB > DOC_SIZE_LIMIT_MB) {
+            showToast('⚠ File too large',
+              '<div class="upload-toast__warn">This file is ' + sizeMB.toFixed(1) + 'MB.<br>' +
+              'Keep under ' + DOC_SIZE_LIMIT_MB + 'MB for browser storage.<br>' +
+              'Larger files must be committed to <code>assets/docs/</code> in GitHub.</div>', 8000);
+            return;
+          }
+          readAsDataURL(file, function(dataUrl) {
+            /* Persist in localStorage — survives page refresh, no session limit */
+            try { localStorage.setItem(uploadKey(assetPath), dataUrl); }
+            catch(storageErr) {
+              showToast('⚠ Storage full',
+                '<div class="upload-toast__warn">Browser storage is full. ' +
+                'Commit the file to <code>' + assetPath + '</code> in GitHub instead.</div>', 7000);
+              return;
+            }
+
+            /* Update the READ/VIEW button's src attribute directly.
+               The existing click listener reads data-doc-src live,
+               so this takes effect immediately — no re-wiring needed. */
+            btn.setAttribute('data-doc-src', dataUrl);
+            btn.setAttribute('data-doc-type', assetType);
+
+            /* Also update any paired download link */
+            var downloadLink = btn.parentNode && btn.parentNode.querySelector('a[download]');
+            if (downloadLink) downloadLink.href = dataUrl;
+
+            /* Visual feedback: highlight the read button green */
+            var prevBg = btn.style.background;
+            btn.style.background = 'rgba(74,222,128,0.18)';
+            btn.style.borderColor = 'rgba(74,222,128,0.6)';
+            setTimeout(function() {
+              btn.style.background = prevBg;
+              btn.style.borderColor = '';
+            }, 2500);
+
+            showToast('✓ ' + assetType.toUpperCase() + ' ready',
+              '<div class="upload-toast__path">File: ' + file.name + '</div>' +
+              '<div class="upload-toast__warn">Stored in browser — persists across page refreshes.<br>' +
+              'Click <strong>' + (btn.textContent.trim().split(' ')[0] || 'READ') + '</strong> to open the document viewer.<br><br>' +
+              'To make it permanent for all visitors:<br>' +
+              '1. Name the file: <strong>' + assetPath.split('/').pop() + '</strong><br>' +
+              '2. Copy into <strong>' + assetPath.split('/').slice(0,-1).join('/') + '/</strong><br>' +
+              '3. Commit and push to GitHub</div>', 14000);
+          });
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
         });
       });
+
+      /* Restore on page load: if a base64 version was stored from a previous upload,
+         apply it immediately so the viewer button is ready without any upload action. */
+      var storedDoc = null;
+      try { storedDoc = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
+      if (storedDoc && /^data:/.test(storedDoc)) {
+        btn.setAttribute('data-doc-src', storedDoc);
+        btn.style.borderColor = 'rgba(74,222,128,0.35)';
+        btn.title = btn.title + ' (stored locally)';
+      }
     });
 
     /* Video upload zones */
@@ -1621,20 +2013,72 @@ window.FormatEngine = (function () {
       var editBtn = document.createElement('button');
       editBtn.className = 'link-edit-btn'; editBtn.title = 'Edit link URL'; editBtn.textContent = '🔗';
       card.appendChild(editBtn);
+<<<<<<< HEAD
+=======
+
+      /* Derive a stable key from the card's social class name          */
+      var key       = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
+      var fbEditKey = 'social-link-' + (card.className.match(/social-\w+/)||['social'])[0];
+
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
       editBtn.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         var current = card.getAttribute('href') || '';
         var newUrl = window.prompt('Enter the full URL for this social link:\n(e.g. https://linkedin.com/in/yourname)', current);
+<<<<<<< HEAD
         if (newUrl !== null && newUrl.trim()) {
           card.setAttribute('href', newUrl.trim());
           var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
           try { localStorage.setItem(key, newUrl.trim()); } catch(e) {}
           showToast('✓ Link updated',
             '<div class="upload-toast__path">' + newUrl.trim() + '</div>' +
+=======
+        if (newUrl === null || !newUrl.trim()) return;
+
+        var url = newUrl.trim();
+        card.setAttribute('href', url);
+
+        /* Always save to localStorage first (instant, always available) */
+        try { localStorage.setItem(key, url); } catch(e) {}
+
+        /* Save to Firebase so ALL devices see the updated link ───────── */
+        if (window.PF && typeof PF.saveEdit === 'function') {
+          var doSave = function() {
+            PF.saveEdit(fbEditKey, url)
+              .then(function() {
+                showToast('✓ Link saved',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Saved to Firebase — visible on all devices.</div>',
+                  5000);
+              })
+              .catch(function(err) {
+                showToast('✓ Link updated (local only)',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Firebase save failed: ' + err.message + '<br>To make permanent, update href in contact.html and push to GitHub.</div>',
+                  7000);
+              });
+          };
+          if (PF.isOwner()) {
+            doSave();
+          } else {
+            PF.ensureOwnerSignIn()
+              .then(function() { doSave(); })
+              .catch(function() {
+                showToast('✓ Link updated (local only)',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Sign-in cancelled. To make permanent, update href in contact.html and push to GitHub.</div>',
+                  7000);
+              });
+          }
+        } else {
+          showToast('✓ Link updated',
+            '<div class="upload-toast__path">' + url + '</div>' +
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
             '<div class="upload-toast__warn">Saved to browser. To make permanent, update href in contact.html and push to GitHub.</div>',
             6000);
         }
       });
+<<<<<<< HEAD
       var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
       var saved = null; try { saved = localStorage.getItem(key); } catch(e) {}
       if (saved) card.setAttribute('href', saved);
@@ -1642,13 +2086,64 @@ window.FormatEngine = (function () {
   }
 
   /* ── WIRE ON UNLOCK ── */
+=======
+
+      /* On page load: restore from Firebase in real-time (watchEdits), fall back to localStorage.
+         Using watchEdits means a link changed on any device appears instantly on all others.     */
+      if (window.PF && typeof PF.watchEdits === 'function') {
+        PF.watchEdits(function(edits) {
+          var fbUrl = edits && edits[fbEditKey];
+          if (fbUrl) {
+            card.setAttribute('href', fbUrl);
+            try { localStorage.setItem(key, fbUrl); } catch(e) {}   /* keep local in sync */
+          } else {
+            var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+            if (lsUrl) card.setAttribute('href', lsUrl);
+          }
+        });
+      } else if (window.PF && typeof PF.loadEdits === 'function') {
+        /* Fallback: one-time read if watchEdits unavailable */
+        PF.loadEdits(function(edits) {
+          var fbUrl = edits && edits[fbEditKey];
+          if (fbUrl) {
+            card.setAttribute('href', fbUrl);
+            try { localStorage.setItem(key, fbUrl); } catch(e) {}
+          } else {
+            var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+            if (lsUrl) card.setAttribute('href', lsUrl);
+          }
+        });
+      } else {
+        /* Firebase not loaded — use localStorage */
+        var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+        if (lsUrl) card.setAttribute('href', lsUrl);
+      }
+    });
+  }
+
+  /* ── WIRE ON UNLOCK / LOCK ── */
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
   var unlockObserver = new MutationObserver(function(mutations) {
     mutations.forEach(function(m) {
       if (m.type === 'attributes' && m.attributeName === 'class') {
-        if (document.body.classList.contains('owner-unlocked')) {
+        var isOwner = document.body.classList.contains('owner-unlocked');
+        if (isOwner) {
+          /* injectUploadZones guards with _uploadWired — safe to call multiple times */
           injectUploadZones();
           injectLinkEditors();
+<<<<<<< HEAD
           document.querySelectorAll('.card-btn[title^="Upload"]').forEach(function(b) { b.style.display = ''; });
+=======
+          /* Show upload-related owner-only elements */
+          document.querySelectorAll('.card-btn[title^="Upload"], .upload-local-badge, .upload-change-btn').forEach(function(b) {
+            b.style.display = '';
+          });
+        } else {
+          /* Hide owner-only upload UI when locked */
+          document.querySelectorAll('.upload-local-badge, .upload-change-btn').forEach(function(b) {
+            b.style.display = 'none';
+          });
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
         }
       }
     });
@@ -1661,6 +2156,7 @@ window.FormatEngine = (function () {
   }
   loadStoredUploads();
 
+<<<<<<< HEAD
 })(); /* end initUploadSystem */
 
 
@@ -1692,6 +2188,57 @@ window.FormatEngine = (function () {
 
     var rfbCurrentSize = 16;
 
+=======
+  /* Also re-wire when dynamic cards are restored from localStorage */
+  document.addEventListener('dynamicCardsRestored', function() {
+    if (document.body.classList.contains('owner-unlocked')) {
+      setTimeout(function() { injectUploadZones(); }, 60);
+    }
+  });
+
+})(); /* end initUploadSystem */
+
+
+/* ═══════════════════════════════════════════════════════════
+   ARTICLES PAGE — READER FORMAT BAR SYNC PATCH
+   Runs only on articles.html. Enhances the existing
+   reader-format-bar to sync state + use FormatEngine
+   for size stepping without deselect.
+   This block is self-contained and safe to run on all pages
+   (it checks for element existence before wiring).
+═══════════════════════════════════════════════════════════ */
+(function patchArticlesFormatBar() {
+
+  /* ── Retry loop: attempt up to 10 times at 100ms intervals ──
+     Replaces the brittle single 300ms setTimeout.  Stops as
+     soon as the target elements exist (usually attempt 1–3). */
+  var attempts = 0;
+  var MAX_ATTEMPTS = 10;
+  var INTERVAL_MS  = 100;
+
+  function tryPatch() {
+    attempts++;
+    var rfbBar    = document.getElementById('reader-format-bar');
+    var rfbSize   = document.getElementById('rfb-size-input');
+    var rfbSizeUp = document.getElementById('rfb-size-up');
+    var rfbSizeDn = document.getElementById('rfb-size-down');
+
+    if (!rfbBar || !rfbSize) {
+      if (attempts < MAX_ATTEMPTS) setTimeout(tryPatch, INTERVAL_MS);
+      return; // elements not ready — retry
+    }
+
+    /* ── Find the bold/italic/underline/strike buttons by their data-cmd ── */
+    var rfbBtns = {
+      bold:         rfbBar.querySelector('[data-cmd="bold"]'),
+      italic:       rfbBar.querySelector('[data-cmd="italic"]'),
+      underline:    rfbBar.querySelector('[data-cmd="underline"]'),
+      strikeThrough:rfbBar.querySelector('[data-cmd="strikeThrough"]'),
+    };
+
+    var rfbCurrentSize = 16;
+
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
     /* Re-wire the size steppers through FormatEngine (keeps selection alive) */
     if (rfbSizeUp) {
       /* Clone to remove old listener */
@@ -1766,8 +2313,19 @@ window.FormatEngine = (function () {
         setTimeout(function() { FormatEngine.syncControls(rfbControls); }, 10);
       });
     });
+<<<<<<< HEAD
 
   }, 300); /* wait 300ms for articles page script to set up the reader */
+=======
+  } /* end tryPatch */
+
+  /* Start the retry loop on DOMContentLoaded or immediately if already loaded */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(tryPatch, 50); });
+  } else {
+    setTimeout(tryPatch, 50);
+  }
+>>>>>>> 75f930b7734204d47c15953704cef1ce3f377b64
 
 })();
 
