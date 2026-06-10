@@ -1057,9 +1057,30 @@
     });
 
 
-    /* ── 2. DOCUMENT OPEN — OS / BROWSER NATIVE ─── */
-    // Buttons with data-doc-src open the file directly in the browser
-    // (PDF viewer, OS app, etc.) via window.open. No in-page iframe.
+    /* ── 2. DOCUMENT OPEN — NATIVE DEVICE TOOLS ─── */
+    // All document buttons (READ, VIEW, DOWNLOAD) force a file download
+    // so the OS opens the doc in its native app (PDF viewer, Word, AutoCAD).
+    //
+    // HOW: Cloudinary raw files served without a transformation flag
+    // use Content-Disposition: inline, which makes browsers display PDFs
+    // inside the browser tab. Adding fl_attachment to the URL path flips
+    // that header to Content-Disposition: attachment, which every browser
+    // and mobile OS treats as "download and open with native app".
+    //
+    // Same helper is used by applyDocUrl() below so saved Firebase URLs
+    // are also patched when loaded on page load.
+
+    function toNativeUrl(url) {
+      if (!url || typeof url !== 'string') return url;
+      // Cloudinary raw upload URLs — insert fl_attachment after /raw/upload/
+      if (url.indexOf('res.cloudinary.com') !== -1 &&
+          url.indexOf('/raw/upload/') !== -1 &&
+          url.indexOf('fl_attachment') === -1) {
+        return url.replace('/raw/upload/', '/raw/upload/fl_attachment/');
+      }
+      return url;
+    }
+
     function wireDocBtns() {
       document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
         if (btn._docWired) return;
@@ -1068,7 +1089,9 @@
           e.preventDefault();
           var src = btn.getAttribute('data-doc-src');
           if (!src || src === '#') return;
-          window.open(src, '_blank', 'noopener');
+          // fl_attachment tells Cloudinary to send Content-Disposition: attachment
+          // → browser downloads the file → OS opens it with the native app
+          window.open(toNativeUrl(src), '_blank', 'noopener');
         });
       });
     }
@@ -1348,7 +1371,9 @@
              browser tabs on every click.                                  */
         }
         if (el.hasAttribute('href')) {
-          el.setAttribute('href', url);
+          /* fl_attachment forces Cloudinary to send Content-Disposition: attachment */
+          /* so the browser downloads and hands off to the native OS app          */
+          el.setAttribute('href', toNativeUrl(url));
           /* Set the named download attribute so the browser saves the file
              with the real document name, not a Cloudinary random public ID. */
           if (displayName) el.setAttribute('download', displayName);

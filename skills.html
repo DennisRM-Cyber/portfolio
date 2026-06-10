@@ -885,26 +885,8 @@
     </div>
   </footer>
 
-  <!-- ═══════════════════════════════════════════
-       IN-PAGE DOCUMENT VIEWER (cert docs)
-  ═══════════════════════════════════════════ -->
-  <div class="doc-viewer-overlay" id="cert-doc-viewer" role="dialog" aria-modal="true" aria-label="Certification document viewer"
-       style="position:fixed;inset:0;z-index:600;background:rgba(10,16,36,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);opacity:0;pointer-events:none;transition:opacity 0.22s;display:flex;flex-direction:column;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid rgba(240,165,0,0.18);background:rgba(5,9,22,0.98);flex-shrink:0;gap:16px;">
-      <span id="cert-doc-title" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Document</span>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-        <a id="cert-doc-download" download style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;padding:7px 14px;border-radius:8px;border:1px solid rgba(240,165,0,0.25);background:transparent;color:var(--amber);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;text-decoration:none;">⬇ DOWNLOAD</a>
-        <button id="cert-doc-close" type="button" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;padding:7px 14px;border-radius:8px;border:1px solid rgba(248,113,113,0.3);background:transparent;color:#f87171;cursor:pointer;transition:all 0.15s;">✕ CLOSE</button>
-      </div>
-    </div>
-    <div style="flex:1;overflow:hidden;position:relative;">
-      <div id="cert-doc-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,9,22,0.97);font-family:var(--font-mono);color:var(--text-muted);font-size:10px;letter-spacing:0.16em;transition:opacity 0.3s;">
-        <div style="width:28px;height:28px;border:2px solid rgba(240,165,0,0.2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-        <span>LOADING DOCUMENT…</span>
-      </div>
-      <iframe id="cert-doc-frame" title="Certification document" style="width:100%;height:100%;border:none;background:#f5f5f0;"></iframe>
-    </div>
-  </div>
+  <!-- doc-viewer-overlay removed — cert card clicks now open documents
+       directly in the native OS app via fl_attachment on the Cloudinary URL -->
 
   <!-- OWNER LOCK OVERLAY — must be before editor.js -->
   <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
@@ -1028,56 +1010,28 @@
     wireAddSkillBtns();
 
 
-    /* ── CERT DOCUMENT VIEWER ────────────────────────── */
-    var certViewer   = document.getElementById('cert-doc-viewer');
-    var certFrame    = document.getElementById('cert-doc-frame');
-    var certTitle    = document.getElementById('cert-doc-title');
-    var certLoading  = document.getElementById('cert-doc-loading');
-    var certClose    = document.getElementById('cert-doc-close');
-    var certDownload = document.getElementById('cert-doc-download');
+    /* ── CERT DOCUMENT — NATIVE DEVICE TOOLS ────────────────────────
+       Clicking a cert card now downloads the file so the OS opens it
+       in the native app (PDF viewer, Word, etc.) instead of an iframe.
 
-    function openCertViewer(src, title, docType) {
-      certTitle.textContent = title || 'Document';
-      certLoading.style.opacity = '1';
-      certLoading.style.pointerEvents = 'all';
-      certDownload.href = src;
-      certDownload.setAttribute('download', '');
-      var viewerSrc;
-      if (!docType || docType === 'pdf') {
-        viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1';
-      } else {
-        /* DOCX via Google Docs viewer */
-        viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
+       fl_attachment is appended to Cloudinary raw URLs which flips
+       Content-Disposition to attachment — every browser and mobile OS
+       then hands the file off to the native app automatically.
+    ─────────────────────────────────────────────────────────────── */
+    function toNativeUrl(url) {
+      if (!url || typeof url !== 'string') return url;
+      if (url.indexOf('res.cloudinary.com') !== -1 &&
+          url.indexOf('/raw/upload/') !== -1 &&
+          url.indexOf('fl_attachment') === -1) {
+        return url.replace('/raw/upload/', '/raw/upload/fl_attachment/');
       }
-      certFrame.src = '';
-      setTimeout(function() { certFrame.src = viewerSrc; }, 80);
-      certViewer.style.opacity = '1';
-      certViewer.style.pointerEvents = 'all';
-      document.body.style.overflow = 'hidden';
+      return url;
     }
 
-    function closeCertViewer() {
-      certViewer.style.opacity = '0';
-      certViewer.style.pointerEvents = 'none';
-      document.body.style.overflow = '';
-      setTimeout(function() { certFrame.src = ''; }, 300);
+    function openCertNative(src) {
+      if (!src || src === '#') return;
+      window.open(toNativeUrl(src), '_blank', 'noopener');
     }
-
-    if (certFrame) {
-      certFrame.addEventListener('load', function() {
-        certLoading.style.opacity = '0';
-        certLoading.style.pointerEvents = 'none';
-      });
-    }
-    if (certClose) certClose.addEventListener('click', closeCertViewer);
-    if (certViewer) {
-      certViewer.addEventListener('click', function(e) {
-        if (e.target === certViewer) closeCertViewer();
-      });
-    }
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && certViewer && certViewer.style.opacity === '1') closeCertViewer();
-    });
 
 
     /* ── CERT CLOUDINARY + FIREBASE UPLOAD SYSTEM ───── */
@@ -1109,12 +1063,13 @@
       }
     }
 
-    /* Apply a saved cert doc URL: update data-cert-doc attribute,
-       hint text, and wire the card click */
+    /* Apply a saved cert doc URL: store the fl_attachment URL on the card
+       so every click goes straight to the native app with no extra steps */
     function applyCertUrl(certId, url, docType) {
       var card = document.querySelector('.cert-card[data-cert-id="' + certId + '"]');
       if (!card) return;
-      card.setAttribute('data-cert-doc', url);
+      /* Store the native URL so wireCertCardClick picks it up directly */
+      card.setAttribute('data-cert-doc', toNativeUrl(url));
       card.setAttribute('data-cert-doc-type', docType || 'pdf');
       var hint = card.querySelector('.cert-card__doc-hint');
       if (hint) hint.textContent = '📄 click to open document';
@@ -1125,14 +1080,12 @@
       if (card._certClickWired) return;
       card._certClickWired = true;
       card.addEventListener('click', function(e) {
-        /* Don't open viewer when clicking the upload btn */
+        /* Don't trigger when clicking the upload btn or delete btn */
         if (e.target.closest('.cert-upload-btn') || e.target.closest('.new-card__delete')) return;
         var url = card.getAttribute('data-cert-doc');
         if (!url) return;
-        var docType = card.getAttribute('data-cert-doc-type') || 'pdf';
-        var nameEl = card.querySelector('.cert-card__name');
-        var title  = nameEl ? nameEl.textContent : 'Certificate';
-        openCertViewer(url, title, docType);
+        /* Open directly in native OS app — fl_attachment already applied by applyCertUrl */
+        openCertNative(url);
       });
     }
 

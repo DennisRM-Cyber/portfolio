@@ -468,12 +468,26 @@
       });
     }
 
+    /* Adds fl_attachment to Cloudinary raw URLs so the server sends
+       Content-Disposition: attachment → browser downloads → native OS app opens */
+    function toNativeUrl(url) {
+      if (!url || typeof url !== 'string') return url;
+      if (url.indexOf('res.cloudinary.com') !== -1 &&
+          url.indexOf('/raw/upload/') !== -1 &&
+          url.indexOf('fl_attachment') === -1) {
+        return url.replace('/raw/upload/', '/raw/upload/fl_attachment/');
+      }
+      return url;
+    }
+
     function applyCvUrl(url, filename) {
       if (!cvBtn) return;
-      cvBtn.setAttribute('href', url);
-      /* Set a named download attribute so the browser saves the file with the
-         real CV filename instead of the Cloudinary random public ID.
-         Falls back to a sensible default so the attribute is never empty.   */
+      /* fl_attachment tells Cloudinary to serve with Content-Disposition: attachment.
+         This forces every browser / mobile OS to download the file and open it
+         in the native app (PDF viewer, Word, etc.) instead of inline in the browser. */
+      cvBtn.setAttribute('href', toNativeUrl(url));
+      /* Named download attribute so the file saves with the real filename, not a
+         Cloudinary random public ID. Falls back to a sensible default. */
       cvBtn.setAttribute('download', filename || 'Rubui-Mwangi-CV.pdf');
       cvBtn.textContent = 'DOWNLOAD CV';
     }
