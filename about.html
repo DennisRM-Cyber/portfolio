@@ -582,26 +582,19 @@
       PF.loadEdits(function (edits) {
         var url = edits['doc-cv'];
         if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-          /* Also read the companion filename saved alongside the URL */
-          var savedName = edits['doc-cv-name'] || '';
-          applyCvUrl(url, savedName);
+          applyCvUrl(url);
         }
       });
     }
 
-    function applyCvUrl(url, filename) {
+    /* Cloudinary stores raw files using the original uploaded filename,
+       so the URL already ends with e.g. "Rubui_Mwangi_CV_2025.pdf".
+       Parsing it out is all that is needed — no separate Firebase key. */
+    function applyCvUrl(url) {
       if (!cvBtn) return;
       cvBtn.setAttribute('href', url);
-      /* Use the real OS filename as the download name so the saved file
-         keeps the original name (e.g. "Rubui_Mwangi_CV.pdf") instead of
-         Cloudinary's random identifier string */
-      var dlName = filename || '';
-      if (!dlName) {
-        try {
-          var seg = url.split('/').pop().split('?')[0];
-          dlName = decodeURIComponent(seg);
-        } catch (e) {}
-      }
+      var dlName = '';
+      try { dlName = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch (e) {}
       cvBtn.setAttribute('download', dlName || '');
       cvBtn.textContent = 'DOWNLOAD CV';
     }
@@ -762,19 +755,17 @@
 
         uploadRawToCloudinary(file,
           function (url) {
-            var fileName = file.name; /* real OS filename, e.g. "Rubui_Mwangi_CV.pdf" */
-            /* Save URL, then companion filename, so download button always
-               uses the correct name even after a page reload */
+            /* The URL already contains the original filename — Cloudinary
+               preserves it. One saveEdit for the URL is all that is needed. */
             PF.saveEdit('doc-cv', url)
-              .then(function () { return PF.saveEdit('doc-cv-name', fileName); })
               .then(function () {
                 document.body.removeChild(toast);
-                applyCvUrl(url, fileName);
+                applyCvUrl(url);
               })
               .catch(function (err) {
                 document.body.removeChild(toast);
-                applyCvUrl(url, fileName);
-                alert('CV uploaded but Firebase save failed: ' + err.message + ' The link will work this session but may not persist.');
+                applyCvUrl(url);
+                alert('CV uploaded but Firebase save failed: ' + err.message + 'The link will work this session but may not persist.');
               });
           },
           function (err) {

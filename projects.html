@@ -1550,23 +1550,16 @@
     }
 
     /* ── UPDATE ALL MATCHING BUTTONS ON A CARD ──────────────────── */
-    /* filename (optional) — the real OS filename of the uploaded file.
-       When provided it becomes the data-doc-title on READ/VIEW buttons
-       so the viewer header always shows the actual document name,
-       not the old hardcoded placeholder title.                         */
-    function applyDocUrl(docId, slot, url, filename) {
+    /* Cloudinary preserves the original filename inside the URL itself,
+       so we parse it out directly — no separate filename parameter needed. */
+    function applyDocUrl(docId, slot, url) {
       /* slot = 'pdf' | 'docx' | 'dwg' */
       var actions = document.querySelector('.card-actions[data-doc-id="' + docId + '"]');
       if (!actions) return;
 
-      /* Derive a clean display name from the provided filename or from the URL */
-      var displayName = filename || '';
-      if (!displayName) {
-        try {
-          var seg = url.split('/').pop().split('?')[0];
-          displayName = decodeURIComponent(seg);
-        } catch (e) {}
-      }
+      /* Parse the real filename out of the Cloudinary URL */
+      var displayName = '';
+      try { displayName = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch (e) {}
 
       actions.querySelectorAll('[data-doc-slot="' + slot + '"]').forEach(function (el) {
         if (el.hasAttribute('data-doc-src')) {
@@ -1589,13 +1582,11 @@
     }
 
     /* ── LOAD ALL SAVED DOC URLS FROM FIREBASE ON PAGE LOAD ─────── */
-    /* Also reads the companion -name keys (doc-CARDID-SLOT-name) that
-       were saved alongside each URL so the viewer shows the real
-       filename rather than the hardcoded placeholder title.          */
+    /* The original filename is already embedded in each Cloudinary URL,
+       so we only need the URL keys — no companion -name keys required. */
     function loadSavedDocUrls() {
       if (!window.PF) return;
       PF.loadEdits(function (edits) {
-        /* First pass: collect all URL keys and their companion name keys */
         Object.keys(edits).forEach(function (key) {
           /* URL keys: doc-fyp-pdf, doc-ac1-dwg, etc. (no trailing -name) */
           var m = key.match(/^doc-([a-z0-9]+)-([a-z]+)$/);
@@ -1604,10 +1595,7 @@
           var slot  = m[2];
           var url   = edits[key];
           if (!url || typeof url !== 'string' || url.indexOf('http') !== 0) return;
-
-          /* Look up the companion filename saved as doc-CARDID-SLOT-name */
-          var savedName = edits['doc-' + docId + '-' + slot + '-name'] || '';
-          applyDocUrl(docId, slot, url, savedName);
+          applyDocUrl(docId, slot, url);
         });
       });
     }
@@ -1750,22 +1738,18 @@
 
         uploadRawToCloudinary(file,
           function (url) {
-            var fileName    = file.name;          /* real OS filename e.g. "My_Report.pdf"  */
+            /* Cloudinary preserves the original filename in the URL —
+               only the URL needs saving, no separate name key. */
             var firebaseKey = 'doc-' + docId + '-' + slot;
-            var nameKey     = 'doc-' + docId + '-' + slot + '-name'; /* store name alongside URL */
-            /* Save URL and filename to Firebase in one batch */
-            var batch = {};
-            batch[firebaseKey] = url;
-            batch[nameKey]     = fileName;
-            PF.saveAllEdits(batch)
+            PF.saveEdit(firebaseKey, url)
               .then(function () {
                 document.body.removeChild(toast);
-                applyDocUrl(docId, slot, url, fileName);
+                applyDocUrl(docId, slot, url);
               })
               .catch(function (err) {
                 document.body.removeChild(toast);
                 /* Still apply locally so the current session works */
-                applyDocUrl(docId, slot, url, fileName);
+                applyDocUrl(docId, slot, url);
                 alert('File uploaded but Firebase save failed: ' + err.message + ' The link will work this session but may not persist.');
               });
           },

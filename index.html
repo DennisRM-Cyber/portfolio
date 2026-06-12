@@ -561,25 +561,19 @@
   <script>
   /* ================================================================
      INDEX PAGE — CV DOWNLOAD BUTTON
-     Reads the CV URL and filename saved by about.html's upload system
-     from Firebase (edits/doc-cv and edits/doc-cv-name) and patches
-     the DOWNLOAD CV button href + download attribute so it downloads
-     the real uploaded file with its original OS filename.
+     Reads the CV URL saved by about.html from Firebase (edits/doc-cv)
+     and patches the DOWNLOAD CV button. The original filename is
+     embedded in the Cloudinary URL itself — no separate key needed.
   ================================================================ */
   (function () {
     'use strict';
     var cvBtn = document.getElementById('cv-download-btn');
     if (!cvBtn) return;
 
-    function applyCvUrl(url, filename) {
+    function applyCvUrl(url) {
       cvBtn.setAttribute('href', url);
-      var dlName = filename || '';
-      if (!dlName) {
-        try {
-          var seg = url.split('/').pop().split('?')[0];
-          dlName = decodeURIComponent(seg);
-        } catch (e) {}
-      }
+      var dlName = '';
+      try { dlName = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch (e) {}
       cvBtn.setAttribute('download', dlName || '');
     }
 
@@ -589,7 +583,7 @@
       PF.loadEdits(function (edits) {
         var url = edits['doc-cv'];
         if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-          applyCvUrl(url, edits['doc-cv-name'] || '');
+          applyCvUrl(url);
         }
       });
     }
