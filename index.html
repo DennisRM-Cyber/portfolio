@@ -570,10 +570,12 @@
     var cvBtn = document.getElementById('cv-download-btn');
     if (!cvBtn) return;
 
-    function applyCvUrl(url) {
+    function applyCvUrl(url, name) {
       cvBtn.setAttribute('href', url);
-      var dlName = '';
-      try { dlName = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch (e) {}
+      var dlName = name || '';
+      if (!dlName) {
+        try { dlName = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch (e) {}
+      }
       cvBtn.setAttribute('download', dlName || '');
     }
 
@@ -581,9 +583,10 @@
     function tryLoad() {
       if (!window.PF) { setTimeout(tryLoad, 120); return; }
       PF.loadEdits(function (edits) {
-        var url = edits['doc-cv'];
+        var url  = edits['doc-cv'];
+        var name = edits['doc-cv-name'] || '';
         if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-          applyCvUrl(url);
+          applyCvUrl(url, name);
         }
       });
     }

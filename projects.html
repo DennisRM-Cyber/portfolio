@@ -445,126 +445,6 @@
     .upload-doc-btn:hover { background: rgba(240,165,0,0.15); border-color: var(--amber); }
     body.owner-unlocked .upload-doc-btn { display: inline-flex !important; }
 
-    /* ── IN-PAGE DOCUMENT VIEWER ───────────────── */
-    .doc-viewer-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 600;
-      background: rgba(10, 16, 36, 0.94);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s;
-      display: flex;
-      flex-direction: column;
-    }
-    .doc-viewer-overlay.open {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .doc-viewer__topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 24px;
-      border-bottom: 1px solid rgba(240,165,0,0.18);
-      background: rgba(5,9,22,0.98);
-      flex-shrink: 0;
-      gap: 16px;
-    }
-    .doc-viewer__title {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      color: var(--amber);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .doc-viewer__controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    .doc-viewer__page-info {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: 0.1em;
-      white-space: nowrap;
-      padding: 0 8px;
-    }
-    .doc-viewer__btn {
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 0.12em;
-      padding: 7px 14px;
-      border-radius: 8px;
-      border: 1px solid rgba(240,165,0,0.25);
-      background: transparent;
-      color: var(--amber);
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      text-decoration: none;
-    }
-    .doc-viewer__btn:hover {
-      background: rgba(240,165,0,0.12);
-      border-color: var(--amber);
-      color: var(--white);
-    }
-    .doc-viewer__btn--close {
-      border-color: rgba(248,113,113,0.3);
-      color: #f87171;
-    }
-    .doc-viewer__btn--close:hover {
-      background: rgba(248,113,113,0.12);
-      border-color: #f87171;
-      color: #f87171;
-    }
-
-    .doc-viewer__frame-wrap {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-    }
-    .doc-viewer__frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #f5f5f0;
-    }
-    .doc-viewer__loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      background: rgba(5,9,22,0.97);
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      transition: opacity 0.3s;
-    }
-    .doc-viewer__loading.hidden { opacity: 0; pointer-events: none; }
-    .doc-viewer__spinner {
-      width: 28px;
-      height: 28px;
-      border: 2px solid rgba(240,165,0,0.2);
-      border-top-color: var(--amber);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
     /* Video modal */
     .video-overlay {
       position: fixed;
@@ -638,10 +518,6 @@
       }
       .project-grid {
         grid-template-columns: 1fr;
-      }
-      .doc-viewer__topbar {
-        flex-wrap: wrap;
-        gap: 10px;
       }
     }
   </style>
@@ -1109,30 +985,6 @@
 
 
   <!-- ═══════════════════════════════════════════
-       IN-PAGE DOCUMENT VIEWER OVERLAY
-  ═══════════════════════════════════════════ -->
-  <div class="doc-viewer-overlay" id="doc-viewer" role="dialog" aria-modal="true" aria-label="Document viewer">
-    <div class="doc-viewer__topbar">
-      <span class="doc-viewer__title" id="doc-viewer-title">Document</span>
-      <div class="doc-viewer__controls">
-        <span class="doc-viewer__page-info" id="doc-page-info"></span>
-        <button class="doc-viewer__btn" id="doc-prev">← PREV</button>
-        <button class="doc-viewer__btn" id="doc-next">NEXT →</button>
-        <a  class="doc-viewer__btn" id="doc-download" download>⬇ DOWNLOAD</a>
-        <button class="doc-viewer__btn doc-viewer__btn--close" id="doc-close">✕ CLOSE</button>
-      </div>
-    </div>
-    <div class="doc-viewer__frame-wrap">
-      <div class="doc-viewer__loading" id="doc-loading">
-        <div class="doc-viewer__spinner"></div>
-        <span>LOADING DOCUMENT…</span>
-      </div>
-      <iframe class="doc-viewer__frame" id="doc-frame" title="Document viewer"></iframe>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
        VIDEO OVERLAY
   ═══════════════════════════════════════════ -->
   <div class="video-overlay" id="video-overlay" role="dialog" aria-modal="true" aria-label="Video player">
@@ -1200,109 +1052,44 @@
     });
 
 
-    /* ── 2. IN-PAGE DOCUMENT VIEWER ────────────── */
-    var docViewer   = document.getElementById('doc-viewer');
-    var docFrame    = document.getElementById('doc-frame');
-    var docTitle    = document.getElementById('doc-viewer-title');
-    var docLoading  = document.getElementById('doc-loading');
-    var docClose    = document.getElementById('doc-close');
-    var docDownload = document.getElementById('doc-download');
-    var docPageInfo = document.getElementById('doc-page-info');
-    var docPrev     = document.getElementById('doc-prev');
-    var docNext     = document.getElementById('doc-next');
+    /* ── 2. DOCUMENT OPEN — native OS/browser handler ─────────────
+       Replaces the previous in-page overlay + Google Docs iframe.
+       PDFs open directly in the browser's own PDF viewer (or the OS
+       PDF app on mobile).  DOCX files are downloaded so the OS opens
+       them in Word / Docs automatically — exactly like any other site.
+       No custom chrome, no loading spinners, no prev/next controls.
+    ────────────────────────────────────────────────────────────── */
+    function openDoc(src, type) {
+      if (!src || src === '#') return;
 
-    function openDocViewer(src, type, title) {
-      /* ── Derive a clean display title ────────────────────────────
-         Priority: explicit title arg → filename decoded from the URL
-         → fallback 'Document'.  This means uploaded files always show
-         their real filename in the viewer header bar.               */
-      var displayTitle = title;
-      if (!displayTitle || displayTitle === 'Document') {
+      if (/^data:/.test(src)) {
+        /* Base64 data URL (locally uploaded file) — create a real Blob
+           URL and open it.  Blob URLs work with window.open() natively. */
+        var mimeMap = {
+          pdf:  'application/pdf',
+          docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          doc:  'application/msword'
+        };
+        var mime = mimeMap[type] || 'application/octet-stream';
         try {
-          /* Extract the last path segment from the URL and decode it */
-          var seg = src.split('/').pop().split('?')[0];
-          var decoded = decodeURIComponent(seg);
-          if (decoded && decoded !== '#') displayTitle = decoded;
-        } catch (e) {}
-      }
-      docTitle.textContent = displayTitle || 'Document';
-      docLoading.classList.remove('hidden');
-      docDownload.href = src;
-      /* Set the download filename to the real decoded filename */
-      try {
-        var dlName = decodeURIComponent(src.split('/').pop().split('?')[0]);
-        docDownload.setAttribute('download', dlName || '');
-      } catch (e) { docDownload.setAttribute('download', ''); }
-      docPageInfo.textContent = '';
-
-      var viewerSrc;
-      var isFullUrl = /^https?:\/\//i.test(src);
-
-      if (type === 'pdf') {
-        if (isFullUrl) {
-          /* Cloudinary / any external PDF — use Google Docs viewer
-             because cross-origin iframes block native browser PDF viewing */
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
-          docPageInfo.textContent = 'Tip: Loading via Google Docs viewer…';
-        } else {
-          /* Same-origin local PDF — native browser viewer works fine */
-          viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
+          var byteStr = atob(src.split(',')[1]);
+          var ab = new ArrayBuffer(byteStr.length);
+          var ia = new Uint8Array(ab);
+          for (var i = 0; i < byteStr.length; i++) ia[i] = byteStr.charCodeAt(i);
+          var blob = new Blob([ab], { type: mime });
+          var blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        } catch (e) {
+          /* Fallback: open the data URL directly */
+          window.open(src, '_blank');
         }
-      } else if (type === 'docx') {
-        if (isFullUrl) {
-          /* Cloudinary DOCX — pass the full URL directly to Google Docs viewer */
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
-        } else {
-          /* Local DOCX — build the absolute URL for Google Docs viewer */
-          var base = window.location.origin +
-            window.location.pathname.replace(/\/[^/]*$/, '/');
-          var fullUrl = base + src;
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fullUrl) + '&embedded=true';
-        }
-        docPageInfo.textContent = 'Tip: Google Docs viewer — may take a moment to load';
-      } else {
-        /* DWG and other raw files — open directly / download prompt */
-        viewerSrc = isFullUrl ? src : (window.location.origin +
-          window.location.pathname.replace(/\/[^/]*$/, '/') + src);
+        return;
       }
 
-      docFrame.src = '';
-      setTimeout(function() {
-        docFrame.src = viewerSrc;
-      }, 80);
-
-      docViewer.classList.add('open');
-      document.body.style.overflow = 'hidden';
+      /* Remote URL — open directly. The browser handles PDFs natively;
+         DOCX files trigger the OS file-open dialog.                    */
+      window.open(src, '_blank');
     }
-
-    function closeDocViewer() {
-      docViewer.classList.remove('open');
-      document.body.style.overflow = '';
-      setTimeout(function() { docFrame.src = ''; }, 300);
-    }
-
-    docFrame.addEventListener('load', function() {
-      docLoading.classList.add('hidden');
-    });
-
-    docClose.addEventListener('click', closeDocViewer);
-
-    // Prev / Next page (PDF only — navigates via hash)
-    var currentPage = 1;
-    docPrev.addEventListener('click', function() {
-      if (currentPage > 1) {
-        currentPage--;
-        var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-        docFrame.src = src;
-        docPageInfo.textContent = 'PAGE ' + currentPage;
-      }
-    });
-    docNext.addEventListener('click', function() {
-      currentPage++;
-      var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-      docFrame.src = src;
-      docPageInfo.textContent = 'PAGE ' + currentPage;
-    });
 
     // Wire all READ PAPER / VIEW DRAWING buttons
     function wireDocBtns() {
@@ -1311,23 +1098,13 @@
         btn._docWired = true;
         btn.addEventListener('click', function(e) {
           e.preventDefault();
-          var src = btn.getAttribute('data-doc-src');
-          /* Skip placeholder or empty src */
-          if (!src || src === '#') return;
-          openDocViewer(
-            src,
-            btn.getAttribute('data-doc-type') || 'pdf',
-            btn.getAttribute('data-doc-title') || 'Document'
-          );
+          var src  = btn.getAttribute('data-doc-src');
+          var type = btn.getAttribute('data-doc-type') || 'pdf';
+          openDoc(src, type);
         });
       });
     }
     wireDocBtns();
-
-    // Close on backdrop click
-    docViewer.addEventListener('click', function(e) {
-      if (e.target === docViewer) closeDocViewer();
-    });
 
 
     /* ── 3. VIDEO OVERLAY ──────────────────────── */
@@ -1473,7 +1250,6 @@
     // Keyboard: Escape closes any open overlay
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        if (docViewer.classList.contains('open'))   closeDocViewer();
         if (videoOverlay.classList.contains('open')) closeVideo();
       }
     });
@@ -1842,9 +1618,4 @@ body.contrast-light .project-card--academic:hover{ border-color: rgba(138,90,0,0
 body.contrast-light .project-add-card { border-color: rgba(13,110,110,0.28) !important; }
 body.contrast-light .project-add-card:hover { background: rgba(13,110,110,0.04) !important; border-color: #0d6e6e !important; }
 body.contrast-light .project-add-card__label { color: #4a556e !important; }
-body.contrast-light .doc-viewer__topbar { background: rgba(255,255,255,0.99) !important; border-color: rgba(14,20,32,0.12) !important; }
-body.contrast-light .doc-viewer__title  { color: #0d6e6e !important; }
-body.contrast-light .doc-viewer__btn    { border-color: rgba(13,110,110,0.3) !important; color: #0d6e6e !important; }
-body.contrast-light .doc-viewer__btn:hover { background: rgba(13,110,110,0.08) !important; }
-body.contrast-light .doc-viewer__btn--close { border-color: rgba(160,48,16,0.35) !important; color: #a03010 !important; }
 </style>
