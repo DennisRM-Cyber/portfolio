@@ -98,7 +98,7 @@
         <div class="about-hero__content">
           <p class="hero__label" data-edit-id="about-hero-label"> About</p>
           <h1 class="hero__title" style="font-size: clamp(32px, 4vw, 52px); margin-bottom: 32px;">
-            <span data-edit-id="about-hero-name">Rubui Mwangi</span>
+            <span data-edit-id="hero-name">Rubui Mwangi</span>
           </h1>
 
           <div class="achievement-banner fade-in">
@@ -106,25 +106,6 @@
             <p class="achievement-banner__text" data-edit-id="banner-text">
               Built a real-time <em>IoT fault detection system</em> end-to-end — Arduino and ESP32 sensors talking to Firebase, data flowing to a dashboard I designed and coded myself. Hardware to cloud, no team. That's the project I'm most proud of.
             </p>
-          </div>
-
-          <div class="about-hero__facts" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
-            <div class="stats__item fade-in" style="padding: 16px 18px;">
-              <div class="stats__label" style="margin-bottom: 4px;">Degree</div>
-              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700; line-height: 1.3;" data-edit-id="fact-degree">BSc Electrical &amp; Electronics Engineering</div>
-            </div>
-            <div class="stats__item fade-in" style="padding: 16px 18px;">
-              <div class="stats__label" style="margin-bottom: 4px;">University</div>
-              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700; line-height: 1.3;" data-edit-id="fact-uni">JKUAT - Graduated Dec 2025</div>
-            </div>
-            <div class="stats__item fade-in" style="padding: 16px 18px;">
-              <div class="stats__label" style="margin-bottom: 4px;">Location</div>
-              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700;" data-edit-id="fact-location">Nairobi, Kenya</div>
-            </div>
-            <div class="stats__item fade-in" style="padding: 16px 18px;">
-              <div class="stats__label" style="margin-bottom: 4px;">Languages</div>
-              <div style="font-size: 13px; color: var(--text-primary); font-weight: 700;" data-edit-id="fact-languages">English · Swahili</div>
-            </div>
           </div>
 
           <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
@@ -580,26 +561,17 @@
     function loadCvUrl() {
       if (!window.PF) return;
       PF.loadEdits(function (edits) {
-        var url  = edits['doc-cv'];
-        var name = edits['doc-cv-name'] || '';
+        var url = edits['doc-cv'];
         if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-          applyCvUrl(url, name);
+          applyCvUrl(url);
         }
       });
     }
 
-    /* Apply URL + saved filename to the download button.
-       name param is the real OS filename saved at upload time
-       (e.g. "Rubui_Mwangi_CV_2025.pdf"). Falls back to parsing
-       the Cloudinary URL only when no saved name is available.  */
-    function applyCvUrl(url, name) {
+    function applyCvUrl(url) {
       if (!cvBtn) return;
       cvBtn.setAttribute('href', url);
-      var dlName = name || '';
-      if (!dlName) {
-        try { dlName = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch (e) {}
-      }
-      cvBtn.setAttribute('download', dlName || '');
+      cvBtn.setAttribute('download', '');
       cvBtn.textContent = 'DOWNLOAD CV';
     }
 
@@ -759,18 +731,15 @@
 
         uploadRawToCloudinary(file,
           function (url) {
-            var fileName = file.name;   /* real OS filename e.g. "Rubui_Mwangi_CV.pdf" */
-            /* Save URL + original filename together so every page load and
-               every device always restores the correct download name.       */
-            PF.saveAllEdits({ 'doc-cv': url, 'doc-cv-name': fileName })
+            PF.saveEdit('doc-cv', url)
               .then(function () {
                 document.body.removeChild(toast);
-                applyCvUrl(url, fileName);
+                applyCvUrl(url);
               })
               .catch(function (err) {
                 document.body.removeChild(toast);
-                applyCvUrl(url, fileName);
-                alert('CV uploaded but Firebase save failed: ' + err.message + ' The link will work this session but may not persist.');
+                applyCvUrl(url);
+                alert('CV uploaded but Firebase save failed: ' + err.message + 'The link will work this session but may not persist.');
               });
           },
           function (err) {
