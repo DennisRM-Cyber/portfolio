@@ -389,10 +389,40 @@
       .skill-grid { grid-template-columns: 1fr; }
       .skills-summary { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ── SKILLS PAGE — LIGHT THEME OVERRIDES ── */
+    body.contrast-light .skill-section__title { color: #0e1420 !important; }
+    body.contrast-light .skill-section__count { color: #4a556e !important; }
+    body.contrast-light .skills-summary__number { color: #0d6e6e !important; }
+    body.contrast-light .skills-summary__label  { color: #4a556e !important; }
+    body.contrast-light .skills-summary__item   { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
+    body.contrast-light .skill-card { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
+    body.contrast-light .skill-card:hover { border-color: #0d6e6e !important; }
+    body.contrast-light .skill-card__name { color: #0e1420 !important; }
+    body.contrast-light .skill-card__context { color: #4a556e !important; }
+    body.contrast-light .skill-bar { background: rgba(14,20,32,0.10) !important; }
+    body.contrast-light .cert-card  { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
+    body.contrast-light .cert-card:hover { border-color: #0d6e6e !important; }
+    body.contrast-light .cert-card__name   { color: #0e1420 !important; }
+    body.contrast-light .cert-card__issuer { color: #4a556e !important; }
+    body.contrast-light .skill-add-card  { border-color: rgba(13,110,110,0.28) !important; }
+    body.contrast-light .skill-add-card:hover { background: rgba(13,110,110,0.05) !important; border-color: #0d6e6e !important; }
+    body.contrast-light .skill-add-card__label { color: #4a556e !important; }
+    body.contrast-light .cert-add-card { border-color: rgba(13,110,110,0.28) !important; }
+    body.contrast-light .cert-add-card:hover { background: rgba(13,110,110,0.05) !important; border-color: #0d6e6e !important; }
+    body.contrast-light .cat-header__label { color: #0d6e6e !important; }
+    body.contrast-light .theme-ee   .skill-section__label { color: #1a4fa0 !important; }
+    body.contrast-light .theme-code .skill-section__label { color: #0a6640 !important; }
+    body.contrast-light .theme-cad  .skill-section__label { color: #8a5a00 !important; }
+    body.contrast-light .theme-field .skill-section__label{ color: #a03010 !important; }
+    body.contrast-light .theme-soft .skill-section__label { color: #5c3a9e !important; }
+    body.contrast-light .skill-section__icon { background: rgba(255,255,255,0.8) !important; }
+    body.contrast-light .skill-bar__thumb { border-color: #0d6e6e !important; }
   </style>
 </head>
 
 <body class="page-frame">
+  <!-- nav injected by main.js -->
 
   <!-- NAV -->
   <nav class="nav">
@@ -869,30 +899,12 @@
   <footer class="footer">
     <div class="container footer__inner">
       <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
-      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span>OPEN TO OPPORTUNITIES</span>
+      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span><span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span></span>
     </div>
   </footer>
 
-  <!-- ═══════════════════════════════════════════
-       IN-PAGE DOCUMENT VIEWER (cert docs)
-  ═══════════════════════════════════════════ -->
-  <div class="doc-viewer-overlay" id="cert-doc-viewer" role="dialog" aria-modal="true" aria-label="Certification document viewer"
-       style="position:fixed;inset:0;z-index:600;background:rgba(10,16,36,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);opacity:0;pointer-events:none;transition:opacity 0.22s;display:flex;flex-direction:column;">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid rgba(240,165,0,0.18);background:rgba(5,9,22,0.98);flex-shrink:0;gap:16px;">
-      <span id="cert-doc-title" style="font-family:var(--font-mono);font-size:11px;letter-spacing:0.14em;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Document</span>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-        <a id="cert-doc-download" download style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;padding:7px 14px;border-radius:8px;border:1px solid rgba(240,165,0,0.25);background:transparent;color:var(--amber);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;text-decoration:none;">⬇ DOWNLOAD</a>
-        <button id="cert-doc-close" type="button" style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.12em;padding:7px 14px;border-radius:8px;border:1px solid rgba(248,113,113,0.3);background:transparent;color:#f87171;cursor:pointer;transition:all 0.15s;">✕ CLOSE</button>
-      </div>
-    </div>
-    <div style="flex:1;overflow:hidden;position:relative;">
-      <div id="cert-doc-loading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,9,22,0.97);font-family:var(--font-mono);color:var(--text-muted);font-size:10px;letter-spacing:0.16em;transition:opacity 0.3s;">
-        <div style="width:28px;height:28px;border:2px solid rgba(240,165,0,0.2);border-top-color:var(--amber);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-        <span>LOADING DOCUMENT…</span>
-      </div>
-      <iframe id="cert-doc-frame" title="Certification document" style="width:100%;height:100%;border:none;background:#f5f5f0;"></iframe>
-    </div>
-  </div>
+  <!-- doc-viewer-overlay removed — cert card clicks now open documents
+       directly in the native OS app via fl_attachment on the Cloudinary URL -->
 
   <!-- OWNER LOCK OVERLAY — must be before editor.js -->
   <div class="lock-overlay" id="lock-overlay" role="dialog" aria-modal="true" aria-label="Owner login">
@@ -909,6 +921,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-e0jCNBMnPnCkKbOtQmfCVbCmrZQBs6tKwAKfHaGFgOCLEKv7e4ggYd0e4RpIlgQ62l5p0hPOE1+KVJAb2Jzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1015,56 +1028,28 @@
     wireAddSkillBtns();
 
 
-    /* ── CERT DOCUMENT VIEWER ────────────────────────── */
-    var certViewer   = document.getElementById('cert-doc-viewer');
-    var certFrame    = document.getElementById('cert-doc-frame');
-    var certTitle    = document.getElementById('cert-doc-title');
-    var certLoading  = document.getElementById('cert-doc-loading');
-    var certClose    = document.getElementById('cert-doc-close');
-    var certDownload = document.getElementById('cert-doc-download');
+    /* ── CERT DOCUMENT — NATIVE DEVICE TOOLS ────────────────────────
+       Clicking a cert card now downloads the file so the OS opens it
+       in the native app (PDF viewer, Word, etc.) instead of an iframe.
 
-    function openCertViewer(src, title, docType) {
-      certTitle.textContent = title || 'Document';
-      certLoading.style.opacity = '1';
-      certLoading.style.pointerEvents = 'all';
-      certDownload.href = src;
-      certDownload.setAttribute('download', '');
-      var viewerSrc;
-      if (!docType || docType === 'pdf') {
-        viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1';
-      } else {
-        /* DOCX via Google Docs viewer */
-        viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
+       fl_attachment is appended to Cloudinary raw URLs which flips
+       Content-Disposition to attachment — every browser and mobile OS
+       then hands the file off to the native app automatically.
+    ─────────────────────────────────────────────────────────────── */
+    function toNativeUrl(url) {
+      if (!url || typeof url !== 'string') return url;
+      if (url.indexOf('res.cloudinary.com') !== -1 &&
+          url.indexOf('/raw/upload/') !== -1 &&
+          url.indexOf('fl_attachment') === -1) {
+        return url.replace('/raw/upload/', '/raw/upload/fl_attachment/');
       }
-      certFrame.src = '';
-      setTimeout(function() { certFrame.src = viewerSrc; }, 80);
-      certViewer.style.opacity = '1';
-      certViewer.style.pointerEvents = 'all';
-      document.body.style.overflow = 'hidden';
+      return url;
     }
 
-    function closeCertViewer() {
-      certViewer.style.opacity = '0';
-      certViewer.style.pointerEvents = 'none';
-      document.body.style.overflow = '';
-      setTimeout(function() { certFrame.src = ''; }, 300);
+    function openCertNative(src) {
+      if (!src || src === '#') return;
+      window.open(toNativeUrl(src), '_blank', 'noopener');
     }
-
-    if (certFrame) {
-      certFrame.addEventListener('load', function() {
-        certLoading.style.opacity = '0';
-        certLoading.style.pointerEvents = 'none';
-      });
-    }
-    if (certClose) certClose.addEventListener('click', closeCertViewer);
-    if (certViewer) {
-      certViewer.addEventListener('click', function(e) {
-        if (e.target === certViewer) closeCertViewer();
-      });
-    }
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && certViewer && certViewer.style.opacity === '1') closeCertViewer();
-    });
 
 
     /* ── CERT CLOUDINARY + FIREBASE UPLOAD SYSTEM ───── */
@@ -1087,104 +1072,22 @@
       .catch(onError);
     }
 
-    function requireCertFirebaseAuth(onAuthenticated) {
-      var existing = document.getElementById('fb-signin-modal');
-      if (existing) existing.remove();
-      var modal = document.createElement('div');
-      modal.id = 'fb-signin-modal';
-      modal.style.cssText = [
-        'position:fixed;inset:0;z-index:10000',
-        'background:rgba(3,6,14,0.88)',
-        'backdrop-filter:blur(18px)',
-        'display:flex;align-items:center;justify-content:center',
-        'animation:fbModalIn 0.18s ease'
-      ].join(';');
-      modal.innerHTML = [
-        '<style>',
-        '@keyframes fbModalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}',
-        '#fb-signin-modal .fb-box{background:rgba(14,20,44,0.98);border:1px solid rgba(240,165,0,0.28);border-radius:16px;padding:32px 36px 28px;width:min(400px,90vw);box-shadow:0 32px 80px rgba(0,0,0,0.7);}',
-        '#fb-signin-modal .fb-label{font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.18em;color:rgba(240,165,0,0.55);margin-bottom:8px;}',
-        '#fb-signin-modal .fb-title{font-family:Syne,sans-serif;font-size:20px;font-weight:800;color:#f0f4ff;margin-bottom:6px;}',
-        '#fb-signin-modal .fb-hint{font-size:12px;color:rgba(180,190,220,0.65);line-height:1.6;margin-bottom:24px;}',
-        '#fb-signin-modal .fb-field{margin-bottom:14px;}',
-        '#fb-signin-modal .fb-field label{display:block;font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.15em;color:rgba(240,165,0,0.6);margin-bottom:5px;}',
-        '#fb-signin-modal .fb-input{width:100%;box-sizing:border-box;background:rgba(8,14,30,0.9);border:1px solid rgba(240,165,0,0.2);border-radius:8px;padding:10px 14px;color:#f0f4ff;font-family:JetBrains Mono,monospace;font-size:13px;outline:none;transition:border-color 0.18s;}',
-        '#fb-signin-modal .fb-input:focus{border-color:rgba(240,165,0,0.6);}',
-        '#fb-signin-modal .fb-input.error{border-color:#f87171!important;}',
-        '#fb-signin-modal .fb-error{font-family:JetBrains Mono,monospace;font-size:9px;color:#f87171;min-height:16px;margin-bottom:18px;letter-spacing:0.08em;}',
-        '#fb-signin-modal .fb-actions{display:flex;gap:10px;}',
-        '#fb-signin-modal .fb-btn-sign{flex:1;padding:12px;border-radius:10px;background:var(--amber,#f0a500);border:none;color:#0d1526;font-family:JetBrains Mono,monospace;font-size:10px;font-weight:700;letter-spacing:0.14em;cursor:pointer;transition:opacity 0.18s;}',
-        '#fb-signin-modal .fb-btn-sign:hover{opacity:0.88;}',
-        '#fb-signin-modal .fb-btn-sign:disabled{opacity:0.4;cursor:default;}',
-        '#fb-signin-modal .fb-btn-cancel{padding:12px 18px;border-radius:10px;background:transparent;border:1px solid rgba(248,113,113,0.35);color:#f87171;font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.12em;cursor:pointer;transition:background 0.15s;}',
-        '#fb-signin-modal .fb-btn-cancel:hover{background:rgba(248,113,113,0.1);}',
-        '</style>',
-        '<div class="fb-box">',
-        '<div class="fb-label">// firebase auth</div>',
-        '<div class="fb-title">Sign in to upload</div>',
-        '<div class="fb-hint">Enter your Firebase owner credentials to upload certification documents.</div>',
-        '<div class="fb-field"><label for="fb-email">EMAIL</label>',
-        '<input class="fb-input" id="fb-email" type="email" placeholder="owner@email.com" autocomplete="email" /></div>',
-        '<div class="fb-field"><label for="fb-pass">PASSWORD</label>',
-        '<input class="fb-input" id="fb-pass" type="password" placeholder="Firebase password" autocomplete="current-password" /></div>',
-        '<div class="fb-error" id="fb-error"></div>',
-        '<div class="fb-actions">',
-        '<button class="fb-btn-sign" id="fb-sign-btn">SIGN IN &amp; UPLOAD</button>',
-        '<button class="fb-btn-cancel" id="fb-cancel-btn">CANCEL</button>',
-        '</div></div>'
-      ].join('');
-      document.body.appendChild(modal);
-      var emailEl   = modal.querySelector('#fb-email');
-      var passEl    = modal.querySelector('#fb-pass');
-      var errorEl   = modal.querySelector('#fb-error');
-      var signBtn   = modal.querySelector('#fb-sign-btn');
-      var cancelBtn = modal.querySelector('#fb-cancel-btn');
-      setTimeout(function() { emailEl.focus(); }, 80);
-      function closeModal() {
-        modal.style.animation = 'fbModalIn 0.15s ease reverse';
-        setTimeout(function() { if (modal.parentNode) modal.remove(); }, 140);
+    /* ── FIREBASE SIGN-IN MODAL — thin wrapper ─────────────────── */
+    function requireFirebaseAuth(onAuthenticated) {
+      if (window.PF && typeof PF.requireFirebaseAuth === 'function') {
+        PF.requireFirebaseAuth(onAuthenticated, function() {/* cancelled */});
+      } else {
+        console.warn('[skills] PF.requireFirebaseAuth not available');
       }
-      function setError(msg) {
-        errorEl.textContent = msg;
-        emailEl.classList.toggle('error', !!msg);
-        passEl.classList.toggle('error', !!msg);
-      }
-      function doSignIn() {
-        var email = emailEl.value.trim();
-        var pass  = passEl.value;
-        if (!email || !pass) { setError('Both fields are required.'); return; }
-        setError('');
-        signBtn.disabled    = true;
-        signBtn.textContent = 'SIGNING IN…';
-        PF.signIn(email, pass)
-          .then(function() { closeModal(); onAuthenticated(); })
-          .catch(function(err) {
-            signBtn.disabled    = false;
-            signBtn.textContent = 'SIGN IN & UPLOAD';
-            var msg = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
-              ? 'Incorrect email or password.'
-              : err.code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.'
-              : err.code === 'auth/network-request-failed' ? 'Network error. Check your connection.'
-              : (err.message || 'Sign-in failed.');
-            setError(msg);
-            passEl.value = ''; passEl.focus();
-          });
-      }
-      signBtn.addEventListener('click', doSignIn);
-      passEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignIn(); });
-      cancelBtn.addEventListener('click', closeModal);
-      modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
-      document.addEventListener('keydown', function escClose(e) {
-        if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escClose); }
-      });
     }
 
-    /* Apply a saved cert doc URL: update data-cert-doc attribute,
-       hint text, and wire the card click */
+    /* Apply a saved cert doc URL: store the fl_attachment URL on the card
+       so every click goes straight to the native app with no extra steps */
     function applyCertUrl(certId, url, docType) {
       var card = document.querySelector('.cert-card[data-cert-id="' + certId + '"]');
       if (!card) return;
-      card.setAttribute('data-cert-doc', url);
+      /* Store the native URL so wireCertCardClick picks it up directly */
+      card.setAttribute('data-cert-doc', toNativeUrl(url));
       card.setAttribute('data-cert-doc-type', docType || 'pdf');
       var hint = card.querySelector('.cert-card__doc-hint');
       if (hint) hint.textContent = '📄 click to open document';
@@ -1195,32 +1098,40 @@
       if (card._certClickWired) return;
       card._certClickWired = true;
       card.addEventListener('click', function(e) {
-        /* Don't open viewer when clicking the upload btn */
+        /* Don't trigger when clicking the upload btn or delete btn */
         if (e.target.closest('.cert-upload-btn') || e.target.closest('.new-card__delete')) return;
         var url = card.getAttribute('data-cert-doc');
         if (!url) return;
-        var docType = card.getAttribute('data-cert-doc-type') || 'pdf';
-        var nameEl = card.querySelector('.cert-card__name');
-        var title  = nameEl ? nameEl.textContent : 'Certificate';
-        openCertViewer(url, title, docType);
+        /* Open directly in native OS app — fl_attachment already applied by applyCertUrl */
+        openCertNative(url);
       });
     }
 
-    /* Load all saved cert doc URLs on page load */
+    /* Load all saved cert doc URLs — watchEdits gives zero-flash on repeat visits
+       (fires from the in-memory Firebase cache before the network responds).     */
+    var _certUnsub = null;
     function loadSavedCertUrls() {
-      if (!window.PF) return;
-      PF.loadEdits(function(edits) {
-        Object.keys(edits).forEach(function(key) {
-          /* Keys: cert-doc-cert1-pdf, cert-doc-cert2-docx, etc. */
-          var m = key.match(/^cert-doc-(cert\d+)-(pdf|docx)$/);
-          if (!m) return;
-          var certId  = m[1];
-          var docType = m[2];
-          var url     = edits[key];
-          if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-            applyCertUrl(certId, url, docType);
-          }
-        });
+      if (!window.PF || typeof PF.watchEdits !== 'function') {
+        /* Fallback for environments where watchEdits isn't available */
+        if (window.PF && typeof PF.loadEdits === 'function') {
+          PF.loadEdits(applyCertUrlsFromEdits);
+        }
+        return;
+      }
+      _certUnsub = PF.watchEdits(applyCertUrlsFromEdits);
+    }
+
+    function applyCertUrlsFromEdits(edits) {
+      Object.keys(edits).forEach(function(key) {
+        /* Keys: cert-doc-cert1-pdf, cert-doc-cert2-docx, etc. */
+        var m = key.match(/^cert-doc-(cert\d+)-(pdf|docx)$/);
+        if (!m) return;
+        var certId  = m[1];
+        var docType = m[2];
+        var url     = edits[key];
+        if (url && typeof url === 'string' && url.indexOf('http') === 0) {
+          applyCertUrl(certId, url, docType);
+        }
       });
     }
     loadSavedCertUrls();
@@ -1235,7 +1146,7 @@
           if (!document.body.classList.contains('owner-unlocked')) return;
           var certId = btn.getAttribute('data-cert-upload');
           if (!window.PF || !PF.isOwner()) {
-            requireCertFirebaseAuth(function() { btn.click(); });
+            requireFirebaseAuth(function() { btn.click(); });
             return;
           }
           var input = document.createElement('input');
@@ -1311,7 +1222,7 @@
         if (!document.body.classList.contains('owner-unlocked')) return;
         /* Require Firebase auth before adding a new cert */
         if (!window.PF || !PF.isOwner()) {
-          requireCertFirebaseAuth(function() { addCertBtn.click(); });
+          requireFirebaseAuth(function() { addCertBtn.click(); });
           return;
         }
         var id = 'cert-' + Date.now();
@@ -1351,33 +1262,3 @@
 
 </body>
 </html>
-<style>
-/* ── SKILLS PAGE — LIGHT THEME OVERRIDES ── */
-body.contrast-light .skill-section__title { color: #0e1420 !important; }
-body.contrast-light .skill-section__count { color: #4a556e !important; }
-body.contrast-light .skills-summary__number { color: #0d6e6e !important; }
-body.contrast-light .skills-summary__label  { color: #4a556e !important; }
-body.contrast-light .skills-summary__item   { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
-body.contrast-light .skill-card { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
-body.contrast-light .skill-card:hover { border-color: #0d6e6e !important; }
-body.contrast-light .skill-card__name { color: #0e1420 !important; }
-body.contrast-light .skill-card__context { color: #4a556e !important; }
-body.contrast-light .skill-bar { background: rgba(14,20,32,0.10) !important; }
-body.contrast-light .cert-card  { background: rgba(255,255,255,0.92) !important; border-color: rgba(14,20,32,0.14) !important; }
-body.contrast-light .cert-card:hover { border-color: #0d6e6e !important; }
-body.contrast-light .cert-card__name   { color: #0e1420 !important; }
-body.contrast-light .cert-card__issuer { color: #4a556e !important; }
-body.contrast-light .skill-add-card  { border-color: rgba(13,110,110,0.28) !important; }
-body.contrast-light .skill-add-card:hover { background: rgba(13,110,110,0.05) !important; border-color: #0d6e6e !important; }
-body.contrast-light .skill-add-card__label { color: #4a556e !important; }
-body.contrast-light .cert-add-card { border-color: rgba(13,110,110,0.28) !important; }
-body.contrast-light .cert-add-card:hover { background: rgba(13,110,110,0.05) !important; border-color: #0d6e6e !important; }
-body.contrast-light .cat-header__label { color: #0d6e6e !important; }
-body.contrast-light .theme-ee   .skill-section__label { color: #1a4fa0 !important; }
-body.contrast-light .theme-code .skill-section__label { color: #0a6640 !important; }
-body.contrast-light .theme-cad  .skill-section__label { color: #8a5a00 !important; }
-body.contrast-light .theme-field .skill-section__label{ color: #a03010 !important; }
-body.contrast-light .theme-soft .skill-section__label { color: #5c3a9e !important; }
-body.contrast-light .skill-section__icon { background: rgba(255,255,255,0.8) !important; }
-body.contrast-light .skill-bar__thumb { border-color: #0d6e6e !important; }
-</style>

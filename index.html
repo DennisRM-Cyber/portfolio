@@ -406,7 +406,7 @@
 
       <div class="hero__actions">
         <a href="projects.html" class="btn btn--primary" data-i18n="hero.btn1">VIEW PROJECTS</a>
-        <a href="#" class="btn btn--ghost" data-i18n="hero.btn2">DOWNLOAD CV</a>
+        <a href="#" id="cv-download-btn" class="btn btn--ghost" data-i18n="hero.btn2">DOWNLOAD CV</a>
       </div>
     </div>
   </header>
@@ -558,6 +558,41 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="js/firebase.js"></script>
   <script src="js/main.js"></script>
+  <script>
+  /* ================================================================
+     INDEX PAGE — CV DOWNLOAD BUTTON
+     Reads the CV URL saved by about.html from Firebase (edits/doc-cv)
+     and patches the DOWNLOAD CV button. The original filename is
+     embedded in the Cloudinary URL itself — no separate key needed.
+  ================================================================ */
+  (function () {
+    'use strict';
+    var cvBtn = document.getElementById('cv-download-btn');
+    if (!cvBtn) return;
+
+    function applyCvUrl(url, name) {
+      cvBtn.setAttribute('href', url);
+      var dlName = name || '';
+      if (!dlName) {
+        try { dlName = decodeURIComponent(url.split('/').pop().split('?')[0]); } catch (e) {}
+      }
+      cvBtn.setAttribute('download', dlName || '');
+    }
+
+    /* Wait for firebase.js / PF to be ready */
+    function tryLoad() {
+      if (!window.PF) { setTimeout(tryLoad, 120); return; }
+      PF.loadEdits(function (edits) {
+        var url  = edits['doc-cv'];
+        var name = edits['doc-cv-name'] || '';
+        if (url && typeof url === 'string' && url.indexOf('http') === 0) {
+          applyCvUrl(url, name);
+        }
+      });
+    }
+    tryLoad();
+  })();
+  </script>
   <script src="js/editor.js"></script>
 
 </body>

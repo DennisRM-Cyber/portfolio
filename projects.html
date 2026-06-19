@@ -1109,30 +1109,6 @@
 
 
   <!-- ═══════════════════════════════════════════
-       IN-PAGE DOCUMENT VIEWER OVERLAY
-  ═══════════════════════════════════════════ -->
-  <div class="doc-viewer-overlay" id="doc-viewer" role="dialog" aria-modal="true" aria-label="Document viewer">
-    <div class="doc-viewer__topbar">
-      <span class="doc-viewer__title" id="doc-viewer-title">Document</span>
-      <div class="doc-viewer__controls">
-        <span class="doc-viewer__page-info" id="doc-page-info"></span>
-        <button class="doc-viewer__btn" id="doc-prev">← PREV</button>
-        <button class="doc-viewer__btn" id="doc-next">NEXT →</button>
-        <a  class="doc-viewer__btn" id="doc-download" download>⬇ DOWNLOAD</a>
-        <button class="doc-viewer__btn doc-viewer__btn--close" id="doc-close">✕ CLOSE</button>
-      </div>
-    </div>
-    <div class="doc-viewer__frame-wrap">
-      <div class="doc-viewer__loading" id="doc-loading">
-        <div class="doc-viewer__spinner"></div>
-        <span>LOADING DOCUMENT…</span>
-      </div>
-      <iframe class="doc-viewer__frame" id="doc-frame" title="Document viewer"></iframe>
-    </div>
-  </div>
-
-
-  <!-- ═══════════════════════════════════════════
        VIDEO OVERLAY
   ═══════════════════════════════════════════ -->
   <div class="video-overlay" id="video-overlay" role="dialog" aria-modal="true" aria-label="Video player">
@@ -1200,111 +1176,34 @@
     });
 
 
-    /* ── 2. IN-PAGE DOCUMENT VIEWER ────────────── */
-    var docViewer   = document.getElementById('doc-viewer');
-    var docFrame    = document.getElementById('doc-frame');
-    var docTitle    = document.getElementById('doc-viewer-title');
-    var docLoading  = document.getElementById('doc-loading');
-    var docClose    = document.getElementById('doc-close');
-    var docDownload = document.getElementById('doc-download');
-    var docPageInfo = document.getElementById('doc-page-info');
-    var docPrev     = document.getElementById('doc-prev');
-    var docNext     = document.getElementById('doc-next');
 
+    /* ── 2. DOCUMENT OPEN — native OS handler ────────────── */
+
+    /* ── OPEN DOCUMENT — native OS handler ───────────────────────
+       window.open() hands the URL to the browser which passes it
+       to the OS.  The OS picks the right app: MS Word / LibreOffice
+       for DOCX, AutoCAD / DWG TrueView for DWG, the system PDF
+       viewer for PDF.  Works offline for same-origin assets.
+       For Cloudinary URLs the file opens in a new browser tab and
+       the browser / OS decides what to do with it (download prompt
+       or native viewer).  No iframe, no Google Docs needed.       */
     function openDocViewer(src, type, title) {
-      /* ── Derive a clean display title ────────────────────────────
-         Priority: explicit title arg → filename decoded from the URL
-         → fallback 'Document'.  This means uploaded files always show
-         their real filename in the viewer header bar.               */
-      var displayTitle = title;
-      if (!displayTitle || displayTitle === 'Document') {
-        try {
-          /* Extract the last path segment from the URL and decode it */
-          var seg = src.split('/').pop().split('?')[0];
-          var decoded = decodeURIComponent(seg);
-          if (decoded && decoded !== '#') displayTitle = decoded;
-        } catch (e) {}
-      }
-      docTitle.textContent = displayTitle || 'Document';
-      docLoading.classList.remove('hidden');
-      docDownload.href = src;
-      /* Set the download filename to the real decoded filename */
-      try {
-        var dlName = decodeURIComponent(src.split('/').pop().split('?')[0]);
-        docDownload.setAttribute('download', dlName || '');
-      } catch (e) { docDownload.setAttribute('download', ''); }
-      docPageInfo.textContent = '';
+      if (!src || src === '#') return;
 
-      var viewerSrc;
+      /* Resolve relative paths to absolute so the new tab has a real URL */
       var isFullUrl = /^https?:\/\//i.test(src);
+      var targetUrl = isFullUrl
+        ? src
+        : (window.location.origin +
+           window.location.pathname.replace(/\/[^/]*$/, '/') + src);
 
-      if (type === 'pdf') {
-        if (isFullUrl) {
-          /* Cloudinary / any external PDF — use Google Docs viewer
-             because cross-origin iframes block native browser PDF viewing */
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
-          docPageInfo.textContent = 'Tip: Loading via Google Docs viewer…';
-        } else {
-          /* Same-origin local PDF — native browser viewer works fine */
-          viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
-        }
-      } else if (type === 'docx') {
-        if (isFullUrl) {
-          /* Cloudinary DOCX — pass the full URL directly to Google Docs viewer */
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
-        } else {
-          /* Local DOCX — build the absolute URL for Google Docs viewer */
-          var base = window.location.origin +
-            window.location.pathname.replace(/\/[^/]*$/, '/');
-          var fullUrl = base + src;
-          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fullUrl) + '&embedded=true';
-        }
-        docPageInfo.textContent = 'Tip: Google Docs viewer — may take a moment to load';
-      } else {
-        /* DWG and other raw files — open directly / download prompt */
-        viewerSrc = isFullUrl ? src : (window.location.origin +
-          window.location.pathname.replace(/\/[^/]*$/, '/') + src);
-      }
-
-      docFrame.src = '';
-      setTimeout(function() {
-        docFrame.src = viewerSrc;
-      }, 80);
-
-      docViewer.classList.add('open');
-      document.body.style.overflow = 'hidden';
+      window.open(targetUrl, '_blank', 'noopener');
     }
 
-    function closeDocViewer() {
-      docViewer.classList.remove('open');
-      document.body.style.overflow = '';
-      setTimeout(function() { docFrame.src = ''; }, 300);
-    }
+    /* Stub — nothing breaks if something calls closeDocViewer() */
+    function closeDocViewer() {}
 
-    docFrame.addEventListener('load', function() {
-      docLoading.classList.add('hidden');
-    });
-
-    docClose.addEventListener('click', closeDocViewer);
-
-    // Prev / Next page (PDF only — navigates via hash)
-    var currentPage = 1;
-    docPrev.addEventListener('click', function() {
-      if (currentPage > 1) {
-        currentPage--;
-        var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-        docFrame.src = src;
-        docPageInfo.textContent = 'PAGE ' + currentPage;
-      }
-    });
-    docNext.addEventListener('click', function() {
-      currentPage++;
-      var src = docFrame.src.replace(/#.*/, '') + '#page=' + currentPage;
-      docFrame.src = src;
-      docPageInfo.textContent = 'PAGE ' + currentPage;
-    });
-
-    // Wire all READ PAPER / VIEW DRAWING buttons
+    // Wire all READ PAPER / VIEW DRAWING / VIEW PROJECT buttons
     function wireDocBtns() {
       document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
         if (btn._docWired) return;
@@ -1312,7 +1211,6 @@
         btn.addEventListener('click', function(e) {
           e.preventDefault();
           var src = btn.getAttribute('data-doc-src');
-          /* Skip placeholder or empty src */
           if (!src || src === '#') return;
           openDocViewer(
             src,
@@ -1324,10 +1222,6 @@
     }
     wireDocBtns();
 
-    // Close on backdrop click
-    docViewer.addEventListener('click', function(e) {
-      if (e.target === docViewer) closeDocViewer();
-    });
 
 
     /* ── 3. VIDEO OVERLAY ──────────────────────── */
@@ -1473,7 +1367,6 @@
     // Keyboard: Escape closes any open overlay
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        if (docViewer.classList.contains('open'))   closeDocViewer();
         if (videoOverlay.classList.contains('open')) closeVideo();
       }
     });

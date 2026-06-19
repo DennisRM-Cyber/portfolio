@@ -7,17 +7,26 @@
 ============================================================ */
 
 /* ════════════════════════════════════════════════════════════
-   SHARED FORMAT ENGINE
-   Single source of truth for BOTH the floating page format bar
-   AND the article reader format bar. Both bars call into this.
-   Key fixes:
-     · Reads current selection's computed font-size, bold, italic
-       etc. and syncs toolbar controls on every selectionchange
-     · Font-size stepping keeps selection alive — no deselect loop
-     · Highlight and text-color apply without losing selection
+   SHARED FORMAT ENGINE  — Word-style toolbar behaviour
+   ────────────────────────────────────────────────────────────
+   Key design:
+   · saveRange()  — always called on mousedown BEFORE the click
+     moves focus away from the contenteditable. This is the
+     single most important trick. All controls call it first.
+   · applyFontSize() — uses execCommand('fontSize', 7) sentinel
+     then replaces the injected <font> elements with
+     <span style="font-size:Xpx">.  Works on multi-node
+     selections, partial words, and across element boundaries.
+   · syncControls() — reads the COMPUTED style of the anchor
+     node, not the attribute.  This means the displayed size
+     always matches what the text actually looks like, even
+     when inherited from a parent.
+   · currentSize variable — updated on every selectionchange
+     so stepper buttons always start from the correct value.
 ════════════════════════════════════════════════════════════ */
 window.FormatEngine = (function () {
 
+  /* ── Read the real computed style of the current selection ── */
   function getSelectionStyle() {
     var result = {
       fontSize: null, fontFamily: '', bold: false,
@@ -27,63 +36,105 @@ window.FormatEngine = (function () {
     if (!sel || !sel.rangeCount) return result;
     var node = sel.anchorNode;
     if (node && node.nodeType === 3) node = node.parentElement;
-    if (!node) return result;
+    if (!node || node.nodeType !== 1) return result;
     try {
       var cs = window.getComputedStyle(node);
       var px = parseFloat(cs.fontSize);
+      /* Round to nearest integer — avoids 15.9999 or 16.0001 noise */
       if (!isNaN(px) && px > 0) result.fontSize = Math.round(px);
-      result.fontFamily   = cs.fontFamily || '';
-      result.bold         = document.queryCommandState('bold');
-      result.italic       = document.queryCommandState('italic');
-      result.underline    = document.queryCommandState('underline');
+      result.fontFamily    = cs.fontFamily || '';
+      result.bold          = parseInt(cs.fontWeight) >= 600 ||
+                             document.queryCommandState('bold');
+      result.italic        = document.queryCommandState('italic');
+      result.underline     = document.queryCommandState('underline');
       result.strikeThrough = document.queryCommandState('strikeThrough');
     } catch (e) {}
     return result;
   }
 
-  /* Apply font size without losing the selection.
-     Uses execCommand('fontSize') with sentinel=7, then swaps the
-     browser-injected <font size="7"> elements for <span style="font-size:Xpx">
-     while the caret / selection remains untouched.                              */
-  function applyFontSize(px) {
-    var sel = window.getSelection();
-    if (!sel || !sel.rangeCount || sel.isCollapsed) return;
-    var SENTINEL = 7;
-    document.execCommand('fontSize', false, SENTINEL);
-    // Find the <font size="7"> elements the browser just inserted
+  /* ── Apply font size without losing the selection ────────────
+     Strategy:
+     1. Restore the saved range (selection may be gone if user
+        clicked the toolbar).
+     2. execCommand('fontSize', 7) — browser wraps selected text
+        in <font size="7"> markers.
+     3. Walk the DOM and replace every <font size="7"> with a
+        <span style="font-size:Xpx">.
+     4. Selection stays intact because we never removed it —
+        we only replaced container elements around it.         */
+  function applyFontSize(px, savedRange) {
+    /* Restore selection first if a saved range was passed */
+    if (savedRange) {
+      var sel = window.getSelection();
+      if (sel) { sel.removeAllRanges(); sel.addRange(savedRange); }
+    }
+    var currentSel = window.getSelection();
+    if (!currentSel || !currentSel.rangeCount || currentSel.isCollapsed) return;
+
+    /* Find the best search root — stay local to avoid touching
+       font elements in other parts of the page */
     var searchRoot = document.body;
     try {
-      var range = sel.getRangeAt(0);
+      var range    = currentSel.getRangeAt(0);
       var ancestor = range.commonAncestorContainer;
       while (ancestor && ancestor.nodeType !== 1) ancestor = ancestor.parentNode;
       if (ancestor) searchRoot = ancestor;
     } catch (e) {}
-    searchRoot.querySelectorAll('font[size="' + SENTINEL + '"]').forEach(function (font) {
+
+    var SENTINEL = 7;
+    document.execCommand('fontSize', false, SENTINEL);
+
+    /* Replace <font size="7"> with <span style="font-size:Xpx"> */
+    var fonts = searchRoot.querySelectorAll('font[size="' + SENTINEL + '"]');
+    /* querySelectorAll on searchRoot may miss if searchRoot itself
+       is the font element (rare but possible) */
+    if (fonts.length === 0 && searchRoot.tagName === 'FONT' &&
+        searchRoot.getAttribute('size') == SENTINEL) {
+      fonts = [searchRoot];
+    }
+    fonts.forEach(function (font) {
       var span = document.createElement('span');
       span.style.fontSize = px + 'px';
       while (font.firstChild) span.appendChild(font.firstChild);
-      font.parentNode.replaceChild(span, font);
+      if (font.parentNode) font.parentNode.replaceChild(span, font);
     });
   }
 
-  function syncControls(controls) {
+  /* ── Sync toolbar controls to reflect the current selection ──
+     Called on every selectionchange and after every command.
+     Updates the size input, bold/italic/underline/strike states.
+     Does NOT update the input if the user is actively typing
+     in it (activeElement guard).                               */
+  function syncControls(controls, currentSizeRef) {
     var style = getSelectionStyle();
+
+    /* Size input — only update when the user isn't editing it */
     if (controls.sizeInput && style.fontSize !== null) {
       if (document.activeElement !== controls.sizeInput) {
         controls.sizeInput.value = style.fontSize;
       }
+      /* Always update the shared size reference so steppers start correctly */
+      if (currentSizeRef && style.fontSize !== null) {
+        currentSizeRef.value = style.fontSize;
+      }
     }
+
     function setActive(btn, state) {
-      if (!btn) return;
-      btn.classList.toggle('active', !!state);
+      if (btn) btn.classList.toggle('active', !!state);
     }
     setActive(controls.boldBtn,       style.bold);
     setActive(controls.italicBtn,     style.italic);
     setActive(controls.underlineBtn,  style.underline);
     setActive(controls.strikeBtn,     style.strikeThrough);
+
+    return style;
   }
 
-  return { getSelectionStyle: getSelectionStyle, applyFontSize: applyFontSize, syncControls: syncControls };
+  return {
+    getSelectionStyle : getSelectionStyle,
+    applyFontSize     : applyFontSize,
+    syncControls      : syncControls
+  };
 }());
 
 
@@ -93,6 +144,36 @@ window.FormatEngine = (function () {
   var OWNER_PASSPHRASE = localStorage.getItem('portfolio__passphrase') || 'blueprint2025';
   var SESSION_KEY      = 'portfolio__owner__unlocked';
   var SETTINGS_KEY     = 'portfolio__settings';
+
+  /* ── XSS SANITISATION ────────────────────────────────────────
+     All Firebase → innerHTML writes go through this wrapper.
+     DOMPurify is the industry-standard sanitiser for HTML content.
+     ALLOWED_TAGS: the full set used by the format bar (bold, italic,
+     underline, strikethrough, links, spans with inline styles, lists,
+     headings, blockquotes, superscript, subscript).
+     We deliberately exclude <script>, <iframe>, <object>, <embed>,
+     event handlers (onclick, onerror…), and javascript: URIs.
+  ──────────────────────────────────────────────────────────── */
+  var _purifyConfig = {
+    ALLOWED_TAGS: [
+      'b','strong','i','em','u','s','strike','del',
+      'sup','sub','mark','br','p','span',
+      'h1','h2','h3','h4','h5','h6',
+      'ul','ol','li','blockquote','a'
+    ],
+    ALLOWED_ATTR: ['style','href','target','rel','class'],
+    ALLOWED_URI_REGEXP: /^(?:https?|mailto):/i,
+    FORCE_BODY: false
+  };
+
+  function sanitize(html) {
+    if (typeof window.DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, _purifyConfig);
+    }
+    /* DOMPurify not loaded (offline / CDN blocked) — return as-is.
+       In practice this path is only hit in local dev without internet. */
+    return html;
+  }
 
 
   /* ══════════════════════════════════════════════════════════
@@ -462,7 +543,9 @@ window.FormatEngine = (function () {
           wireAddCards();
           if (document.body.classList.contains('owner-unlocked')) {
             injectAllDeleteBtns();
-            setTimeout(injectUploadTriggers, 60);
+            /* Note: upload zone wiring for newly-restored cards is handled
+               by injectUploadZones() in initUploadSystem which fires on
+               dynamicCardsRestored dispatch above — no call needed here */
           }
         }, 80);
       } catch(e) {}
@@ -474,7 +557,7 @@ window.FormatEngine = (function () {
         var id = el.getAttribute('data-edit-id');
         if (id && edits[id] !== undefined && edits[id] !== null) {
           /* Only touch DOM if value actually changed — avoids caret disruption */
-          if (el.innerHTML !== edits[id]) el.innerHTML = edits[id];
+          if (el.innerHTML !== edits[id]) el.innerHTML = sanitize(edits[id]);
         }
       });
     }
@@ -495,7 +578,7 @@ window.FormatEngine = (function () {
       var id = el.getAttribute('data-edit-id');
       if (id && (cachedEdits[id] === undefined || cachedEdits[id] === null)) {
         var s = localStorage.getItem(storageKey(id));
-        if (s !== null && el.innerHTML !== s) el.innerHTML = s;
+        if (s !== null && el.innerHTML !== s) el.innerHTML = sanitize(s);
       }
     });
 
@@ -980,43 +1063,66 @@ window.FormatEngine = (function () {
   var fmtSizeInput = document.getElementById('fmt-size-input');
   var fmtSizeUp    = document.getElementById('fmt-size-up');
   var fmtSizeDown  = document.getElementById('fmt-size-down');
-  var currentFontSize = 16;
+  /* Use an object so FormatEngine.syncControls can update it by reference */
+  var currentFontSizeRef = { value: 16 };
 
-  fmtSizeInput.addEventListener('focus', saveRange);
-  fmtSizeInput.addEventListener('change', function() {
-    var px = Math.max(8, Math.min(96, parseInt(this.value) || 16));
-    this.value = px;
-    currentFontSize = px;
-    restoreSelection();
-    FormatEngine.applyFontSize(px);
+  /* mousedown fires BEFORE the input steals focus from the contenteditable.
+     This is the correct moment to save the selection range.                 */
+  fmtSizeInput.addEventListener('mousedown', function() { saveRange(); });
+
+  fmtSizeInput.addEventListener('input', function() {
+    /* Live preview as user types — only apply when value is valid */
+    var px = parseInt(this.value);
+    if (!isNaN(px) && px >= 8 && px <= 96) {
+      currentFontSizeRef.value = px;
+      /* Don't apply yet — wait for Enter or blur to commit */
+    }
   });
+
+  fmtSizeInput.addEventListener('change', function() {
+    var px = Math.max(8, Math.min(96, parseInt(this.value) || currentFontSizeRef.value));
+    this.value = px;
+    currentFontSizeRef.value = px;
+    FormatEngine.applyFontSize(px, savedRange);
+  });
+
   fmtSizeInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); this.dispatchEvent(new Event('change')); }
-    /* Allow arrow keys to step size while keeping selection */
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var px = Math.max(8, Math.min(96, parseInt(this.value) || currentFontSizeRef.value));
+      this.value = px;
+      currentFontSizeRef.value = px;
+      FormatEngine.applyFontSize(px, savedRange);
+      this.blur();
+    }
     if (e.key === 'ArrowUp') {
-      e.preventDefault(); saveRange();
-      currentFontSize = Math.min(96, currentFontSize + 1);
-      this.value = currentFontSize;
-      FormatEngine.applyFontSize(currentFontSize);
+      e.preventDefault();
+      currentFontSizeRef.value = Math.min(96, currentFontSizeRef.value + 1);
+      this.value = currentFontSizeRef.value;
+      FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
     }
     if (e.key === 'ArrowDown') {
-      e.preventDefault(); saveRange();
-      currentFontSize = Math.max(8, currentFontSize - 1);
-      this.value = currentFontSize;
-      FormatEngine.applyFontSize(currentFontSize);
+      e.preventDefault();
+      currentFontSizeRef.value = Math.max(8, currentFontSizeRef.value - 1);
+      this.value = currentFontSizeRef.value;
+      FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
     }
   });
+
   fmtSizeUp.addEventListener('mousedown', function(e) {
-    e.preventDefault(); saveRange();
-    currentFontSize = Math.min(96, currentFontSize + 1);
-    fmtSizeInput.value = currentFontSize;
-    FormatEngine.applyFontSize(currentFontSize);
+    e.preventDefault();
+    saveRange();
+    currentFontSizeRef.value = Math.min(96, currentFontSizeRef.value + 1);
+    fmtSizeInput.value = currentFontSizeRef.value;
+    FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
   });
+
   fmtSizeDown.addEventListener('mousedown', function(e) {
-    e.preventDefault(); saveRange();
-    currentFontSize = Math.max(8, currentFontSize - 1);
-    fmtSizeInput.value = currentFontSize;
-    FormatEngine.applyFontSize(currentFontSize);
+    e.preventDefault();
+    saveRange();
+    currentFontSizeRef.value = Math.max(8, currentFontSizeRef.value - 1);
+    fmtSizeInput.value = currentFontSizeRef.value;
+    FormatEngine.applyFontSize(currentFontSizeRef.value, savedRange);
   });
 
   /* ── Text colour ── */
@@ -1051,20 +1157,28 @@ window.FormatEngine = (function () {
   };
 
   function syncFmtBarControls() {
-    FormatEngine.syncControls(fmtBarControls);
-    /* Also update the size variable to stay in sync */
-    var style = FormatEngine.getSelectionStyle();
-    if (style.fontSize !== null) currentFontSize = style.fontSize;
+    /* Pass currentFontSizeRef so syncControls can update it when
+       the selection moves to text with a different size.          */
+    FormatEngine.syncControls(fmtBarControls, currentFontSizeRef);
   }
 
   /* ── selectionchange: show bar + sync controls ── */
-  document.addEventListener('selectionchange', function() {
+  /* rAF-throttled handler: selectionchange fires on every caret move
+     and continuously while dragging — coalescing to one run per frame
+     eliminates the Word-like lag while typing or holding shift+arrow. */
+  var _selRAF = 0;
+  var _lastSelKey = '';
+  var _hideTimer  = 0;
+  function handleSelectionChange() {
+    _selRAF = 0;
     if (!editMode) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) {
-      setTimeout(function() {
+      if (_hideTimer) clearTimeout(_hideTimer);
+      _hideTimer = setTimeout(function() {
+        _hideTimer = 0;
         if (!formatBar.matches(':hover')) hideFormatBar();
-      }, 120);
+      }, 150);
       return;
     }
     /* Check selection is inside a contenteditable */
@@ -1078,12 +1192,23 @@ window.FormatEngine = (function () {
     }
     if (!inEdit) return;
 
-    savedRange = sel.getRangeAt(0).cloneRange();
-    var rect = sel.getRangeAt(0).getBoundingClientRect();
-    showFormatBar(rect.left + rect.width / 2, rect.top);
+    var range = sel.getRangeAt(0);
+    savedRange = range.cloneRange();
+
+    /* Skip layout work if selection bounds + text length didn't change */
+    var key = sel.toString().length + ':' + range.startOffset + ':' + range.endOffset;
+    if (key !== _lastSelKey || !formatBar.classList.contains('visible')) {
+      _lastSelKey = key;
+      var rect = range.getBoundingClientRect();
+      showFormatBar(rect.left + rect.width / 2, rect.top);
+    }
 
     /* Sync toolbar state to reflect selected text */
     syncFmtBarControls();
+  }
+  document.addEventListener('selectionchange', function() {
+    if (_selRAF) return;
+    _selRAF = requestAnimationFrame(handleSelectionChange);
   });
 
   formatBar.addEventListener('mousedown', function() {
@@ -1104,7 +1229,10 @@ window.FormatEngine = (function () {
     injectAllDeleteBtns();
     initSlideableBars();
     wireAddCards();
-    setTimeout(injectUploadTriggers, 100);
+    /* NOTE: injectUploadTriggers() intentionally NOT called here.
+       initUploadSystem (below) owns all upload wiring and fires its
+       own MutationObserver on the 'owner-unlocked' class add.
+       Calling it here as well was the root cause of duplicate upload buttons. */
     document.dispatchEvent(new CustomEvent('ownerUnlocked'));
   }
 
@@ -1121,6 +1249,15 @@ window.FormatEngine = (function () {
   }
 
   if (sessionStorage.getItem(SESSION_KEY) === '1') unlock();
+
+  /* ── GLOBAL EXPORTS ──────────────────────────────────────────────
+     Expose key functions so page-level inline scripts (projects.html,
+     media.html, etc.) can call them without being inside this IIFE.
+  ──────────────────────────────────────────────────────────────── */
+  window.enableEditMode  = enableEditMode;
+  window.disableEditMode = disableEditMode;
+  window.unlockOwner     = unlock;
+  window.lockOwner       = lock;
 
 
   /* ══════════════════════════════════════════════════════════
@@ -1144,14 +1281,49 @@ window.FormatEngine = (function () {
 
 
   /* ══════════════════════════════════════════════════════════
-     PART 10 — UPLOAD TRIGGERS (placeholder upload buttons)
-     (unchanged from v4 — still wires image/video/doc
-     upload zones on unlock)
+     PART 10 — ASSET GUIDE PANEL only.
+     Upload trigger wiring is owned exclusively by initUploadSystem
+     below. This part only injects the guide panel UI that the
+     upload zones reference via showAssetGuide().
   ══════════════════════════════════════════════════════════ */
 
-  /* IMAGE_STORE_PREFIX / storeImage / applyStoredImage / loadStoredImages
-     removed — thumbnail images now upload to Cloudinary and save to Firebase.
-     See initUploadSystem → injectUploadZones below. */
+  /* ── Keep legacy image storage helpers for backward-compat
+     (loadStoredImages below reads keys written by old version) ── */
+  var IMAGE_STORE_PREFIX = 'portfolio__img__';
+
+  function storeImage(key, dataUrl) {
+    try { localStorage.setItem(IMAGE_STORE_PREFIX + key, dataUrl); return true; }
+    catch(e) {
+      if (e.name === 'QuotaExceededError') {
+        alert('Image too large to store in browser. Please resize first, or add directly to assets/images/ in your GitHub repo.');
+      }
+      return false;
+    }
+  }
+
+  function applyStoredImage(container, dataUrl) {
+    var existing = container.querySelector('.placeholder-uploaded');
+    if (existing) { existing.src = dataUrl; return; }
+    var img = document.createElement('img');
+    img.className = 'placeholder-uploaded';
+    img.src = dataUrl;
+    img.alt = 'Uploaded image';
+    var trigger = container.querySelector('.upload-trigger');
+    if (trigger) container.insertBefore(img, trigger);
+    else container.appendChild(img);
+    var icon  = container.querySelector('.card-media__placeholder-icon, .about-hero__placeholder-icon');
+    var label = container.querySelector('.card-media__placeholder-label, .about-hero__placeholder-label');
+    if (icon)  icon.style.display  = 'none';
+    if (label) label.style.display = 'none';
+  }
+
+  function loadStoredImages() {
+    document.querySelectorAll('[data-img-key]').forEach(function(placeholder) {
+      var key    = placeholder.getAttribute('data-img-key');
+      var stored = localStorage.getItem(IMAGE_STORE_PREFIX + key);
+      if (stored) applyStoredImage(placeholder, stored);
+    });
+  }
 
   function showAssetGuide(type) {
     var guide = document.getElementById('asset-guide');
@@ -1194,45 +1366,6 @@ window.FormatEngine = (function () {
     guide.classList.add('open');
   }
 
-  /* injectUploadTriggers — now only handles PDF/video guide overlays.
-     Image upload is handled by initUploadSystem → injectUploadZones below. */
-  function injectUploadTriggers() {
-    /* PDF/doc guide triggers */
-    document.querySelectorAll('.card-media__placeholder-icon').forEach(function(icon) {
-      var text = icon.textContent.trim();
-      if (text === '📐' || text === '📄' || text === '📚' || text === '🔥') {
-        var placeholder = icon.closest('.card-media');
-        if (!placeholder || placeholder.querySelector('.upload-trigger')) return;
-        var trigger = document.createElement('div');
-        trigger.className = 'upload-trigger';
-        trigger.setAttribute('title', 'How to add this document');
-        trigger.innerHTML = '<div class="upload-trigger__icon">?</div>';
-        placeholder.style.position = 'relative';
-        placeholder.appendChild(trigger);
-        trigger.addEventListener('click', function(e) { e.stopPropagation(); showAssetGuide('pdf'); });
-      }
-    });
-
-    /* Video guide triggers */
-    document.querySelectorAll('.card-media__play').forEach(function(playBtn) {
-      var placeholder = playBtn.closest('.card-media');
-      if (!placeholder) return;
-      var hasImage    = placeholder.querySelector('img');
-      var hasTrigger  = placeholder.querySelector('.upload-trigger[data-video-guide]');
-      if (hasImage || hasTrigger) return;
-      var triggerIcon = placeholder.querySelector('.card-media__placeholder-icon');
-      if (!triggerIcon || triggerIcon.textContent.trim() !== '🎬') return;
-      var trigger = document.createElement('div');
-      trigger.className = 'upload-trigger';
-      trigger.setAttribute('data-video-guide', '1');
-      trigger.setAttribute('title', 'How to add a video');
-      trigger.innerHTML = '<div class="upload-trigger__icon">🎬</div><div class="upload-trigger__label">HOW TO ADD<br>VIDEO</div>';
-      placeholder.style.position = 'relative';
-      placeholder.appendChild(trigger);
-      trigger.addEventListener('click', function(e) { e.stopPropagation(); showAssetGuide('video'); });
-    });
-  }
-
   /* Inject asset guide panel (once) */
   if (!document.getElementById('asset-guide')) {
     var assetGuide = document.createElement('div');
@@ -1251,14 +1384,16 @@ window.FormatEngine = (function () {
     });
   }
 
+  setTimeout(loadStoredImages, 50);
+
 })(); /* end initEditor */
 
 
 /* ═══════════════════════════════════════════════════════════
-   FILE UPLOAD SYSTEM  (full version — Cloudinary + Firebase)
-   Handles: image placeholders (→ Cloudinary/Firebase),
-   doc buttons, video zones, social link editors.
-   Toast notifications. Shown only when owner-unlocked.
+   FILE UPLOAD SYSTEM  (full version — Cloudinary-ready)
+   Handles: image placeholders, doc buttons, video zones,
+   social link editors. Toast notifications. localStorage
+   storage for images. Shown only when owner-unlocked.
 ═══════════════════════════════════════════════════════════ */
 (function initUploadSystem() {
 
@@ -1299,89 +1434,28 @@ window.FormatEngine = (function () {
   function uploadKey(assetPath) { return UPLOAD_PREFIX + assetPath.replace(/\//g, '__'); }
 
   function loadStoredUploads() {
-    /* Restore thumbnail images saved to Firebase (Cloudinary URLs).
-       Keys are prefixed with 'thumb__' — set by injectUploadZones above. */
-    if (window.PF) {
-      PF.loadEdits(function(edits) {
-        document.querySelectorAll('.card-media__placeholder, .media-card__placeholder').forEach(function(ph) {
-          if (ph._uploadWired) return; /* already handled by injectUploadZones */
-          var card = ph.closest('.project-card, .media-card');
-          if (!card) return;
-          var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
-          if (!titleEl) return;
-          var slug = titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30);
-          var editKey = 'thumb__' + slug;
-          var savedUrl = edits[editKey];
-          if (savedUrl && typeof savedUrl === 'string' && savedUrl.indexOf('http') === 0) {
-            applyStoredFile(ph, savedUrl, 'image', editKey);
-          }
-        });
-      });
-    }
+    document.querySelectorAll('[data-asset-path]').forEach(function(el) {
+      var assetPath = el.getAttribute('data-asset-path');
+      var assetType = el.getAttribute('data-asset-type') || 'image';
+      var stored = null;
+      try { stored = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
+      if (stored) applyStoredFile(el, stored, assetType, assetPath);
+    });
+
+
+    document.querySelectorAll('.card-media__placeholder, .media-card__placeholder').forEach(function(ph) {
+      if (ph._uploadWired) return;
+      var card = ph.closest('.project-card, .media-card');
+      if (!card) return;
+      var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
+      if (!titleEl) return;
+      var slug = titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0,30);
+      var assetPath = 'assets/images/' + slug + '.jpg';
+      var stored = null;
+      try { stored = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
+      if (stored) applyStoredFile(ph, stored, 'image', assetPath);
+    });
   }
-
-  /* ── THUMBNAIL LIGHTBOX ─────────────────────────────────────────
-     Single shared overlay for full-screen thumbnail preview.
-     Opens when a [data-uploaded] image is clicked anywhere on the page.
-     Closes on click, Escape, or clicking the backdrop.
-  ─────────────────────────────────────────────────────────────── */
-  var thumbLightbox = (function() {
-    var overlay = null;
-    var lbImg   = null;
-
-    function build() {
-      overlay = document.createElement('div');
-      overlay.id = 'thumb-lightbox';
-      overlay.style.cssText = [
-        'position:fixed;inset:0;z-index:9500',
-        'background:rgba(3,6,14,0.96)',
-        'display:flex;align-items:center;justify-content:center',
-        'opacity:0;pointer-events:none',
-        'transition:opacity 0.22s',
-        'cursor:zoom-out'
-      ].join(';');
-
-      lbImg = document.createElement('img');
-      lbImg.style.cssText = [
-        'max-width:92vw;max-height:88vh',
-        'object-fit:contain',
-        'border-radius:8px',
-        'box-shadow:0 24px 80px rgba(0,0,0,0.75)',
-        'display:block',
-        'pointer-events:none',
-        'user-select:none'
-      ].join(';');
-
-      overlay.appendChild(lbImg);
-      document.body.appendChild(overlay);
-
-      overlay.addEventListener('click', close);
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && overlay.style.pointerEvents !== 'none') close();
-      });
-    }
-
-    function open(src, alt) {
-      if (!overlay) build();
-      lbImg.src = src;
-      lbImg.alt = alt || '';
-      overlay.style.pointerEvents = 'all';
-      /* rAF so the transition fires after display change */
-      requestAnimationFrame(function() {
-        overlay.style.opacity = '1';
-      });
-      document.body.style.overflow = 'hidden';
-    }
-
-    function close() {
-      if (!overlay) return;
-      overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
-      document.body.style.overflow = '';
-    }
-
-    return { open: open, close: close };
-  })();
 
   function applyStoredFile(targetEl, dataUrl, assetType, assetPath) {
     if (assetType === 'image') {
@@ -1397,23 +1471,18 @@ window.FormatEngine = (function () {
         container.insertBefore(img, container.firstChild);
       }
       img.src = dataUrl;
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in;';
-      /* Wire lightbox once per image element */
-      if (!img._lbWired) {
-        img._lbWired = true;
-        img.addEventListener('click', function(e) {
-          e.stopPropagation();
-          thumbLightbox.open(img.src, img.alt);
-        });
-      }
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+      /* LOCAL ONLY badge — owner visibility only. Visitors see the image without the badge. */
       var badge = container.querySelector('.upload-local-badge');
-      if (badge) badge.style.display = '';
+      if (badge) badge.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
       container.setAttribute('data-has-upload', '1');
       var changeBtn = container.querySelector('.upload-change-btn');
       if (!changeBtn) {
         changeBtn = document.createElement('button');
         changeBtn.className = 'upload-change-btn';
         changeBtn.textContent = '✎ CHANGE PHOTO';
+        /* Change button only for owners */
+        changeBtn.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
         container.appendChild(changeBtn);
         changeBtn.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -1444,27 +1513,6 @@ window.FormatEngine = (function () {
     reader.readAsDataURL(file);
   }
 
-  /* ── CLOUDINARY CONFIG (mirrors media.html) ── */
-  var CLD_CLOUD_ED  = 'dqloeuu33';
-  var CLD_PRESET_ED = 'i1mylmri';
-
-  /* Upload an image file to Cloudinary and return the secure URL via callback. */
-  function uploadImageToCloudinary(file, onSuccess, onError) {
-    var fd = new FormData();
-    fd.append('file', file);
-    fd.append('upload_preset', CLD_PRESET_ED);
-    fd.append('folder', 'portfolio/thumbnails');
-    fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD_ED + '/image/upload', {
-      method: 'POST', body: fd
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.secure_url) { onSuccess(d.secure_url); }
-      else { onError(new Error(d.error ? d.error.message : 'Upload failed')); }
-    })
-    .catch(onError);
-  }
-
   /* ── INJECT UPLOAD ZONES ── */
   function injectUploadZones() {
     /* Images */
@@ -1476,129 +1524,169 @@ window.FormatEngine = (function () {
       /* Skip about.html profile photo — managed exclusively by about.html inline script */
       if (ph.id === 'profile-placeholder' || ph.closest('#profile-img-wrap')) return;
       ph._uploadWired = true;
-
-      /* Derive a Firebase edit-key from the card so the URL is persisted permanently */
-      var card = ph.closest('.project-card, .media-card, .about-hero__img-wrap');
-      var editKey = null;
-      if (card) {
-        var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
-        var slug = titleEl
-          ? titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30)
-          : 'img-' + Date.now();
-        editKey = 'thumb__' + slug;
+      var container = ph.closest('[data-asset-path]');
+      var assetPath, assetType;
+      if (container) {
+        assetPath = container.getAttribute('data-asset-path');
+        assetType = container.getAttribute('data-asset-type') || 'image';
+      } else {
+        if (ph.classList.contains('about-hero__placeholder')) {
+          assetPath = 'assets/images/rubui-mwangi.jpg'; assetType = 'image'; container = ph;
+        } else {
+          var card = ph.closest('.project-card, .media-card, .about-hero__img-wrap');
+          if (card) {
+            var titleEl = card.querySelector('[data-edit-id$="-title"], .card-title, .media-card__title');
+            var slug = titleEl ? titleEl.textContent.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0,30) : 'image-' + Date.now();
+            assetPath = 'assets/images/' + slug + '.jpg'; assetType = 'image'; container = ph;
+          }
+        }
       }
-
+      if (!assetPath) return;
       var zone = document.createElement('div');
       zone.className = 'upload-zone';
       zone.innerHTML = '<div class="upload-zone__icon">📁</div><div class="upload-zone__label">CLICK TO UPLOAD<br>IMAGE</div><div class="upload-zone__hint">JPG · PNG · WEBP · GIF</div>';
       ph.style.position = 'relative'; ph.appendChild(zone);
-
-      /* If a URL was previously saved to Firebase, restore it now */
-      if (editKey && window.PF) {
-        PF.loadEdits(function(edits) {
-          var savedUrl = edits[editKey];
-          if (savedUrl && typeof savedUrl === 'string' && savedUrl.indexOf('http') === 0) {
-            applyStoredFile(ph, savedUrl, 'image', editKey);
-          }
-        });
-      }
-
+      var badge = document.createElement('div');
+      badge.className = 'upload-local-badge'; badge.textContent = '⚡ LOCAL ONLY'; badge.style.display = 'none';
+      var badgeTarget = ph.closest('.card-media, .media-card__thumb, .about-hero__img-wrap');
+      if (badgeTarget) badgeTarget.appendChild(badge);
+      var finalAssetPath = assetPath;
+      var finalAssetType = assetType;
       zone.addEventListener('click', function(e) {
         e.stopPropagation();
         if (!document.body.classList.contains('owner-unlocked')) return;
-
-        /* Ensure Firebase auth before uploading */
-        if (!window.PF || !PF.isOwner()) {
-          showToast('⚠ Sign in first',
-            '<span class="upload-toast__warn">Click OWNER → enter your Firebase password to enable image uploads.</span>',
-            6000);
-          return;
-        }
-
         openFilePicker('image/jpeg,image/png,image/webp,image/gif', function(file) {
           var sizeMB = file.size / (1024 * 1024);
-          if (sizeMB > 10) {
+          if (sizeMB > SIZE_LIMIT_MB) {
             showToast('⚠ File too large',
-              '<span class="upload-toast__warn">Image is ' + sizeMB.toFixed(1) + 'MB. Keep under 10 MB.</span>',
-              8000);
-            return;
+              '<span class="upload-toast__warn">This image is ' + sizeMB.toFixed(1) + 'MB. ' +
+              'Keep under ' + SIZE_LIMIT_MB + 'MB for browser storage, or add directly to <code>' + finalAssetPath + '</code> and push to GitHub.</span>',
+              8000); return;
           }
-
-          showToast('⏳ Uploading…', '<span>Sending to Cloudinary — please wait.</span>', 0);
-          zone.innerHTML = '<div class="upload-zone__icon">⏳</div><div class="upload-zone__label">UPLOADING…</div>';
-
-          uploadImageToCloudinary(file,
-            function(url) {
-              /* Restore zone icon */
-              zone.innerHTML = '<div class="upload-zone__icon">✓</div><div class="upload-zone__label">UPLOADED</div>';
-              /* Apply image to page immediately */
-              applyStoredFile(ph, url, 'image', editKey || ('thumb__' + Date.now()));
-              /* Save the Cloudinary URL to Firebase so all visitors see it */
-              if (editKey && window.PF && PF.isOwner()) {
-                var batch = {};
-                batch[editKey] = url;
-                PF.saveAllEdits(batch)
-                  .then(function() {
-                    showToast('✓ Image saved',
-                      '<div class="upload-toast__path">Cloudinary + Firebase — permanent for all visitors.</div>',
-                      5000);
-                  })
-                  .catch(function(err) {
-                    showToast('⚠ Firebase save failed',
-                      '<span class="upload-toast__warn">Image uploaded to Cloudinary but URL not saved: ' + err.message + '</span>',
-                      8000);
-                  });
-              } else {
-                showToast('✓ Uploaded to Cloudinary',
-                  '<div class="upload-toast__path">URL: ' + url + '</div>',
-                  6000);
-              }
-            },
-            function(err) {
-              zone.innerHTML = '<div class="upload-zone__icon">📁</div><div class="upload-zone__label">CLICK TO UPLOAD<br>IMAGE</div><div class="upload-zone__hint">JPG · PNG · WEBP · GIF</div>';
-              showToast('✗ Upload failed', '<span class="upload-toast__warn">' + err.message + '</span>', 8000);
+          readAsDataURL(file, function(dataUrl) {
+            try { localStorage.setItem(uploadKey(finalAssetPath), dataUrl); }
+            catch(e) {
+              showToast('⚠ Storage full', '<span class="upload-toast__warn">Browser storage is full. Add the image directly to your assets/ folder.</span>', 6000);
+              return;
             }
-          );
+            applyStoredFile(ph, dataUrl, finalAssetType, finalAssetPath);
+            var fname = file.name;
+            var ext   = fname.split('.').pop().toLowerCase();
+            var suggested = finalAssetPath.replace(/\.[^.]+$/, '.' + ext);
+            showToast('✓ Image uploaded locally',
+              '<div class="upload-toast__path">Save as: ' + suggested + '</div>' +
+              '<div class="upload-toast__warn">⚡ Stored in your browser only.<br>' +
+              'To make it permanent for all visitors:<br>' +
+              '1. Save the file as <strong>' + fname + '</strong><br>' +
+              '2. Copy into <strong>assets/images/</strong><br>' +
+              '3. Commit and push to GitHub</div>', 10000);
+          });
         });
       });
     });
 
-    /* PDF / DOCX upload buttons */
+    /* PDF / DOCX upload buttons
+       ─────────────────────────────────────────────────────────────────────
+       FIX (v6): Previous version used URL.createObjectURL() which produced
+       a blob: URL that is:
+         (a) session-only — revoked on tab close
+         (b) sent to Google Docs viewer which CANNOT read blob: URLs
+         (c) required re-wiring wireDocBtns via _docWired=false which
+             caused the doc viewer to either double-fire or not fire at all
+
+       New approach:
+         1. Read the file as a base64 DataURL (like image uploads do)
+         2. Store it in localStorage under uploadKey(assetPath)
+         3. Update btn.setAttribute('data-doc-src', dataUrl) in-place
+            without touching _docWired — the existing click listener on
+            btn already reads the current data-doc-src attribute live
+         4. In openDocViewer (projects.html), data: URLs are treated as
+            local PDFs — the inline viewer handles them natively via an
+            <iframe srcdoc> or object element, bypassing Google Docs
+       ────────────────────────────────────────────────────────────────── */
+    var DOC_SIZE_LIMIT_MB = 4; /* 4 MB base64 ≈ 5.3 MB encoded — safe for localStorage */
     document.querySelectorAll('[data-doc-src]').forEach(function(btn) {
-      if (btn._uploadDocWired || !btn.classList.contains('card-btn--primary')) return;
+      if (btn._uploadDocWired || !btn.classList.contains("card-btn--primary")) return;
+      /* FIX: skip cards owned by projects.html doc-id upload system (avoids duplicate upload buttons) */
+      if (btn.closest && btn.closest(".card-actions[data-doc-id]")) return;
       btn._uploadDocWired = true;
       var assetPath = btn.getAttribute('data-doc-src');
+      /* Skip buttons that already point to a stored data URL or blob */
+      if (/^data:|^blob:/.test(assetPath)) return;
       var assetType = btn.getAttribute('data-doc-type') || 'pdf';
       var uploadBtn = document.createElement('button');
       uploadBtn.className = 'card-btn owner-only';
-      uploadBtn.title = 'Upload ' + assetType.toUpperCase() + ' file';
+      uploadBtn.title = 'Upload ' + assetType.toUpperCase() + ' file to replace placeholder';
       uploadBtn.innerHTML = '<span style="font-size:11px;">📂</span> UPLOAD ' + assetType.toUpperCase();
-      uploadBtn.style.display = 'none';
+      /* Always hidden by default; shown only when owner-unlocked */
+      uploadBtn.style.display = document.body.classList.contains('owner-unlocked') ? '' : 'none';
       if (btn.parentNode) btn.parentNode.insertBefore(uploadBtn, btn.nextSibling);
-      if (document.body.classList.contains('owner-unlocked')) uploadBtn.style.display = '';
+
       uploadBtn.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         if (!document.body.classList.contains('owner-unlocked')) return;
-        var accept = assetType === 'pdf' ? 'application/pdf' : '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        var accept = assetType === 'pdf'
+          ? 'application/pdf'
+          : '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         openFilePicker(accept, function(file) {
-          var objectUrl = URL.createObjectURL(file);
-          btn.setAttribute('data-doc-src-local', objectUrl);
-          btn._localObjectUrl = objectUrl;
-          var downloadBtn = btn.parentNode && btn.parentNode.querySelector('a[download][href*="' + assetPath + '"]');
-          if (downloadBtn) downloadBtn.href = objectUrl;
-          showToast('✓ ' + assetType.toUpperCase() + ' loaded for this session',
-            '<div class="upload-toast__path">File: ' + file.name + '</div>' +
-            '<div class="upload-toast__warn">⚡ Session only — link works until you close the tab.<br>' +
-            'To make it permanent:<br>' +
-            '1. Name the file: <strong>' + assetPath.split('/').pop() + '</strong><br>' +
-            '2. Copy into <strong>' + assetPath.split('/').slice(0,-1).join('/') + '/</strong><br>' +
-            '3. Commit and push to GitHub</div>', 12000);
-          btn.removeAttribute('data-doc-src');
-          btn.setAttribute('data-doc-src', objectUrl);
-          btn._docWired = false;
-          if (typeof wireDocBtns === 'function') wireDocBtns();
+          var sizeMB = file.size / (1024 * 1024);
+          if (sizeMB > DOC_SIZE_LIMIT_MB) {
+            showToast('⚠ File too large',
+              '<div class="upload-toast__warn">This file is ' + sizeMB.toFixed(1) + 'MB.<br>' +
+              'Keep under ' + DOC_SIZE_LIMIT_MB + 'MB for browser storage.<br>' +
+              'Larger files must be committed to <code>assets/docs/</code> in GitHub.</div>', 8000);
+            return;
+          }
+          readAsDataURL(file, function(dataUrl) {
+            /* Persist in localStorage — survives page refresh, no session limit */
+            try { localStorage.setItem(uploadKey(assetPath), dataUrl); }
+            catch(storageErr) {
+              showToast('⚠ Storage full',
+                '<div class="upload-toast__warn">Browser storage is full. ' +
+                'Commit the file to <code>' + assetPath + '</code> in GitHub instead.</div>', 7000);
+              return;
+            }
+
+            /* Update the READ/VIEW button's src attribute directly.
+               The existing click listener reads data-doc-src live,
+               so this takes effect immediately — no re-wiring needed. */
+            btn.setAttribute('data-doc-src', dataUrl);
+            btn.setAttribute('data-doc-type', assetType);
+
+            /* Also update any paired download link */
+            var downloadLink = btn.parentNode && btn.parentNode.querySelector('a[download]');
+            if (downloadLink) downloadLink.href = dataUrl;
+
+            /* Visual feedback: highlight the read button green */
+            var prevBg = btn.style.background;
+            btn.style.background = 'rgba(74,222,128,0.18)';
+            btn.style.borderColor = 'rgba(74,222,128,0.6)';
+            setTimeout(function() {
+              btn.style.background = prevBg;
+              btn.style.borderColor = '';
+            }, 2500);
+
+            showToast('✓ ' + assetType.toUpperCase() + ' ready',
+              '<div class="upload-toast__path">File: ' + file.name + '</div>' +
+              '<div class="upload-toast__warn">Stored in browser — persists across page refreshes.<br>' +
+              'Click <strong>' + (btn.textContent.trim().split(' ')[0] || 'READ') + '</strong> to open the document viewer.<br><br>' +
+              'To make it permanent for all visitors:<br>' +
+              '1. Name the file: <strong>' + assetPath.split('/').pop() + '</strong><br>' +
+              '2. Copy into <strong>' + assetPath.split('/').slice(0,-1).join('/') + '/</strong><br>' +
+              '3. Commit and push to GitHub</div>', 14000);
+          });
         });
       });
+
+      /* Restore on page load: if a base64 version was stored from a previous upload,
+         apply it immediately so the viewer button is ready without any upload action. */
+      var storedDoc = null;
+      try { storedDoc = localStorage.getItem(uploadKey(assetPath)); } catch(e) {}
+      if (storedDoc && /^data:/.test(storedDoc)) {
+        btn.setAttribute('data-doc-src', storedDoc);
+        btn.style.borderColor = 'rgba(74,222,128,0.35)';
+        btn.title = btn.title + ' (stored locally)';
+      }
     });
 
     /* Video upload zones */
@@ -1639,34 +1727,111 @@ window.FormatEngine = (function () {
       var editBtn = document.createElement('button');
       editBtn.className = 'link-edit-btn'; editBtn.title = 'Edit link URL'; editBtn.textContent = '🔗';
       card.appendChild(editBtn);
+
+      /* Derive a stable key from the card's social class name          */
+      var key       = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
+      var fbEditKey = 'social-link-' + (card.className.match(/social-\w+/)||['social'])[0];
+
       editBtn.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         var current = card.getAttribute('href') || '';
         var newUrl = window.prompt('Enter the full URL for this social link:\n(e.g. https://linkedin.com/in/yourname)', current);
-        if (newUrl !== null && newUrl.trim()) {
-          card.setAttribute('href', newUrl.trim());
-          var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
-          try { localStorage.setItem(key, newUrl.trim()); } catch(e) {}
+        if (newUrl === null || !newUrl.trim()) return;
+
+        var url = newUrl.trim();
+        card.setAttribute('href', url);
+
+        /* Always save to localStorage first (instant, always available) */
+        try { localStorage.setItem(key, url); } catch(e) {}
+
+        /* Save to Firebase so ALL devices see the updated link ───────── */
+        if (window.PF && typeof PF.saveEdit === 'function') {
+          var doSave = function() {
+            PF.saveEdit(fbEditKey, url)
+              .then(function() {
+                showToast('✓ Link saved',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Saved to Firebase — visible on all devices.</div>',
+                  5000);
+              })
+              .catch(function(err) {
+                showToast('✓ Link updated (local only)',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Firebase save failed: ' + err.message + '<br>To make permanent, update href in contact.html and push to GitHub.</div>',
+                  7000);
+              });
+          };
+          if (PF.isOwner()) {
+            doSave();
+          } else {
+            PF.ensureOwnerSignIn()
+              .then(function() { doSave(); })
+              .catch(function() {
+                showToast('✓ Link updated (local only)',
+                  '<div class="upload-toast__path">' + url + '</div>' +
+                  '<div class="upload-toast__warn">Sign-in cancelled. To make permanent, update href in contact.html and push to GitHub.</div>',
+                  7000);
+              });
+          }
+        } else {
           showToast('✓ Link updated',
-            '<div class="upload-toast__path">' + newUrl.trim() + '</div>' +
+            '<div class="upload-toast__path">' + url + '</div>' +
             '<div class="upload-toast__warn">Saved to browser. To make permanent, update href in contact.html and push to GitHub.</div>',
             6000);
         }
       });
-      var key = 'portfolio__link__' + (card.className.match(/social-\w+/)||['social'])[0];
-      var saved = null; try { saved = localStorage.getItem(key); } catch(e) {}
-      if (saved) card.setAttribute('href', saved);
+
+      /* On page load: restore from Firebase in real-time (watchEdits), fall back to localStorage.
+         Using watchEdits means a link changed on any device appears instantly on all others.     */
+      if (window.PF && typeof PF.watchEdits === 'function') {
+        PF.watchEdits(function(edits) {
+          var fbUrl = edits && edits[fbEditKey];
+          if (fbUrl) {
+            card.setAttribute('href', fbUrl);
+            try { localStorage.setItem(key, fbUrl); } catch(e) {}   /* keep local in sync */
+          } else {
+            var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+            if (lsUrl) card.setAttribute('href', lsUrl);
+          }
+        });
+      } else if (window.PF && typeof PF.loadEdits === 'function') {
+        /* Fallback: one-time read if watchEdits unavailable */
+        PF.loadEdits(function(edits) {
+          var fbUrl = edits && edits[fbEditKey];
+          if (fbUrl) {
+            card.setAttribute('href', fbUrl);
+            try { localStorage.setItem(key, fbUrl); } catch(e) {}
+          } else {
+            var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+            if (lsUrl) card.setAttribute('href', lsUrl);
+          }
+        });
+      } else {
+        /* Firebase not loaded — use localStorage */
+        var lsUrl = null; try { lsUrl = localStorage.getItem(key); } catch(e) {}
+        if (lsUrl) card.setAttribute('href', lsUrl);
+      }
     });
   }
 
-  /* ── WIRE ON UNLOCK ── */
+  /* ── WIRE ON UNLOCK / LOCK ── */
   var unlockObserver = new MutationObserver(function(mutations) {
     mutations.forEach(function(m) {
       if (m.type === 'attributes' && m.attributeName === 'class') {
-        if (document.body.classList.contains('owner-unlocked')) {
+        var isOwner = document.body.classList.contains('owner-unlocked');
+        if (isOwner) {
+          /* injectUploadZones guards with _uploadWired — safe to call multiple times */
           injectUploadZones();
           injectLinkEditors();
-          document.querySelectorAll('.card-btn[title^="Upload"]').forEach(function(b) { b.style.display = ''; });
+          /* Show upload-related owner-only elements */
+          document.querySelectorAll('.card-btn[title^="Upload"], .upload-local-badge, .upload-change-btn').forEach(function(b) {
+            b.style.display = '';
+          });
+        } else {
+          /* Hide owner-only upload UI when locked */
+          document.querySelectorAll('.upload-local-badge, .upload-change-btn').forEach(function(b) {
+            b.style.display = 'none';
+          });
         }
       }
     });
@@ -1678,6 +1843,13 @@ window.FormatEngine = (function () {
     injectLinkEditors();
   }
   loadStoredUploads();
+
+  /* Also re-wire when dynamic cards are restored from localStorage */
+  document.addEventListener('dynamicCardsRestored', function() {
+    if (document.body.classList.contains('owner-unlocked')) {
+      setTimeout(function() { injectUploadZones(); }, 60);
+    }
+  });
 
 })(); /* end initUploadSystem */
 
@@ -1692,15 +1864,26 @@ window.FormatEngine = (function () {
 ═══════════════════════════════════════════════════════════ */
 (function patchArticlesFormatBar() {
 
-  /* Wait for the page's own script to have run first */
-  setTimeout(function() {
+  /* ── Retry loop: attempt up to 10 times at 100ms intervals ──
+     Replaces the brittle single 300ms setTimeout.  Stops as
+     soon as the target elements exist (usually attempt 1–3). */
+  var attempts = 0;
+  var MAX_ATTEMPTS = 10;
+  var INTERVAL_MS  = 100;
+
+  function tryPatch() {
+    attempts++;
     var rfbBar    = document.getElementById('reader-format-bar');
     var rfbSize   = document.getElementById('rfb-size-input');
     var rfbSizeUp = document.getElementById('rfb-size-up');
     var rfbSizeDn = document.getElementById('rfb-size-down');
-    if (!rfbBar || !rfbSize) return; // not articles page or not loaded yet
 
-    /* Find the bold/italic/underline/strike buttons by their data-cmd */
+    if (!rfbBar || !rfbSize) {
+      if (attempts < MAX_ATTEMPTS) setTimeout(tryPatch, INTERVAL_MS);
+      return; // elements not ready — retry
+    }
+
+    /* ── Find the bold/italic/underline/strike buttons by their data-cmd ── */
     var rfbBtns = {
       bold:         rfbBar.querySelector('[data-cmd="bold"]'),
       italic:       rfbBar.querySelector('[data-cmd="italic"]'),
@@ -1784,8 +1967,14 @@ window.FormatEngine = (function () {
         setTimeout(function() { FormatEngine.syncControls(rfbControls); }, 10);
       });
     });
+  } /* end tryPatch */
 
-  }, 300); /* wait 300ms for articles page script to set up the reader */
+  /* Start the retry loop on DOMContentLoaded or immediately if already loaded */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(tryPatch, 50); });
+  } else {
+    setTimeout(tryPatch, 50);
+  }
 
 })();
 

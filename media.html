@@ -13,7 +13,7 @@
 
   <!-- Open Graph: LinkedIn, WhatsApp, Facebook previews -->
   <meta property="og:type"         content="website" />
-  <meta property="og:site_name"    content="Rubui Mwangi  Portfolio" />
+  <meta property="og:site_name"    content="Rubui Mwangi — Portfolio" />
   <meta property="og:title"        content="Media . Rubui Mwangi" />
   <meta property="og:description"  content="Photography, design work, and media by Rubui Mwangi — a visual portfolio alongside engineering work." />
   <meta property="og:url"          content="https://dennisrm-cyber.github.io/portfolio/media.html" />
@@ -719,25 +719,8 @@
   </style>
 </head>
 <body class="page-frame">
+  <!-- nav injected by main.js -->
 
-  <!-- NAV -->
-  <nav class="nav">
-    <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"></span>Portfolio.EE</span></a>
-      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav__links">
-        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
-        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
-        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
-        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
-        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
-        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
-        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
-      </ul>
-    </div>
-  </nav>
 
   <div class="scroll-surface">
     <div class="container">
@@ -1010,10 +993,7 @@
   <footer class="footer">
     <div class="container footer__inner">
       <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
-      <span class="footer__right">
-        <span class="footer__pulse" aria-hidden="true"></span>
-        <span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span>
-      </span>
+      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span><span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span></span>
     </div>
   </footer>
 
@@ -1075,6 +1055,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-e0jCNBMnPnCkKbOtQmfCVbCmrZQBs6tKwAKfHaGFgOCLEKv7e4ggYd0e4RpIlgQ62l5p0hPOE1+KVJAb2Jzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1215,188 +1196,26 @@
       if (sv) sv.textContent = videoN;
       if (ss) ss.textContent = socialN;
     }
-
-    /* ── FIREBASE SIGN-IN MODAL ─────────────────────────────────────
-       Shows a polished inline modal to collect Firebase email +
-       password, signs in, then runs the callback on success.
-       Dismissed on cancel or Escape.
-    ─────────────────────────────────────────────────────────────── */
+        /* ── FIREBASE SIGN-IN MODAL — thin wrapper ─────────────────── */
     function requireFirebaseAuth(onAuthenticated) {
-      /* Reuse an existing modal if already in the DOM */
-      var existing = document.getElementById('fb-signin-modal');
-      if (existing) existing.remove();
-
-      var modal = document.createElement('div');
-      modal.id = 'fb-signin-modal';
-      modal.style.cssText = [
-        'position:fixed;inset:0;z-index:10000',
-        'background:rgba(3,6,14,0.88)',
-        'backdrop-filter:blur(18px)',
-        'display:flex;align-items:center;justify-content:center',
-        'animation:fbModalIn 0.18s ease'
-      ].join(';');
-
-      modal.innerHTML = [
-        '<style>',
-        '@keyframes fbModalIn{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}',
-        '#fb-signin-modal .fb-box{',
-        '  background:rgba(14,20,44,0.98);',
-        '  border:1px solid rgba(240,165,0,0.28);',
-        '  border-radius:16px;padding:32px 36px 28px;',
-        '  width:min(400px,90vw);',
-        '  box-shadow:0 32px 80px rgba(0,0,0,0.7);',
-        '}',
-        '#fb-signin-modal .fb-label{',
-        '  font-family:JetBrains Mono,monospace;font-size:9px;',
-        '  letter-spacing:0.18em;color:rgba(240,165,0,0.55);',
-        '  margin-bottom:8px;',
-        '}',
-        '#fb-signin-modal .fb-title{',
-        '  font-family:Syne,sans-serif;font-size:20px;font-weight:800;',
-        '  color:#f0f4ff;margin-bottom:6px;',
-        '}',
-        '#fb-signin-modal .fb-hint{',
-        '  font-size:12px;color:rgba(180,190,220,0.65);',
-        '  line-height:1.6;margin-bottom:24px;',
-        '}',
-        '#fb-signin-modal .fb-field{margin-bottom:14px;}',
-        '#fb-signin-modal .fb-field label{',
-        '  display:block;font-family:JetBrains Mono,monospace;',
-        '  font-size:8px;letter-spacing:0.15em;color:rgba(240,165,0,0.6);',
-        '  margin-bottom:5px;',
-        '}',
-        '#fb-signin-modal .fb-input{',
-        '  width:100%;box-sizing:border-box;',
-        '  background:rgba(8,14,30,0.9);',
-        '  border:1px solid rgba(240,165,0,0.2);',
-        '  border-radius:8px;padding:10px 14px;',
-        '  color:#f0f4ff;font-family:JetBrains Mono,monospace;font-size:13px;',
-        '  outline:none;transition:border-color 0.18s;',
-        '}',
-        '#fb-signin-modal .fb-input:focus{border-color:rgba(240,165,0,0.6);}',
-        '#fb-signin-modal .fb-input.error{border-color:#f87171!important;}',
-        '#fb-signin-modal .fb-error{',
-        '  font-family:JetBrains Mono,monospace;font-size:9px;',
-        '  color:#f87171;min-height:16px;margin-bottom:18px;',
-        '  letter-spacing:0.08em;',
-        '}',
-        '#fb-signin-modal .fb-actions{display:flex;gap:10px;}',
-        '#fb-signin-modal .fb-btn-sign{',
-        '  flex:1;padding:12px;border-radius:10px;',
-        '  background:var(--amber,#f0a500);border:none;',
-        '  color:#0d1526;font-family:JetBrains Mono,monospace;',
-        '  font-size:10px;font-weight:700;letter-spacing:0.14em;',
-        '  cursor:pointer;transition:opacity 0.18s;',
-        '}',
-        '#fb-signin-modal .fb-btn-sign:hover{opacity:0.88;}',
-        '#fb-signin-modal .fb-btn-sign:disabled{opacity:0.4;cursor:default;}',
-        '#fb-signin-modal .fb-btn-cancel{',
-        '  padding:12px 18px;border-radius:10px;',
-        '  background:transparent;',
-        '  border:1px solid rgba(248,113,113,0.35);',
-        '  color:#f87171;font-family:JetBrains Mono,monospace;',
-        '  font-size:10px;letter-spacing:0.12em;cursor:pointer;',
-        '  transition:background 0.15s;',
-        '}',
-        '#fb-signin-modal .fb-btn-cancel:hover{background:rgba(248,113,113,0.1);}',
-        '</style>',
-        '<div class="fb-box">',
-        '  <div class="fb-label">// firebase auth</div>',
-        '  <div class="fb-title">Sign in to upload</div>',
-        '  <div class="fb-hint">Enter your Firebase owner credentials to enable image uploads. This is separate from your site passphrase.</div>',
-        '  <div class="fb-field">',
-        '    <label for="fb-email">EMAIL</label>',
-        '    <input class="fb-input" id="fb-email" type="email" placeholder="owner@email.com" autocomplete="email" />',
-        '  </div>',
-        '  <div class="fb-field">',
-        '    <label for="fb-pass">PASSWORD</label>',
-        '    <input class="fb-input" id="fb-pass" type="password" placeholder="Firebase password" autocomplete="current-password" />',
-        '  </div>',
-        '  <div class="fb-error" id="fb-error"></div>',
-        '  <div class="fb-actions">',
-        '    <button class="fb-btn-sign" id="fb-sign-btn">SIGN IN &amp; UPLOAD</button>',
-        '    <button class="fb-btn-cancel" id="fb-cancel-btn">CANCEL</button>',
-        '  </div>',
-        '</div>'
-      ].join('');
-
-      document.body.appendChild(modal);
-
-      var emailEl  = modal.querySelector('#fb-email');
-      var passEl   = modal.querySelector('#fb-pass');
-      var errorEl  = modal.querySelector('#fb-error');
-      var signBtn  = modal.querySelector('#fb-sign-btn');
-      var cancelBtn= modal.querySelector('#fb-cancel-btn');
-
-      setTimeout(function() { emailEl.focus(); }, 80);
-
-      function closeModal() {
-        modal.style.animation = 'fbModalIn 0.15s ease reverse';
-        setTimeout(function() { if (modal.parentNode) modal.remove(); }, 140);
+      if (window.PF && typeof PF.requireFirebaseAuth === 'function') {
+        PF.requireFirebaseAuth(onAuthenticated, function() {/* cancelled */});
+      } else {
+        console.warn('[media] PF.requireFirebaseAuth not available');
       }
-
-      function setError(msg) {
-        errorEl.textContent = msg;
-        emailEl.classList.toggle('error', !!msg);
-        passEl.classList.toggle('error', !!msg);
-      }
-
-      function doSignIn() {
-        var email = emailEl.value.trim();
-        var pass  = passEl.value;
-        if (!email || !pass) { setError('Both fields are required.'); return; }
-        setError('');
-        signBtn.disabled = true;
-        signBtn.textContent = 'SIGNING IN\u2026';
-        PF.signIn(email, pass)
-          .then(function() {
-            closeModal();
-            onAuthenticated();           /* ← proceed to file picker */
-          })
-          .catch(function(err) {
-            signBtn.disabled = false;
-            signBtn.textContent = 'SIGN IN & UPLOAD';
-            var msg = err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
-              ? 'Incorrect email or password.'
-              : err.code === 'auth/too-many-requests'
-              ? 'Too many attempts. Wait a moment and try again.'
-              : err.code === 'auth/network-request-failed'
-              ? 'Network error. Check your connection.'
-              : (err.message || 'Sign-in failed.');
-            setError(msg);
-            passEl.value = '';
-            passEl.focus();
-          });
-      }
-
-      signBtn.addEventListener('click', doSignIn);
-      passEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSignIn(); });
-      cancelBtn.addEventListener('click', closeModal);
-      modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
-      document.addEventListener('keydown', function escClose(e) {
-        if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escClose); }
-      });
     }
 
-    /* ── ADD IMAGES TO COLLECTION ───────────────────────────────────
-       Flow: [if needed] Firebase sign-in modal → file picker →
-             Cloudinary upload → Firebase save →
-             watchCollection fires → cache updates → UI re-renders.
-       No base64. No localStorage. Permanent Cloudinary URLs only.
-    ─────────────────────────────────────────────────────────────── */
+    /* ── ADD TO COLLECTION — opens OS file picker, uploads to Cloudinary ── */
     function addToCollection(collId) {
       if (!document.body.classList.contains('owner-unlocked')) return;
-
-      /* If not yet signed in to Firebase, show the sign-in modal
-         first, then retry addToCollection on success. */
       if (!window.PF || !PF.isOwner()) {
         requireFirebaseAuth(function() { addToCollection(collId); });
         return;
       }
 
       var input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm';
+      input.type     = 'file';
+      input.accept   = 'image/jpeg,image/png,image/webp,image/gif';
       input.multiple = true;
       input.style.display = 'none';
       document.body.appendChild(input);
@@ -1409,7 +1228,7 @@
         var total  = files.length;
         var done   = 0;
         var errors = [];
-        var SIZE_LIMIT = 10 * 1024 * 1024; /* 10MB Cloudinary free limit */
+        var SIZE_LIMIT = 10 * 1024 * 1024; /* 10 MB Cloudinary free limit */
 
         /* Progress toast */
         var toast = document.createElement('div');
@@ -1937,7 +1756,7 @@
         wireMediaCards();
         updateStats();
         // Enter edit mode and focus title
-        if (typeof enableEditMode === 'function') enableEditMode();
+        if (typeof window.enableEditMode === 'function') window.enableEditMode();
         var t = card.querySelector('.media-card__title');
         if (t) {
           t.setAttribute('contenteditable', 'true');

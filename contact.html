@@ -13,7 +13,7 @@
 
   <!-- Open Graph: LinkedIn, WhatsApp, Facebook previews -->
   <meta property="og:type"         content="website" />
-  <meta property="og:site_name"    content="Rubui Mwangi  Portfolio" />
+  <meta property="og:site_name"    content="Rubui Mwangi — Portfolio" />
   <meta property="og:title"        content="Contact . Rubui Mwangi" />
   <meta property="og:description"  content="Get in touch with Rubui Mwangi — electrical engineer based in Nairobi, Kenya. Open to internship opportunities. Contact via form, LinkedIn, GitHub, or Instagram." />
   <meta property="og:url"          content="https://dennisrm-cyber.github.io/portfolio/contact.html" />
@@ -371,23 +371,9 @@
 </head>
 <body class="page-frame">
 
-  <nav class="nav">
-    <div class="container nav__inner">
-      <a href="index.html" class="nav__logo"><span>// </span>portfolio.ee<span> _</span></a>
-      <button class="nav__toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav__links">
-        <li><a href="index.html"    data-i18n="nav.home">home</a></li>
-        <li><a href="about.html"    data-i18n="nav.about">about</a></li>
-        <li><a href="projects.html" data-i18n="nav.projects">projects</a></li>
-        <li><a href="skills.html"   data-i18n="nav.skills">skills</a></li>
-        <li><a href="articles.html" data-i18n="nav.articles">articles</a></li>
-        <li><a href="media.html"    data-i18n="nav.media">media</a></li>
-        <li><a href="contact.html"  data-i18n="nav.contact">contact</a></li>
-      </ul>
-    </div>
-  </nav>
+  
+  <!-- nav injected by main.js -->
+
 
   <div class="scroll-surface">
     <div class="container">
@@ -614,10 +600,7 @@
   <footer class="footer">
     <div class="container footer__inner">
       <span class="footer__left">PORTFOLIO v1.0 &nbsp;·&nbsp; BUILT WITH HTML / CSS / JS</span>
-      <span class="footer__right">
-        <span class="footer__pulse" aria-hidden="true"></span>
-        <span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span>
-      </span>
+      <span class="footer__right"><span class="footer__pulse" aria-hidden="true"></span><span data-i18n="footer.status">OPEN TO OPPORTUNITIES</span></span>
     </div>
   </footer>
 
@@ -647,6 +630,7 @@
     5. Never share your private key — the public key below is safe to expose
   -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" integrity="sha512-e0jCNBMnPnCkKbOtQmfCVbCmrZQBs6tKwAKfHaGFgOCLEKv7e4ggYd0e4RpIlgQ62l5p0hPOE1+KVJAb2Jzw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -793,78 +777,120 @@
 
 
     /* ── PUBLISH APPROVED COMMENTS (owner) ──────── */
-    var COMMENTS_KEY = 'portfolio published_comments';
+    /* ── PUBLISHED COMMENTS (Firebase real-time) ────────────────────
+       PF.watchComments  → real-time listener, fires on every change
+                           from any device. callback(commentsArray)
+                           each item has ._key for deletion.
+       PF.publishComment → owner-auth required. Writes to /comments.
+       PF.deleteComment  → owner-auth required. Removes by key.
 
-    function loadComments() {
-      var stored = [];
-      try { stored = JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]'); } catch(e) {}
-      var list  = document.getElementById('comments-list');
-      var empty = document.getElementById('comments-empty');
-      list.innerHTML = '';
-      if (stored.length === 0) {
-        empty.style.display = ''; return;
-      }
-      empty.style.display = 'none';
-      stored.forEach(function(c, idx) {
-        list.appendChild(makeCommentEl(c, idx));
-      });
-    }
+       Falls back to localStorage if Firebase isn't available.         */
 
-    function saveComments(arr) {
-      try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(arr)); } catch(e) {}
-    }
+    var _commentsUnsub = null;
 
-    function getComments() {
-      try { return JSON.parse(localStorage.getItem(COMMENTS_KEY) || '[]'); } catch(e) { return []; }
-    }
-
-    function makeCommentEl(c, idx) {
+    function makeCommentEl(c) {
       var div = document.createElement('div');
       div.className = 'comment-item fade-in visible';
       var typeClass = 'type-' + (c.type || 'recommendation').toLowerCase();
       var initial = (c.name || '?')[0].toUpperCase();
       div.innerHTML =
-        '<button class="comment-item__delete" data-idx="' + idx + '" title="Remove comment">✕</button>' +
+        '<button class="comment-item__delete" title="Remove comment">✕</button>' +
         '<div class="comment-item__header">' +
           '<div class="comment-item__avatar">' + initial + '</div>' +
           '<div class="comment-item__meta">' +
-            '<div class="comment-item__name">' + escHtml(c.name) + '</div>' +
-            '<div class="comment-item__date">' + escHtml(c.date || '') + '</div>' +
+            '<div class="comment-item__name">'  + escHtml(c.name || '')         + '</div>' +
+            '<div class="comment-item__date">'  + escHtml(c.date || '')         + '</div>' +
           '</div>' +
           '<span class="comment-item__type ' + typeClass + '">' + escHtml(c.type || 'Recommendation') + '</span>' +
         '</div>' +
-        '<div class="comment-item__text">' + escHtml(c.text) + '</div>';
+        '<div class="comment-item__text">' + escHtml(c.text || '') + '</div>';
 
       div.querySelector('.comment-item__delete').addEventListener('click', function() {
+        if (!document.body.classList.contains('owner-unlocked')) return;
         if (!confirm('Remove this comment?')) return;
-        var arr = getComments();
-        arr.splice(idx, 1);
-        saveComments(arr);
-        loadComments();
+        if (window.PF && typeof PF.deleteComment === 'function' && c._key) {
+          PF.deleteComment(c._key).catch(function(err) {
+            alert('Delete failed: ' + err.message);
+          });
+          /* watchComments listener will re-render automatically */
+        } else {
+          /* localStorage fallback */
+          var stored = [];
+          try { stored = JSON.parse(localStorage.getItem('portfolio__published_comments') || '[]'); } catch(e) {}
+          stored = stored.filter(function(x) { return x._lsKey !== c._lsKey; });
+          try { localStorage.setItem('portfolio__published_comments', JSON.stringify(stored)); } catch(e) {}
+          renderComments(stored);
+        }
       });
       return div;
+    }
+
+    function renderComments(arr) {
+      var list  = document.getElementById('comments-list');
+      var empty = document.getElementById('comments-empty');
+      list.innerHTML = '';
+      if (!arr || arr.length === 0) {
+        empty.style.display = ''; return;
+      }
+      empty.style.display = 'none';
+      arr.forEach(function(c) { list.appendChild(makeCommentEl(c)); });
+    }
+
+    /* Start real-time listener */
+    function initComments() {
+      if (window.PF && typeof PF.watchComments === 'function') {
+        _commentsUnsub = PF.watchComments(function(arr) {
+          renderComments(arr);
+        });
+      } else {
+        /* Firebase not loaded — render from localStorage */
+        var stored = [];
+        try { stored = JSON.parse(localStorage.getItem('portfolio__published_comments') || '[]'); } catch(e) {}
+        renderComments(stored);
+      }
     }
 
     document.getElementById('btn-add-comment').addEventListener('click', function() {
       if (!document.body.classList.contains('owner-unlocked')) return;
       var name = prompt('Commenter name (as approved):');
-      if (!name) return;
+      if (!name || !name.trim()) return;
       var text = prompt('Comment text:');
-      if (!text) return;
+      if (!text || !text.trim()) return;
       var type = prompt('Type (Recommendation / Suggestion / Review / Compliment):', 'Recommendation');
-      var arr = getComments();
-      var now = new Date();
-      arr.push({
+      var now  = new Date();
+      var commentObj = {
         name: name.trim(),
         text: text.trim(),
-        type: type || 'Recommendation',
-        date: now.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'})
-      });
-      saveComments(arr);
-      loadComments();
+        type: (type || 'Recommendation').trim(),
+        date: now.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})
+      };
+
+      if (window.PF && typeof PF.publishComment === 'function') {
+        if (PF.isOwner()) {
+          PF.publishComment(commentObj).catch(function(err) {
+            alert('Failed to publish comment: ' + err.message);
+          });
+          /* watchComments listener auto-updates the list */
+        } else {
+          /* Need Firebase sign-in first */
+          PF.ensureOwnerSignIn()
+            .then(function() { return PF.publishComment(commentObj); })
+            .catch(function(err) {
+              if (err.message !== 'cancelled') alert('Failed to publish: ' + err.message);
+            });
+        }
+      } else {
+        /* localStorage fallback */
+        var stored = [];
+        try { stored = JSON.parse(localStorage.getItem('portfolio__published_comments') || '[]'); } catch(e) {}
+        commentObj._lsKey = Date.now() + '-' + Math.random();
+        stored.push(commentObj);
+        try { localStorage.setItem('portfolio__published_comments', JSON.stringify(stored)); } catch(e) {}
+        renderComments(stored);
+      }
     });
 
-    loadComments();
+    initComments();
 
 
     /* ── HELPERS ────────────────────────────────── */
