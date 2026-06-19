@@ -161,6 +161,10 @@
     .reader-format-bar button:hover {
       background: #f0ede6; border-color: #c8c4bc; color: #0e0e1a;
     }
+    /* Active state synced to selection (bold pressed = button highlighted) */
+    .reader-format-bar button.active {
+      background: #fff3cd; border-color: #b87800; color: #7a5200; font-weight: 700;
+    }
     .reader-format-bar button b   { font-weight: 900; font-size: 13px; }
     .reader-format-bar button i   { font-style: italic; font-size: 13px; }
     .reader-format-bar button u   { text-decoration: underline; font-size: 13px; }
@@ -855,8 +859,8 @@
           <option value="Courier New,monospace">Courier New</option>
         </select>
         <div class="rfb-divider"></div>
-        <div class="rfb-size-wrap" title="Font size">
-          <input class="rfb-size-input" type="number" id="rfb-size-input" min="8" max="96" value="16"/>
+        <div class="rfb-size-wrap" title="Font size — type, ▲▼ buttons, or ↑↓ arrow keys while focused">
+          <input class="rfb-size-input" type="number" id="rfb-size-input" min="8" max="96" value="16" title="Font size — ↑↓ arrow keys step size while keeping your text selected"/>
           <div style="display:flex;flex-direction:column;">
             <button class="rfb-size-step" id="rfb-size-up">▲</button>
             <button class="rfb-size-step" id="rfb-size-down">▼</button>

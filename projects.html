@@ -1212,26 +1212,58 @@
     var docNext     = document.getElementById('doc-next');
 
     function openDocViewer(src, type, title) {
-      docTitle.textContent = title || 'Document';
+      /* ── Derive a clean display title ────────────────────────────
+         Priority: explicit title arg → filename decoded from the URL
+         → fallback 'Document'.  This means uploaded files always show
+         their real filename in the viewer header bar.               */
+      var displayTitle = title;
+      if (!displayTitle || displayTitle === 'Document') {
+        try {
+          /* Extract the last path segment from the URL and decode it */
+          var seg = src.split('/').pop().split('?')[0];
+          var decoded = decodeURIComponent(seg);
+          if (decoded && decoded !== '#') displayTitle = decoded;
+        } catch (e) {}
+      }
+      docTitle.textContent = displayTitle || 'Document';
       docLoading.classList.remove('hidden');
       docDownload.href = src;
-      docDownload.setAttribute('download', '');
+      /* Set the download filename to the real decoded filename */
+      try {
+        var dlName = decodeURIComponent(src.split('/').pop().split('?')[0]);
+        docDownload.setAttribute('download', dlName || '');
+      } catch (e) { docDownload.setAttribute('download', ''); }
       docPageInfo.textContent = '';
 
       var viewerSrc;
+      var isFullUrl = /^https?:\/\//i.test(src);
+
       if (type === 'pdf') {
-        // Use browser's native PDF viewer via iframe
-        // For GitHub Pages, PDF.js would be needed for cross-origin;
-        // for same-origin files this works perfectly.
-        viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
+        if (isFullUrl) {
+          /* Cloudinary / any external PDF — use Google Docs viewer
+             because cross-origin iframes block native browser PDF viewing */
+          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
+          docPageInfo.textContent = 'Tip: Loading via Google Docs viewer…';
+        } else {
+          /* Same-origin local PDF — native browser viewer works fine */
+          viewerSrc = src + '#toolbar=1&navpanes=1&scrollbar=1&page=1';
+        }
       } else if (type === 'docx') {
-        // Google Docs viewer — works for publicly accessible files
-        // Replace with your actual GitHub Pages URL after deployment
-        var fullUrl = window.location.origin + '/' +
-          window.location.pathname.split('/').slice(1, -1).join('/') +
-          (window.location.pathname.includes('/') ? '/' : '') + src;
-        viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fullUrl) + '&embedded=true';
+        if (isFullUrl) {
+          /* Cloudinary DOCX — pass the full URL directly to Google Docs viewer */
+          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(src) + '&embedded=true';
+        } else {
+          /* Local DOCX — build the absolute URL for Google Docs viewer */
+          var base = window.location.origin +
+            window.location.pathname.replace(/\/[^/]*$/, '/');
+          var fullUrl = base + src;
+          viewerSrc = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fullUrl) + '&embedded=true';
+        }
         docPageInfo.textContent = 'Tip: Google Docs viewer — may take a moment to load';
+      } else {
+        /* DWG and other raw files — open directly / download prompt */
+        viewerSrc = isFullUrl ? src : (window.location.origin +
+          window.location.pathname.replace(/\/[^/]*$/, '/') + src);
       }
 
       docFrame.src = '';
@@ -1518,13 +1550,29 @@
     }
 
     /* ── UPDATE ALL MATCHING BUTTONS ON A CARD ──────────────────── */
-    function applyDocUrl(docId, slot, url) {
+    /* filename (optional) — the real OS filename of the uploaded file.
+       When provided it becomes the data-doc-title on READ/VIEW buttons
+       so the viewer header always shows the actual document name,
+       not the old hardcoded placeholder title.                         */
+    function applyDocUrl(docId, slot, url, filename) {
       /* slot = 'pdf' | 'docx' | 'dwg' */
       var actions = document.querySelector('.card-actions[data-doc-id="' + docId + '"]');
       if (!actions) return;
+
+      /* Derive a clean display name from the provided filename or from the URL */
+      var displayName = filename || '';
+      if (!displayName) {
+        try {
+          var seg = url.split('/').pop().split('?')[0];
+          displayName = decodeURIComponent(seg);
+        } catch (e) {}
+      }
+
       actions.querySelectorAll('[data-doc-slot="' + slot + '"]').forEach(function (el) {
         if (el.hasAttribute('data-doc-src')) {
           el.setAttribute('data-doc-src', url);
+          /* Update the viewer title to use the real uploaded filename */
+          if (displayName) el.setAttribute('data-doc-title', displayName);
           /* Re-wire the doc viewer click since the src changed */
           el._docWired = false;
         }
@@ -1537,19 +1585,25 @@
     }
 
     /* ── LOAD ALL SAVED DOC URLS FROM FIREBASE ON PAGE LOAD ─────── */
+    /* Also reads the companion -name keys (doc-CARDID-SLOT-name) that
+       were saved alongside each URL so the viewer shows the real
+       filename rather than the hardcoded placeholder title.          */
     function loadSavedDocUrls() {
       if (!window.PF) return;
       PF.loadEdits(function (edits) {
+        /* First pass: collect all URL keys and their companion name keys */
         Object.keys(edits).forEach(function (key) {
-          /* Keys look like: doc-fyp-pdf, doc-ac1-dwg, etc. */
+          /* URL keys: doc-fyp-pdf, doc-ac1-dwg, etc. (no trailing -name) */
           var m = key.match(/^doc-([a-z0-9]+)-([a-z]+)$/);
           if (!m) return;
           var docId = m[1];
           var slot  = m[2];
           var url   = edits[key];
-          if (url && typeof url === 'string' && url.indexOf('http') === 0) {
-            applyDocUrl(docId, slot, url);
-          }
+          if (!url || typeof url !== 'string' || url.indexOf('http') !== 0) return;
+
+          /* Look up the companion filename saved as doc-CARDID-SLOT-name */
+          var savedName = edits['doc-' + docId + '-' + slot + '-name'] || '';
+          applyDocUrl(docId, slot, url, savedName);
         });
       });
     }
@@ -1692,17 +1746,23 @@
 
         uploadRawToCloudinary(file,
           function (url) {
+            var fileName    = file.name;          /* real OS filename e.g. "My_Report.pdf"  */
             var firebaseKey = 'doc-' + docId + '-' + slot;
-            PF.saveEdit(firebaseKey, url)
+            var nameKey     = 'doc-' + docId + '-' + slot + '-name'; /* store name alongside URL */
+            /* Save URL and filename to Firebase in one batch */
+            var batch = {};
+            batch[firebaseKey] = url;
+            batch[nameKey]     = fileName;
+            PF.saveAllEdits(batch)
               .then(function () {
                 document.body.removeChild(toast);
-                applyDocUrl(docId, slot, url);
+                applyDocUrl(docId, slot, url, fileName);
               })
               .catch(function (err) {
                 document.body.removeChild(toast);
                 /* Still apply locally so the current session works */
-                applyDocUrl(docId, slot, url);
-                alert('File uploaded but Firebase save failed: ' + err.message + 'The link will work this session but may not persist.');
+                applyDocUrl(docId, slot, url, fileName);
+                alert('File uploaded but Firebase save failed: ' + err.message + ' The link will work this session but may not persist.');
               });
           },
           function (err) {
